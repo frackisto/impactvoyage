@@ -1,6 +1,6 @@
-# Plateforme Web Agence de Voyage — Phase 4
+# Plateforme Web Agence de Voyage — Phase 5
 
-Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles métier et services métier.
+Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles, services métier et serializers.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
 
 ## Démarrage avec Docker (recommandé)
@@ -122,14 +122,30 @@ feront qu'appeler ces fonctions.
 Erreurs métier : `core.exceptions` (`BusinessError`, `NotAvailable`, `InvalidTransition`,
 `InvalidToken`), chacune avec un `code` stable pour le frontend.
 
-## Ce qui a été validé (Phase 4)
+## Serializers (Phase 5)
 
-- 63 tests passent sur PostgreSQL, dont un test de **concurrence** : deux confirmations
-  simultanées pour la dernière place d'un départ, une seule aboutit.
-- Tâches Celery enregistrées et planifiées par `celery-beat` ; récupération réelle des
-  taux de change vérifiée (100 000 FCFA = 152,45 EUR).
+Chaque app a un `serializers.py` : serializers de **lecture** (cartes de liste,
+pages détail) et serializers d'**entrée** qui valident les formulaires avant
+l'appel au service (`serializer.validated_data` → `services.xxx(**data)`).
+
+- **Traductions** : les champs sont renvoyés dans la langue de la requête
+  (`Accept-Language`), avec repli sur le français.
+- **Prix** : `{"amount": "150000.00", "currency": "XOF"}`, plus `"display"` converti
+  quand le visiteur demande une autre devise (`?currency=EUR` ou en-tête `X-Currency`).
+- **Aucun prix accepté en entrée** : une demande de réservation ne contient que
+  l'offre, les dates et les quantités.
+- **Données jamais exposées** : immatriculations, emails des auteurs d'avis et
+  d'articles, jeton d'accès des devis (hors lien client).
+- **Anti-spam** : champ piège `website` sur les formulaires publics.
+
+## Ce qui a été validé (Phase 5)
+
+- 81 tests passent (dont 18 sur les serializers : traduction, conversion de devise,
+  données masquées, validation des formulaires, nombre de requêtes SQL constant sur
+  la page destination).
 
 ## Prochaine étape
 
-**Phase 5 : Création des serializers** — sérialisation DRF des modèles (lecture publique,
-champs traduits, prix convertis) et validation des entrées (devis, réservations, avis).
+**Phase 6 : Création des API REST** — ViewSets et routes `/api/v1/`, pagination,
+filtres, format d'erreur unique (traduction des erreurs métier en réponses JSON),
+documentation OpenAPI.
