@@ -68,6 +68,22 @@ services:
       redis:
         condition: service_healthy
 
+  celery-beat:
+    build:
+      context: ./backend
+    container_name: voyage_celery_beat
+    restart: unless-stopped
+    # Planificateur des tâches périodiques (CELERY_BEAT_SCHEDULE) ; le fichier
+    # d'état reste dans le conteneur pour ne pas polluer le dossier monté.
+    command: celery -A config beat -l info --schedule /tmp/celerybeat-schedule
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+
   # --- Ajoutés dans les phases suivantes ---
   # frontend:   # Phase 8 « Initialisation Next.js »
   # nginx:      # Phase 24 « Dockerisation et déploiement »

@@ -828,8 +828,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 1 | Architecture générale du projet | ✅ ce document |
 | 2 | Initialisation Django + PostgreSQL | ✅ |
 | 3 | Création des modèles et migrations | ✅ |
-| 4 | Création des services métier | ⏭ prochaine étape |
-| 5 | Création des serializers | |
+| 4 | Création des services métier | ✅ |
+| 5 | Création des serializers | ⏭ prochaine étape |
 | 6 | Création des API REST | |
 | 7 | Authentification JWT et permissions | |
 | 8 | Initialisation Next.js | |

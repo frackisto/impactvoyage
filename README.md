@@ -1,6 +1,6 @@
-# Plateforme Web Agence de Voyage — Phase 3
+# Plateforme Web Agence de Voyage — Phase 4
 
-Backend Django + PostgreSQL + Redis + Celery, dockerisé, avec l'ensemble des modèles métier.
+Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles métier et services métier.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
 
 ## Démarrage avec Docker (recommandé)
@@ -23,7 +23,8 @@ Services démarrés :
 - `backend` → http://localhost:8000
 - `db` → PostgreSQL sur le port 5432
 - `redis` → Redis sur le port 6379
-- `celery` → worker Celery (tâches asynchrones)
+- `celery` → worker Celery (tâches asynchrones : emails, taux de change)
+- `celery-beat` → planificateur (expiration des réservations, taux de change quotidiens)
 
 ## Vérifier que tout fonctionne
 
@@ -103,15 +104,32 @@ backend/
 Chaque app de contenu a un `translation.py` (champs traduits FR/EN via
 django-modeltranslation : `title_fr`, `title_en`…).
 
-## Ce qui a été validé (Phase 3)
+## Services métier (Phase 4)
 
-- `python manage.py check` : aucune erreur ; `makemigrations --check` : aucune migration manquante.
-- Migrations appliquées sur PostgreSQL 16, extensions `btree_gist`, `pg_trgm`, `unaccent` actives.
-- 32 tests de modèles : capacité des départs, chevauchement des locations de véhicules,
-  cible unique des lignes de réservation, références `IV-`/`DV-`, contraintes des offres,
-  avis, blog, médias, traductions avec repli sur le français, connexion par email et rôles.
+La logique métier vit dans `services.py` (écritures, transitions de statut) et
+`selectors.py` (lectures optimisées) de chaque app ; les vues de la Phase 6 ne
+feront qu'appeler ces fonctions.
+
+| Module | Rôle |
+|---|---|
+| `bookings.services` | Demande de réservation (prix calculé côté serveur, promotions), confirmation, refus, annulation, expiration ; réserve et libère le stock sous verrou |
+| `inquiries.services` | Devis : création (consentement obligatoire), assignation, proposition, validation ou refus **par le client via son lien secret** ; messages de contact |
+| `reviews.services` | Dépôt d'avis et modération |
+| `notifications` | Canaux extensibles (tableau de bord + email agence), emails asynchrones |
+| `core.services` | Conversion FCFA → EUR/USD/GBP (parité fixe 655,957 + taux BCE) |
+| `*/selectors.py` | Catalogue filtré (moteur de recherche), disponibilité des véhicules et résidences, notes moyennes |
+
+Erreurs métier : `core.exceptions` (`BusinessError`, `NotAvailable`, `InvalidTransition`,
+`InvalidToken`), chacune avec un `code` stable pour le frontend.
+
+## Ce qui a été validé (Phase 4)
+
+- 63 tests passent sur PostgreSQL, dont un test de **concurrence** : deux confirmations
+  simultanées pour la dernière place d'un départ, une seule aboutit.
+- Tâches Celery enregistrées et planifiées par `celery-beat` ; récupération réelle des
+  taux de change vérifiée (100 000 FCFA = 152,45 EUR).
 
 ## Prochaine étape
 
-**Phase 4 : Création des services métier** — `services.py` et `selectors.py` de chaque app :
-cycle de vie des réservations et des devis, calcul des prix, notifications.
+**Phase 5 : Création des serializers** — sérialisation DRF des modèles (lecture publique,
+champs traduits, prix convertis) et validation des entrées (devis, réservations, avis).

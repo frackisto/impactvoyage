@@ -10,6 +10,7 @@ from apps.core.db import at_most_one
 from apps.core.models import CoverImageMixin, SlugMixin, TimeStampedModel
 
 OFFER_TARGETS = ("tour", "hotel", "residence", "vehicle", "activity")
+LAST_SEATS_THRESHOLD = 5
 
 
 class OfferQuerySet(models.QuerySet):
@@ -111,6 +112,13 @@ class Offer(TimeStampedModel, SlugMixin, CoverImageMixin):
             return 0
         ratio = (self.initial_price - self.promo_price) / self.initial_price * 100
         return int(Decimal(ratio).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+    @property
+    def display_badge(self):
+        """Badge affiché : « Dernières places » s'impose quand le stock devient faible."""
+        if self.seats_available is not None and self.seats_available <= LAST_SEATS_THRESHOLD:
+            return self.Badge.DERNIERES_PLACES
+        return self.badge
 
     @property
     def target(self):

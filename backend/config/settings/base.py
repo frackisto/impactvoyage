@@ -2,9 +2,11 @@
 Settings de base — communs à dev, prod et test.
 """
 from datetime import timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -140,6 +142,15 @@ USE_TZ = True
 # Prix stockés en FCFA (XOF) ; les autres devises ne servent qu'à l'affichage.
 DEFAULT_CURRENCY = "XOF"
 DISPLAY_CURRENCIES = ["XOF", "EUR", "USD", "GBP"]
+# Parité fixe du franc CFA (UEMOA) : 1 EUR = 655,957 XOF.
+XOF_PER_EUR = Decimal("655.957")
+EXCHANGE_RATES_API_URL = env(
+    "EXCHANGE_RATES_API_URL", default="https://api.frankfurter.dev/v1/latest"
+)
+
+# --- Réservations (architecture § 3.8) ---
+BOOKING_HOLD_MINUTES = 30  # réservation directe en attente de paiement
+QUOTE_BOOKING_HOLD_HOURS = 48  # réservation issue d'un devis accepté
 
 # --- Fichiers statiques / médias ---
 STATIC_URL = "static/"
@@ -235,6 +246,21 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    "expire-pending-bookings": {
+        "task": "apps.bookings.tasks.expire_pending_bookings_task",
+        "schedule": crontab(minute="*/5"),
+    },
+    "complete-past-bookings": {
+        "task": "apps.bookings.tasks.complete_past_bookings_task",
+        "schedule": crontab(hour=2, minute=0),
+    },
+    "update-exchange-rates": {
+        "task": "apps.core.tasks.update_exchange_rates_task",
+        # Après la publication des taux de la BCE (~16 h, heure d'Europe centrale).
+        "schedule": crontab(hour=16, minute=30),
+    },
+}
 
 # --- Email ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -247,3 +273,4 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@agence-voyage.c
 AGENCY_NOTIFICATION_EMAIL = env("AGENCY_NOTIFICATION_EMAIL", default="contact@agence-voyage.com")
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
+BACKEND_URL = env("BACKEND_URL", default="http://localhost:8000")
