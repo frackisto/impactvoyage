@@ -545,7 +545,7 @@ frontend/
 ├── i18n/                    # config next-intl + messages/{fr,en}.json
 ├── types/
 │   └── api.d.ts             # GÉNÉRÉ depuis /api/v1/schema/ (openapi-typescript)
-├── middleware.ts            # locale + protection des routes privées
+├── proxy.ts                 # (ex-middleware, Next 16) locale + routes privées + refresh JWT
 └── public/
 ```
 
@@ -559,7 +559,11 @@ frontend/
 - **États systématiques** : `loading.tsx` avec skeletons, `error.tsx`, état vide (« aucun résultat ») pour chaque liste (CdC § 4, § 7).
 - **Aucun secret dans le frontend** : seules les variables `NEXT_PUBLIC_*` non sensibles (URL publique de l'API) sont exposées.
 
-### 4.3 Responsive et accessibilité (CdC § 34, § 35)
+### 4.3 Charte graphique
+
+Couleurs du logo *Impact Voyage et Logistique* : bleu `#1F8FC4` (palette `ocean`) et orange `#F89832` (palette `sunset`), déclinées en nuances OKLCH dans `frontend/app/globals.css`. Rôles : `primary` = `ocean-600` (texte blanc, 4,7:1), `cta` = orange du logo avec texte bleu nuit `ocean-950` (7,2:1), texte courant `ocean-950`. Typographies : Fredoka (titres, arrondis comme le logo), Nunito (texte), Dancing Script (slogan « Voyagez, Rêvez, Explorez. »).
+
+### 4.4 Responsive et accessibilité (CdC § 34, § 35)
 
 - Conception *mobile-first* : menu hamburger, cartes sur une colonne, formulaires simplifiés, boutons d'au moins 44 × 44 px, galerie optimisée.
 - Objectif **WCAG 2.2 niveau AA** : navigation clavier complète, `focus-visible` apparent, labels sur tous les champs, messages d'erreur reliés aux champs (`aria-describedby`), contrastes ≥ 4,5:1, textes alternatifs obligatoires, `aria-label` sur les boutons-icônes.
@@ -636,7 +640,7 @@ frontend/
 - Clé de signature dédiée `JWT_SIGNING_KEY`, distincte de `SECRET_KEY` (CdC § 29 : « JWT_SECRET »).
 - **Stockage des jetons** : jamais dans `localStorage`. Les Route Handlers Next.js (`app/api/auth/…`) servent de *BFF* : ils appellent Django et posent les jetons en cookies `httpOnly; Secure; SameSite=Lax`. Les Server Components lisent le cookie, et le navigateur n'a jamais accès au jeton.
 - Vérification de l'email à l'inscription (`is_verified`), réinitialisation du mot de passe par lien signé à durée limitée.
-- Routes privées protégées côté Next.js (`middleware.ts`) **et** côté Django (permissions DRF). Seul Django fait autorité.
+- Routes privées protégées côté Next.js (`proxy.ts`) **et** côté Django (permissions DRF). Seul Django fait autorité.
 
 ### 6.2 Rôles (CdC § 23)
 
@@ -834,8 +838,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 5 | Création des serializers | ✅ |
 | 6 | Création des API REST | ✅ |
 | 7 | Authentification JWT et permissions | ✅ |
-| 8 | Initialisation Next.js | ⏭ prochaine étape |
-| 9 | Création du design system | |
+| 8 | Initialisation Next.js | ✅ |
+| 9 | Création du design system | ⏭ prochaine étape |
 | 10 | Création de la page d'accueil | |
 | 11 | Création des destinations | |
 | 12 | Création des circuits | |

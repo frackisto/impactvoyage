@@ -1,0 +1,45 @@
+{
+  "Metadata": {
+    "title": "Impact Voyage et Logistique",
+    "titleTemplate": "%s | Impact Voyage",
+    "description": "Agence de voyage et de tourisme : circuits nationaux et internationaux, hébergements, location de véhicules, visas et événements."
+  },
+  "Brand": {
+    "name": "Impact Voyage et Logistique",
+    "slogan": "Voyagez, Rêvez, Explorez.",
+    "logoAlt": "Logo Impact Voyage et Logistique"
+  },
+  "Nav": {
+    "home": "Accueil",
+    "destinations": "Destinations",
+    "tours": "Circuits",
+    "services": "Services",
+    "offers": "Offres",
+    "accommodations": "Hébergements",
+    "vehicles": "Location de véhicules",
+    "events": "Événementiel",
+    "media": "Médiathèque",
+    "about": "À propos",
+    "contact": "Contact",
+    "quote": "Demander un devis",
+    "skipToContent": "Aller au contenu principal",
+    "language": "Langue"
+  },
+  "Home": {
+    "heroTitle": "Voyagez autrement. Découvrez le monde avec nous.",
+    "heroSubtitle": "Circuits, hébergements, visas et voyages sur mesure : une équipe à votre écoute de la préparation au retour.",
+    "discover": "Découvrir nos destinations",
+    "comingSoon": "Le site est en cours de construction."
+  },
+  "Footer": {
+    "rights": "Tous droits réservés."
+  },
+  "Errors": {
+    "notFoundTitle": "Page introuvable",
+    "notFoundText": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "backHome": "Retour à l'accueil",
+    "errorTitle": "Une erreur est survenue",
+    "errorText": "Nous n'avons pas pu afficher cette page. Réessayez dans un instant.",
+    "retry": "Réessayer"
+  }
+}

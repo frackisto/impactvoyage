@@ -1,6 +1,6 @@
-# Plateforme Web Agence de Voyage — Phase 7
+# Plateforme Web Agence de Voyage — Phase 8
 
-Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles, services métier et API REST `/api/v1/`.
+Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
 
 ## Démarrage avec Docker (recommandé)
@@ -20,6 +20,7 @@ docker compose up --build
 ```
 
 Services démarrés :
+- `frontend` → http://localhost:3000 (site Next.js, voir [frontend/README.md](frontend/README.md))
 - `backend` → http://localhost:8000
 - `db` → PostgreSQL sur le port 5432
 - `redis` → Redis sur le port 6379
@@ -189,14 +190,23 @@ Documentation interactive : http://localhost:8000/api/v1/docs/ (Swagger) et
 > se retrouver réduite à quelques caractères. `manage.py check` le signale
 > (`core.W001`) et la configuration de production refuse de démarrer avec une clé trop courte.
 
-## Ce qui a été validé (Phase 7)
+## Frontend (Phase 8)
 
-- 117 tests passent, dont 17 sur l'authentification et les rôles (rotation et révocation
-  des jetons, liens à usage unique, droits par rôle sur l'API, cohérence de la matrice
-  avec les permissions existantes).
+Projet Next.js 16 dans [frontend/](frontend/README.md) : FR/EN (`/` et `/en/`), charte aux
+couleurs du logo (bleu `#1F8FC4`, orange `#F89832`), types TypeScript générés depuis le
+schéma OpenAPI, authentification par cookies httpOnly (le navigateur ne voit jamais les
+jetons), pages privées protégées par `proxy.ts`.
+
+## Ce qui a été validé (Phase 8)
+
+- Backend : 117 tests. Frontend : TypeScript strict, ESLint et 6 tests Vitest sans erreur ;
+  build de production réussi (pages FR/EN pré-rendues).
+- Vérifié dans Docker : accueil FR/EN, 404 traduite, redirection de `/profile` vers la
+  connexion, relais vers l'API (langue transmise), réponse 503 propre si le backend est
+  arrêté, en-têtes de sécurité.
 
 ## Prochaine étape
 
-**Phase 8 : Initialisation Next.js** — projet `frontend/` (App Router, TypeScript strict,
-Tailwind, shadcn/ui, next-intl FR/EN), types générés depuis le schéma OpenAPI, client API,
-authentification par cookies httpOnly (Route Handlers), service `frontend` dans Docker.
+**Phase 9 : Création du design system** — composants réutilisables (boutons, cartes,
+badges, formulaires, skeletons, états vides et d'erreur), en-tête complet avec navigation
+et menu mobile, pied de page avec les coordonnées de l'agence.

@@ -84,8 +84,23 @@ services:
       redis:
         condition: service_healthy
 
-  # --- Ajoutés dans les phases suivantes ---
-  # frontend:   # Phase 8 « Initialisation Next.js »
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+        NEXT_PUBLIC_MEDIA_URL: http://localhost:8000
+    container_name: voyage_frontend
+    restart: unless-stopped
+    environment:
+      # Adresse interne du backend, vue depuis le serveur Next.js (jamais par le navigateur).
+      API_URL: http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # --- Ajouté dans une phase suivante ---
   # nginx:      # Phase 24 « Dockerisation et déploiement »
 
 volumes:

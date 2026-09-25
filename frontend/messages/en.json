@@ -1,0 +1,45 @@
+{
+  "Metadata": {
+    "title": "Impact Voyage et Logistique",
+    "titleTemplate": "%s | Impact Voyage",
+    "description": "Travel and tourism agency: domestic and international tours, accommodation, car rental, visas and events."
+  },
+  "Brand": {
+    "name": "Impact Voyage et Logistique",
+    "slogan": "Travel, Dream, Explore.",
+    "logoAlt": "Impact Voyage et Logistique logo"
+  },
+  "Nav": {
+    "home": "Home",
+    "destinations": "Destinations",
+    "tours": "Tours",
+    "services": "Services",
+    "offers": "Deals",
+    "accommodations": "Accommodation",
+    "vehicles": "Car rental",
+    "events": "Events",
+    "media": "Gallery",
+    "about": "About us",
+    "contact": "Contact",
+    "quote": "Request a quote",
+    "skipToContent": "Skip to main content",
+    "language": "Language"
+  },
+  "Home": {
+    "heroTitle": "Travel differently. Discover the world with us.",
+    "heroSubtitle": "Tours, accommodation, visas and tailor-made trips: a team at your side from planning to return.",
+    "discover": "Discover our destinations",
+    "comingSoon": "The website is under construction."
+  },
+  "Footer": {
+    "rights": "All rights reserved."
+  },
+  "Errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundText": "The page you are looking for does not exist or has been moved.",
+    "backHome": "Back to home",
+    "errorTitle": "Something went wrong",
+    "errorText": "We could not display this page. Please try again in a moment.",
+    "retry": "Try again"
+  }
+}
