@@ -7,7 +7,8 @@
   "Brand": {
     "name": "Impact Voyage et Logistique",
     "slogan": "Voyagez, Rêvez, Explorez.",
-    "logoAlt": "Logo Impact Voyage et Logistique"
+    "logoAlt": "Logo Impact Voyage et Logistique",
+    "tagline": "et Logistique"
   },
   "Nav": {
     "home": "Accueil",
@@ -23,7 +24,11 @@
     "contact": "Contact",
     "quote": "Demander un devis",
     "skipToContent": "Aller au contenu principal",
-    "language": "Langue"
+    "language": "Langue",
+    "main": "Menu principal",
+    "more": "Plus",
+    "homeLink": "Impact Voyage et Logistique — accueil",
+    "breadcrumb": "Fil d'Ariane"
   },
   "Home": {
     "heroTitle": "Voyagez autrement. Découvrez le monde avec nous.",
@@ -32,7 +37,15 @@
     "comingSoon": "Le site est en cours de construction."
   },
   "Footer": {
-    "rights": "Tous droits réservés."
+    "rights": "Tous droits réservés.",
+    "pitch": "Agence de voyage et de tourisme : conseil, circuits, hébergements, visas, location de véhicules et événementiel, de la préparation à votre retour.",
+    "social": "Réseaux sociaux",
+    "explore": "Explorer",
+    "agency": "L'agence",
+    "contactUs": "Nous contacter",
+    "legalNotice": "Mentions légales",
+    "privacy": "Confidentialité",
+    "terms": "Conditions générales"
   },
   "Errors": {
     "notFoundTitle": "Page introuvable",
@@ -41,5 +54,44 @@
     "errorTitle": "Une erreur est survenue",
     "errorText": "Nous n'avons pas pu afficher cette page. Réessayez dans un instant.",
     "retry": "Réessayer"
+  },
+  "Header": {
+    "search": "Rechercher",
+    "login": "Connexion",
+    "account": "Mon compte",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
+  },
+  "Currency": {
+    "label": "Devise d'affichage",
+    "XOF": "FCFA",
+    "EUR": "EUR €",
+    "USD": "USD $",
+    "GBP": "GBP £"
+  },
+  "Price": {
+    "from": "À partir de",
+    "person": "pers.",
+    "night": "nuit",
+    "day": "jour",
+    "indicative": "prix indicatif",
+    "initialPrice": "Prix initial :"
+  },
+  "Rating": {
+    "label": "Note : {value} sur 5",
+    "count": "{count, plural, =0 {aucun avis} one {# avis} other {# avis}}"
+  },
+  "OfferBadge": {
+    "NOUVEAU": "Nouveau",
+    "PROMOTION": "Promotion",
+    "POPULAIRE": "Populaire",
+    "DERNIERES_PLACES": "Dernières places"
+  },
+  "States": {
+    "loading": "Chargement…",
+    "emptyTitle": "Aucun résultat",
+    "emptyText": "Essayez d'élargir vos critères de recherche.",
+    "errorTitle": "Impossible de charger les données",
+    "errorText": "Vérifiez votre connexion puis réessayez."
   }
 }

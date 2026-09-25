@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/lib/utils";
 
 /** Accueil provisoire aux couleurs du logo ; la vraie page d'accueil arrive en Phase 10. */
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
@@ -28,16 +27,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <p className="font-script text-3xl text-sunset-600">{t("Brand.slogan")}</p>
         <p className="max-w-2xl text-lg text-muted-foreground">{t("Home.heroSubtitle")}</p>
         <div className="flex flex-wrap justify-center gap-3">
-          <Link href="/destinations" className={cn(buttonVariants({ size: "lg" }), "h-11 px-6 text-base")}>
+          <Link href="/destinations" className={buttonVariants({ size: "lg" })}>
             {t("Home.discover")}
           </Link>
-          <Link
-            href="/devis"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "h-11 bg-cta px-6 text-base text-cta-foreground hover:bg-sunset-400",
-            )}
-          >
+          <Link href="/devis" className={buttonVariants({ variant: "cta", size: "lg" })}>
             {t("Nav.quote")}
           </Link>
         </div>

@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 8
+# Plateforme Web Agence de Voyage — Phase 9
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -197,16 +197,24 @@ couleurs du logo (bleu `#1F8FC4`, orange `#F89832`), types TypeScript générés
 schéma OpenAPI, authentification par cookies httpOnly (le navigateur ne voit jamais les
 jetons), pages privées protégées par `proxy.ts`.
 
-## Ce qui a été validé (Phase 8)
+## Design system (Phase 9)
 
-- Backend : 117 tests. Frontend : TypeScript strict, ESLint et 6 tests Vitest sans erreur ;
-  build de production réussi (pages FR/EN pré-rendues).
-- Vérifié dans Docker : accueil FR/EN, 404 traduite, redirection de `/profile` vers la
-  connexion, relais vers l'API (langue transmise), réponse 503 propre si le backend est
-  arrêté, en-têtes de sécurité.
+Composants réutilisables aux couleurs du logo, en-tête complet (barre de contact, menu
+du CdC § 5, « Plus », recherche, sélecteurs de langue et de devise, menu mobile), pied de
+page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-graphique
+
+> Les coordonnées (téléphone, email, WhatsApp, adresse, horaires, réseaux sociaux)
+> s'affichent dès qu'elles sont saisies dans les paramètres du site (admin, Phase 19).
+
+## Ce qui a été validé (Phase 9)
+
+- Frontend : TypeScript, ESLint, 15 tests Vitest ; 15 tests Playwright sur ordinateur et
+  mobile, dont un audit d'accessibilité axe (WCAG 2.2 AA) sans violation grave, le menu
+  mobile au clavier, le lien d'évitement, l'absence de défilement horizontal et le menu
+  sur une ligne dès 1280 px.
 
 ## Prochaine étape
 
-**Phase 9 : Création du design system** — composants réutilisables (boutons, cartes,
-badges, formulaires, skeletons, états vides et d'erreur), en-tête complet avec navigation
-et menu mobile, pied de page avec les coordonnées de l'agence.
+**Phase 10 : Création de la page d'accueil** — hero immersif, moteur de recherche
+multifonction à onglets (Tours, Hôtels, Visa, Activités, Transport), destinations et
+offres mises en avant, avis clients.

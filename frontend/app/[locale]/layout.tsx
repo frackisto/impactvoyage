@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { Toaster } from "@/components/ui/sonner";
 import { routing, textDirection } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
               {children}
             </main>
             <SiteFooter />
+            <Toaster position="top-center" richColors closeButton />
           </Providers>
         </NextIntlClientProvider>
       </body>

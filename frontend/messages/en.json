@@ -7,7 +7,8 @@
   "Brand": {
     "name": "Impact Voyage et Logistique",
     "slogan": "Travel, Dream, Explore.",
-    "logoAlt": "Impact Voyage et Logistique logo"
+    "logoAlt": "Impact Voyage et Logistique logo",
+    "tagline": "et Logistique"
   },
   "Nav": {
     "home": "Home",
@@ -23,7 +24,11 @@
     "contact": "Contact",
     "quote": "Request a quote",
     "skipToContent": "Skip to main content",
-    "language": "Language"
+    "language": "Language",
+    "main": "Main menu",
+    "more": "More",
+    "homeLink": "Impact Voyage et Logistique — home",
+    "breadcrumb": "Breadcrumb"
   },
   "Home": {
     "heroTitle": "Travel differently. Discover the world with us.",
@@ -32,7 +37,15 @@
     "comingSoon": "The website is under construction."
   },
   "Footer": {
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "pitch": "Travel and tourism agency: advice, tours, accommodation, visas, car rental and events, from planning to your return.",
+    "social": "Social media",
+    "explore": "Explore",
+    "agency": "The agency",
+    "contactUs": "Contact us",
+    "legalNotice": "Legal notice",
+    "privacy": "Privacy",
+    "terms": "Terms and conditions"
   },
   "Errors": {
     "notFoundTitle": "Page not found",
@@ -41,5 +54,44 @@
     "errorTitle": "Something went wrong",
     "errorText": "We could not display this page. Please try again in a moment.",
     "retry": "Try again"
+  },
+  "Header": {
+    "search": "Search",
+    "login": "Sign in",
+    "account": "My account",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "Currency": {
+    "label": "Display currency",
+    "XOF": "FCFA",
+    "EUR": "EUR €",
+    "USD": "USD $",
+    "GBP": "GBP £"
+  },
+  "Price": {
+    "from": "From",
+    "person": "person",
+    "night": "night",
+    "day": "day",
+    "indicative": "indicative price",
+    "initialPrice": "Initial price:"
+  },
+  "Rating": {
+    "label": "Rating: {value} out of 5",
+    "count": "{count, plural, =0 {no reviews} one {# review} other {# reviews}}"
+  },
+  "OfferBadge": {
+    "NOUVEAU": "New",
+    "PROMOTION": "Special offer",
+    "POPULAIRE": "Popular",
+    "DERNIERES_PLACES": "Last seats"
+  },
+  "States": {
+    "loading": "Loading…",
+    "emptyTitle": "No results",
+    "emptyText": "Try broadening your search criteria.",
+    "errorTitle": "Unable to load data",
+    "errorText": "Check your connection and try again."
   }
 }

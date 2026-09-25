@@ -561,7 +561,7 @@ frontend/
 
 ### 4.3 Charte graphique
 
-Couleurs du logo *Impact Voyage et Logistique* : bleu `#1F8FC4` (palette `ocean`) et orange `#F89832` (palette `sunset`), déclinées en nuances OKLCH dans `frontend/app/globals.css`. Rôles : `primary` = `ocean-600` (texte blanc, 4,7:1), `cta` = orange du logo avec texte bleu nuit `ocean-950` (7,2:1), texte courant `ocean-950`. Typographies : Fredoka (titres, arrondis comme le logo), Nunito (texte), Dancing Script (slogan « Voyagez, Rêvez, Explorez. »).
+Couleurs du logo *Impact Voyage et Logistique* : bleu `#1F8FC4` (palette `ocean`) et orange `#F89832` (palette `sunset`), déclinées en nuances OKLCH dans `frontend/app/globals.css`. Rôles : `primary` = `ocean-600` (texte blanc, 4,7:1), `cta` = orange du logo avec texte bleu nuit `ocean-950` (7,2:1), texte courant `ocean-950`. Typographies : Fredoka (titres, arrondis comme le logo), Nunito (texte), Dancing Script (slogan « Voyagez, Rêvez, Explorez. »). L'emblème du logo (personnage et avion) sert d'icône et de logo compact ; le logo complet est réservé aux grands formats. Référence visuelle interne : `/charte-graphique` (non indexée).
 
 ### 4.4 Responsive et accessibilité (CdC § 34, § 35)
 
@@ -839,8 +839,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 6 | Création des API REST | ✅ |
 | 7 | Authentification JWT et permissions | ✅ |
 | 8 | Initialisation Next.js | ✅ |
-| 9 | Création du design system | ⏭ prochaine étape |
-| 10 | Création de la page d'accueil | |
+| 9 | Création du design system | ✅ |
+| 10 | Création de la page d'accueil | ⏭ prochaine étape |
 | 11 | Création des destinations | |
 | 12 | Création des circuits | |
 | 13 | Création des hôtels et résidences | |

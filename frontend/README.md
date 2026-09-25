@@ -19,6 +19,7 @@ npm run dev                  # http://localhost:3000 (le backend Django doit tou
 |---|---|
 | `npm run dev` / `build` / `start` | Développement, build de production, serveur de production |
 | `npm run lint` · `npm run typecheck` · `npm test` | ESLint, TypeScript, Vitest |
+| `npm run test:e2e` | Playwright (bureau + mobile) et audit d'accessibilité axe — après `npm run build` |
 | `npm run api:types` | Régénère `types/api.d.ts` depuis le schéma OpenAPI du backend |
 
 ## Architecture
@@ -45,6 +46,19 @@ besoin. Les Server Components utilisent `apiGet()` (langue et devise du visiteur
 **Appels depuis un Client Component** : `api.get("tours", { params: { travelers: 2 } })`
 — chemins sans barre finale ; les erreurs sont des `ApiError` (`code`, `message`,
 `fieldErrors()` pour les formulaires).
+
+## Design system
+
+- `components/ui/` : composants shadcn/ui adaptés à la charte (boutons de 40/44 px pour le
+  tactile, variantes `cta` et `inverse`, badges d'offre, libellés traduits).
+- `components/common/` : briques du site — `ContentCard` (carte cliquable avec effet au
+  survol), `Price` (devise choisie, conversion indicative), `Rating`, `OfferBadge`,
+  `SectionHeading`, `PageHeader` (fil d'Ariane), `EmptyState`, `ErrorState`, squelettes.
+- `components/layout/` : en-tête collant (barre de contact, menu, « Plus », recherche,
+  devis), menu mobile, sélecteurs de langue et de devise, pied de page (coordonnées issues
+  des paramètres du site).
+- Page de référence : **`/charte-graphique`** (non indexée) — palette, typographies,
+  composants, formulaire modèle (React Hook Form + Zod), états.
 
 ## Charte graphique
 
