@@ -17,12 +17,15 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 # --- Applications ---
 DJANGO_APPS = [
+    # modeltranslation doit précéder l'admin pour patcher ses formulaires.
+    "modeltranslation",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
 ]
 
 THIRD_PARTY_APPS = [
@@ -124,6 +127,11 @@ LANGUAGES = [
     ("en", "English"),
 ]
 LOCALE_PATHS = [BASE_DIR / "locale"]
+
+# Contenus traduits (django-modeltranslation) : une colonne par langue.
+# Si la traduction anglaise est vide, on affiche le français.
+MODELTRANSLATION_DEFAULT_LANGUAGE = "fr"
+MODELTRANSLATION_FALLBACK_LANGUAGES = ("fr",)
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True

@@ -1,6 +1,7 @@
-# Plateforme Web Agence de Voyage — Phase 2
+# Plateforme Web Agence de Voyage — Phase 3
 
-Initialisation Django + PostgreSQL + Redis + Celery, dockerisée.
+Backend Django + PostgreSQL + Redis + Celery, dockerisé, avec l'ensemble des modèles métier.
+Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
 
 ## Démarrage avec Docker (recommandé)
 
@@ -37,18 +38,22 @@ open http://localhost:8000/api/v1/docs/
 open http://localhost:8000/admin/
 ```
 
-Créer un compte administrateur :
+Créer un compte administrateur (la connexion se fait **par email**) :
 
 ```bash
 docker compose exec backend python manage.py createsuperuser
 ```
+
+> Depuis la Phase 3, les comptes existants se connectent avec leur **email** : le nom
+> d'utilisateur a été supprimé (il est conservé dans le prénom) et les superutilisateurs
+> ont reçu le rôle `SUPER_ADMIN`.
 
 ## Démarrage sans Docker (alternative)
 
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env   # adapter DATABASE_HOST=localhost
 python manage.py migrate
 python manage.py runserver
@@ -56,34 +61,57 @@ python manage.py runserver
 
 Nécessite une instance PostgreSQL et Redis locales déjà démarrées.
 
-## Structure créée à cette étape
+## Lancer les tests
 
-```
-.
-├── docker-compose.yml
-├── .env.example
-├── README.md
-└── backend/
-    ├── config/
-    │   ├── settings/{base,dev,prod,test}.py
-    │   ├── urls.py, api_urls.py
-    │   ├── wsgi.py, asgi.py, celery.py
-    ├── apps/
-    │   ├── core/           # mixins partagés (TimeStamped, Slug, SoftDelete)
-    │   ├── accounts/       # modèle User minimal (étendu en Phase 3)
-    │   └── ... (18 autres apps, squelettes vides — peuplées en Phase 3)
-    ├── manage.py
-    ├── requirements.txt
-    ├── Dockerfile
-    └── .env.example
+Les tests tournent sur PostgreSQL (contraintes d'exclusion, extensions) : la base Docker
+doit être démarrée.
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+DATABASE_HOST=localhost pytest
 ```
 
-## Ce qui a été validé
+## Structure du backend
 
-- `python manage.py check` → aucune erreur de configuration.
-- `python manage.py makemigrations` → génère correctement la migration initiale du modèle `User`.
-- Les 20 apps locales (19 apps métier + `core`) sont enregistrées dans `INSTALLED_APPS` et démarrent sans conflit.
+```
+backend/
+├── config/
+│   ├── settings/{base,dev,prod,test}.py
+│   ├── urls.py, api_urls.py
+│   └── wsgi.py, asgi.py, celery.py
+├── apps/
+│   ├── core/            # mixins (TimeStamped, Slug, SoftDelete, Publishable, Bookable,
+│   │                    # Reference), Category, Tag, SiteSettings, ExchangeRate
+│   ├── accounts/        # User (connexion par email, rôles)
+│   ├── destinations/    # Destination + galerie
+│   ├── tours/           # Tour, TourDay, TourDeparture + galerie
+│   ├── accommodations/  # Hotel, Room, Residence, Amenity + galeries
+│   ├── vehicles/        # Vehicle + galerie
+│   ├── activities/      # Activity + galerie
+│   ├── events/          # Event + photos/vidéos
+│   ├── media/           # MediaAlbum, MediaItem (médiathèque)
+│   ├── services/ visas/ transport/ offers/ blog/
+│   ├── inquiries/       # QuoteRequest (devis), ContactMessage
+│   ├── bookings/        # Booking, BookingItem (anti-surréservation en base)
+│   ├── reviews/ notifications/ payments/
+│   └── search/          # sans modèle (recherche transverse, Phase 16)
+├── requirements.txt, requirements-dev.txt, pytest.ini
+└── Dockerfile
+```
+
+Chaque app de contenu a un `translation.py` (champs traduits FR/EN via
+django-modeltranslation : `title_fr`, `title_en`…).
+
+## Ce qui a été validé (Phase 3)
+
+- `python manage.py check` : aucune erreur ; `makemigrations --check` : aucune migration manquante.
+- Migrations appliquées sur PostgreSQL 16, extensions `btree_gist`, `pg_trgm`, `unaccent` actives.
+- 32 tests de modèles : capacité des départs, chevauchement des locations de véhicules,
+  cible unique des lignes de réservation, références `IV-`/`DV-`, contraintes des offres,
+  avis, blog, médias, traductions avec repli sur le français, connexion par email et rôles.
 
 ## Prochaine étape
 
-**Phase 3 : Création des modèles et migrations** — on remplira les modèles de chaque app (`Destination`, `Tour`, `Hotel`, etc.) selon le schéma défini dans l'architecture globale, puis on génèrera et appliquera les migrations correspondantes.
+**Phase 4 : Création des services métier** — `services.py` et `selectors.py` de chaque app :
+cycle de vie des réservations et des devis, calcul des prix, notifications.

@@ -155,8 +155,8 @@ BookableMixin (abstrait) — offres réservables : Tour, Room, Residence, Vehicl
 ├── base_price  (DecimalField max_digits=12, decimal_places=2)
 └── currency    (ISO 4217, défaut "XOF")
 
-Category                     → name, slug, kind, order
-    kind: TOUR_THEME | ACTIVITY | BLOG | EVENT | MEDIA
+Category                     → name, slug, kind, order ; unique (kind, slug)
+    kind: TOUR_THEME | ACTIVITY | BLOG | MEDIA
 Tag                          → name, slug
 
 SiteSettings (singleton, éditable dans l'admin)        CdC § 5, § 6, § 19
@@ -192,7 +192,7 @@ Tous les contenus publics ont des champs **traduits** (FR/EN au départ), voir �
 
 ```
 Destination                                               CdC § 8
-├── name, slug, continent, country (ISO 3166), city
+├── name, slug, continent, country_code (ISO 3166-1), city
 │     continent: AFRIQUE | EUROPE | AMERIQUES | ASIE | MOYEN_ORIENT | OCEANIE
 ├── description, best_period, attractions, tips
 ├── cover_image, cover_alt, is_featured
@@ -214,7 +214,8 @@ Tour  (BookableMixin)                                     CdC § 9, § 10
 ├── cover_image, cover_alt, is_featured
 ├── TourImage (FK → Tour)  [1-N]
 ├── TourDay (FK → Tour)  [1-N]  → day_number, title, description ; unique (tour, day_number)
-└── TourDeparture (FK → Tour, PROTECT)  [1-N]            → « disponibilité », « date de départ », « période »
+└── TourDeparture (FK → Tour, CASCADE)  [1-N]            → « disponibilité », « date de départ », « période »
+    │     (un départ réservé est protégé par BookingItem → PROTECT : le circuit ne peut plus être supprimé)
     ├── start_date, end_date
     ├── capacity, seats_reserved
     ├── price_override (nullable → sinon Tour.base_price)
@@ -242,7 +243,7 @@ Amenity  → name, icon (Lucide), scope (HOTEL | RESIDENCE | BOTH)
 Vehicle  (BookableMixin)  → 1 ligne = 1 véhicule physique   CdC § 12
 ├── brand, model, slug, category, year, plate_number (unique, non exposé publiquement)
 ├── seats, transmission (MANUELLE | AUTOMATIQUE), fuel, air_conditioning
-├── base_price (par jour), features (JSON), is_active
+├── base_price (par jour), features (JSON), is_published
 ├── cover_image, cover_alt
 └── VehicleImage (FK → Vehicle)  [1-N]
     (disponibilité calculée à partir des BookingItem, voir § 3.8)
@@ -250,7 +251,7 @@ Vehicle  (BookableMixin)  → 1 ligne = 1 véhicule physique   CdC § 12
 Activity  (BookableMixin)                                 CdC § 7
 ├── title, slug, description, destination (FK)
 ├── category (FK → Category kind=ACTIVITY)
-├── duration, base_price, max_participants
+├── duration_hours, base_price, max_participants
 ├── cover_image, cover_alt
 └── ActivityImage (FK → Activity)  [1-N]
 
@@ -392,7 +393,8 @@ PaymentStatus  (enum : PENDING, PAID, FAILED, REFUNDED)
 
 ### 3.7 Champs et pratiques communes
 
-- `SlugField(unique=True)` sur toutes les entités publiques (URLs SEO-friendly), un slug par langue (§ 12).
+- `SlugField(unique=True)` sur toutes les entités publiques (URLs SEO-friendly). En V1, le slug est commun à toutes les langues (`/en/destinations/cote-divoire`) ; des slugs traduits pourront être ajoutés sans casser les URLs existantes.
+- Pays et nationalités stockés en **codes ISO 3166-1** ; le frontend affiche leur nom dans la langue du visiteur (`Intl.DisplayNames`), sans traduction à maintenir.
 - `TimeStampedModel` hérité partout, `SoftDeleteModel` pour Booking et QuoteRequest.
 - Index sur les champs de filtre fréquents : `destination`, `status`, `scope`, `continent`, `start_date`, `category`, `is_featured`.
 - Montants : toujours `DecimalField(max_digits=12, decimal_places=2)` + `currency` ISO 4217, jamais de `FloatField`.
@@ -825,8 +827,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 |---|---|---|
 | 1 | Architecture générale du projet | ✅ ce document |
 | 2 | Initialisation Django + PostgreSQL | ✅ |
-| 3 | Création des modèles et migrations | ⏭ prochaine étape |
-| 4 | Création des services métier | |
+| 3 | Création des modèles et migrations | ✅ |
+| 4 | Création des services métier | ⏭ prochaine étape |
 | 5 | Création des serializers | |
 | 6 | Création des API REST | |
 | 7 | Authentification JWT et permissions | |
