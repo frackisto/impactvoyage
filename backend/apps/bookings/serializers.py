@@ -61,7 +61,7 @@ class BookingItemSerializer(serializers.ModelSerializer):
             "pickup_location", "dropoff_location",
         ]
 
-    def get_kind(self, obj):
+    def get_kind(self, obj) -> str:
         return next(k for k in BOOKING_TARGETS if getattr(obj, f"{k}_id"))
 
 

@@ -70,6 +70,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "apps.core.middleware.QueryLanguageMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -177,8 +178,10 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.StandardPagination",
     "PAGE_SIZE": 12,
+    # Format d'erreur unique : {"error": {"code", "message", "details"}} (architecture § 5.1).
+    "EXCEPTION_HANDLER": "apps.core.api.api_exception_handler",
     # Rate limiting (cahier § 29). Les scopes "auth", "quotes", "contact" et
     # "reviews" sont appliqués aux vues concernées via ScopedRateThrottle.
     "DEFAULT_THROTTLE_CLASSES": (
@@ -190,6 +193,7 @@ REST_FRAMEWORK = {
         "user": "300/min",
         "auth": "10/min",
         "quotes": "5/hour",
+        "bookings": "10/hour",
         "contact": "5/hour",
         "reviews": "3/hour",
     },
@@ -201,6 +205,19 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Documentation de l'API REST de la plateforme de l'agence de voyage.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Schémas distincts lecture / écriture (ex. upload de photo d'avis).
+    "COMPONENT_SPLIT_REQUEST": True,
+    # Noms explicites des enums partagés ou homonymes (types TypeScript lisibles, Phase 8).
+    "ENUM_NAME_OVERRIDES": {
+        "CurrencyEnum": "apps.core.choices.Currency",
+        "DisplayCurrencyEnum": ["EUR", "USD", "GBP"],
+        "RequestedServiceEnum": "apps.core.choices.RequestedService",
+        "BookingStatusEnum": "apps.bookings.models.Booking.Status",
+        "QuoteStatusEnum": "apps.inquiries.models.QuoteRequest.Status",
+        "DepartureStatusEnum": "apps.tours.models.TourDeparture.Status",
+        "VehicleCategoryEnum": "apps.vehicles.models.Vehicle.Category",
+        "EventCategoryEnum": "apps.events.models.Event.Category",
+    },
 }
 
 # --- JWT ---

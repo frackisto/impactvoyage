@@ -9,6 +9,7 @@ from decimal import Decimal
 from operator import attrgetter
 
 from django.conf import settings
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .exceptions import BusinessError
@@ -50,6 +51,25 @@ def money_repr(amount, currency, request=None):
     return data
 
 
+class DisplayAmountSerializer(serializers.Serializer):
+    amount = serializers.CharField()
+    currency = serializers.CharField()
+
+
+class MoneySerializer(serializers.Serializer):
+    """Schéma OpenAPI d'un montant (voir money_repr)."""
+
+    amount = serializers.CharField(help_text="Montant décimal, ex. « 150000.00 »")
+    currency = serializers.CharField(help_text="Code ISO 4217, ex. « XOF »")
+    display = DisplayAmountSerializer(required=False, help_text="Conversion d'affichage")
+
+
+class RatingSummarySerializer(serializers.Serializer):
+    average = serializers.FloatField(allow_null=True)
+    count = serializers.IntegerField()
+
+
+@extend_schema_field(MoneySerializer(allow_null=True))
 class MoneyField(serializers.Field):
     """
     Montant en lecture seule (voir money_repr). `amount` et `currency` sont des
@@ -76,6 +96,7 @@ class MoneyField(serializers.Field):
         )
 
 
+@extend_schema_field({"type": "array", "items": {"type": "string"}})
 class LinesField(serializers.Field):
     """Texte « un élément par ligne » (attractions, inclusions...) exposé en liste."""
 

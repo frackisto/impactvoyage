@@ -6,6 +6,7 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.activities.models import Activity
@@ -107,7 +108,7 @@ class QuoteClientSerializer(serializers.ModelSerializer):
             "proposal_valid_until", "can_answer", "booking_reference", "created_at",
         ]
 
-    def get_can_answer(self, obj):
+    def get_can_answer(self, obj) -> bool:
         return obj.status == QuoteRequest.Status.DEVIS_ENVOYE and (
             obj.proposal_valid_until is None
             or obj.proposal_valid_until >= timezone.localdate()
@@ -116,6 +117,11 @@ class QuoteClientSerializer(serializers.ModelSerializer):
 
 class QuoteDeclineSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+
+
+class StaffMemberSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
 
 
 class QuoteStaffSerializer(serializers.ModelSerializer):
@@ -131,6 +137,7 @@ class QuoteStaffSerializer(serializers.ModelSerializer):
         model = QuoteRequest
         exclude = ["access_token", "deleted_at", "activities"]
 
+    @extend_schema_field(StaffMemberSerializer(allow_null=True))
     def get_assigned_to(self, obj):
         user = obj.assigned_to
         return {"id": user.pk, "name": str(user)} if user else None

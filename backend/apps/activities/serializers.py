@@ -1,12 +1,14 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.core.serializers import (
     CategorySerializer,
     GalleryImageSerializer,
     MoneyField,
+    MoneySerializer,
     money_repr,
 )
-from apps.destinations.serializers import DestinationMiniSerializer
+from apps.destinations.references import DestinationMiniSerializer
 from apps.offers.selectors import promo_price_for
 
 from .models import Activity
@@ -40,5 +42,6 @@ class ActivityDetailSerializer(ActivityListSerializer):
     class Meta(ActivityListSerializer.Meta):
         fields = ActivityListSerializer.Meta.fields + ["description", "images", "promo_price"]
 
+    @extend_schema_field(MoneySerializer(allow_null=True))
     def get_promo_price(self, obj):
         return money_repr(promo_price_for(obj), obj.currency, self.context.get("request"))

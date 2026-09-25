@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.core.serializers import MediaAssetSerializer
-from apps.destinations.serializers import DestinationMiniSerializer
+from apps.destinations.references import DestinationMiniSerializer
 
 from .models import Event
 

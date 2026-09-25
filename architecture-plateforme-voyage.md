@@ -609,15 +609,17 @@ frontend/
 /api/v1/blog/                  /{slug}/
 /api/v1/media/albums/          /{slug}/
 
-/api/v1/quotes/                                    # POST public (throttle "quotes")
-/api/v1/quotes/{reference}/?token=                 # consultation client
-/api/v1/quotes/{reference}/accept/                 # client, avec token
-/api/v1/quotes/{reference}/send-proposal/          # staff
-/api/v1/bookings/                                  # POST public : demande de réservation
+/api/v1/quotes/                                    # POST public (throttle "quotes") ; GET staff
+/api/v1/quotes/{reference}/?token=                 # client (jeton) ou staff (fiche complète)
+/api/v1/quotes/{reference}/accept/  decline/       # client, jeton dans le corps
+/api/v1/quotes/{reference}/send-proposal/  assign/  status/   # staff
+/api/v1/bookings/                                  # POST public : demande ; GET : les siennes / toutes (staff)
 /api/v1/bookings/{reference}/                      # lookup par référence, jamais par id
-/api/v1/bookings/{reference}/confirm/  reject/  cancel/
+/api/v1/bookings/{reference}/confirm/  reject/     # staff
+/api/v1/bookings/{reference}/cancel/               # client (avant confirmation) ou staff
 /api/v1/contact/                                   # POST public (throttle "contact")
-/api/v1/reviews/                                   # GET approuvés ; POST (throttle "reviews")
+/api/v1/reviews/?target_type=&target_slug=&featured=   # GET avis validés ; POST (throttle "reviews")
+/api/v1/notifications/  {id}/read/  read-all/  unread-count/   # staff
 
 /api/v1/search/?q=&type=&destination=&category=&min_price=&max_price=&date=&tags=
 /api/v1/dashboard/stats/                           # staff
@@ -830,8 +832,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 3 | Création des modèles et migrations | ✅ |
 | 4 | Création des services métier | ✅ |
 | 5 | Création des serializers | ✅ |
-| 6 | Création des API REST | ⏭ prochaine étape |
-| 7 | Authentification JWT et permissions | |
+| 6 | Création des API REST | ✅ |
+| 7 | Authentification JWT et permissions | ⏭ prochaine étape |
 | 8 | Initialisation Next.js | |
 | 9 | Création du design system | |
 | 10 | Création de la page d'accueil | |

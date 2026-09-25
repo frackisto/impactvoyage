@@ -1,9 +1,16 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.core.serializers import MoneyField
-from apps.destinations.serializers import DestinationMiniSerializer
+from apps.destinations.references import DestinationMiniSerializer
 
 from .models import Offer
+
+
+class OfferTargetSerializer(serializers.Serializer):
+    type = serializers.CharField(help_text="tour, hotel, residence, vehicle ou activity")
+    slug = serializers.CharField()
+    title = serializers.CharField()
 
 
 class OfferListSerializer(serializers.ModelSerializer):
@@ -21,6 +28,7 @@ class OfferListSerializer(serializers.ModelSerializer):
             "badge", "cover_image", "cover_alt", "target",
         ]
 
+    @extend_schema_field(OfferTargetSerializer(allow_null=True))
     def get_target(self, obj):
         """Lien vers la fiche concernée : {"type": "tour", "slug": "…", "title": "…"}."""
         target = obj.target

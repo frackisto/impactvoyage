@@ -1,16 +1,12 @@
 from rest_framework import serializers
 
+from apps.accommodations.serializers import HotelCardSerializer
+from apps.activities.serializers import ActivityCardSerializer
 from apps.core.serializers import GalleryImageSerializer, LinesField, TagSerializer
+from apps.tours.serializers import TourCardSerializer
 
 from .models import Destination
-
-
-class DestinationMiniSerializer(serializers.ModelSerializer):
-    """Référence courte, imbriquée dans les circuits, hôtels, activités..."""
-
-    class Meta:
-        model = Destination
-        fields = ["id", "slug", "name", "continent", "country_code", "city"]
+from .references import DestinationMiniSerializer  # noqa: F401 (réexport)
 
 
 class DestinationListSerializer(serializers.ModelSerializer):
@@ -27,14 +23,14 @@ class DestinationListSerializer(serializers.ModelSerializer):
 
 
 class DestinationDetailSerializer(serializers.ModelSerializer):
-    """Page immersive (CdC § 8) : galerie, attractions, conseils, offres liées."""
+    """Page immersive (CdC § 8) : galerie, attractions, conseils, offres liées publiées."""
 
     images = GalleryImageSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     attractions = LinesField()
-    tours = serializers.SerializerMethodField()
-    hotels = serializers.SerializerMethodField()
-    activities = serializers.SerializerMethodField()
+    tours = TourCardSerializer(many=True, read_only=True)
+    hotels = HotelCardSerializer(many=True, read_only=True)
+    activities = ActivityCardSerializer(many=True, read_only=True)
 
     class Meta:
         model = Destination
@@ -43,19 +39,3 @@ class DestinationDetailSerializer(serializers.ModelSerializer):
             "short_description", "description", "best_period", "attractions", "tips",
             "cover_image", "cover_alt", "images", "tags", "tours", "hotels", "activities",
         ]
-
-    # Imports différés : ces apps importent elles-mêmes DestinationMiniSerializer.
-    def get_tours(self, obj):
-        from apps.tours.serializers import TourCardSerializer
-
-        return TourCardSerializer(obj.tours.all(), many=True, context=self.context).data
-
-    def get_hotels(self, obj):
-        from apps.accommodations.serializers import HotelCardSerializer
-
-        return HotelCardSerializer(obj.hotels.all(), many=True, context=self.context).data
-
-    def get_activities(self, obj):
-        from apps.activities.serializers import ActivityCardSerializer
-
-        return ActivityCardSerializer(obj.activities.all(), many=True, context=self.context).data

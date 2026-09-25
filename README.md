@@ -1,6 +1,6 @@
-# Plateforme Web Agence de Voyage — Phase 5
+# Plateforme Web Agence de Voyage — Phase 6
 
-Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles, services métier et serializers.
+Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles, services métier et API REST `/api/v1/`.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
 
 ## Démarrage avec Docker (recommandé)
@@ -138,14 +138,41 @@ l'appel au service (`serializer.validated_data` → `services.xxx(**data)`).
   d'articles, jeton d'accès des devis (hors lien client).
 - **Anti-spam** : champ piège `website` sur les formulaires publics.
 
-## Ce qui a été validé (Phase 5)
+## API REST (Phase 6)
 
-- 81 tests passent (dont 18 sur les serializers : traduction, conversion de devise,
-  données masquées, validation des formulaires, nombre de requêtes SQL constant sur
-  la page destination).
+Documentation interactive : http://localhost:8000/api/v1/docs/ (Swagger) et
+`/api/v1/redoc/` ; schéma OpenAPI brut : `/api/v1/schema/`.
+
+- **Lecture publique** du catalogue : `/destinations`, `/tours` (+ `/departures`),
+  `/hotels`, `/residences`, `/vehicles` (+ `/availability`), `/activities`, `/events`,
+  `/offers`, `/services`, `/visas`, `/transport`, `/blog`, `/media/albums`,
+  `/categories`, `/site-settings`, `/currencies`.
+- **Formulaires** : `POST /quotes/`, `/bookings/`, `/contact/`, `/reviews/`
+  (débit limité par IP : 5 devis/h, 10 réservations/h, 5 messages/h, 3 avis/h).
+- **Parcours client** : consultation et validation d'un devis avec le jeton reçu
+  par email ; réservations du compte connecté.
+- **Équipe** : devis (assignation, proposition, statut), réservations
+  (confirmation, refus, annulation), notifications.
+- **Paramètres** : pagination `?page=`, `?page_size=` (max 48), recherche `?search=`,
+  tri `?ordering=`, filtres propres à chaque liste (documentés dans Swagger),
+  langue `Accept-Language` ou `?lang=en`, devise `?currency=EUR` ou `X-Currency`.
+- **Erreurs** : toujours `{"error": {"code", "message", "details"}}` — 400
+  `validation_error`, 404 `not_found`, 409 `not_available` / `invalid_transition`,
+  429 `throttled`…
+
+Les droits sont pour l'instant « équipe » (tout rôle sauf client) / « client » ;
+la Phase 7 les affine par rôle et ajoute l'authentification JWT (`/auth/...`).
+
+## Ce qui a été validé (Phase 6)
+
+- 100 tests passent, dont 19 tests d'API (parcours devis et réservation complets,
+  droits, prix envoyés par le client ignorés, format d'erreur, limitation de débit).
+- Schéma OpenAPI généré **sans aucun avertissement** (`spectacular --validate
+  --fail-on-warn`, vérifié par un test) : il servira à générer les types TypeScript
+  du frontend (Phase 8).
 
 ## Prochaine étape
 
-**Phase 6 : Création des API REST** — ViewSets et routes `/api/v1/`, pagination,
-filtres, format d'erreur unique (traduction des erreurs métier en réponses JSON),
-documentation OpenAPI.
+**Phase 7 : Authentification JWT et permissions** — inscription, connexion,
+rafraîchissement et révocation des jetons, mot de passe oublié, vérification de
+l'email, permissions par rôle (commercial, gestionnaire, agent…).

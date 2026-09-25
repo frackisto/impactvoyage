@@ -7,6 +7,19 @@ def active_offers():
     )
 
 
+def offer_list(offer_type=None, destination=None):
+    qs = active_offers()
+    if offer_type:
+        qs = qs.filter(offer_type=offer_type)
+    if destination:
+        qs = qs.filter(destination__slug=destination)
+    return qs
+
+
+def offer_detail(slug):
+    return active_offers().get(slug=slug)
+
+
 def promo_price_for(target):
     """
     Prix promotionnel actif le plus bas pour un circuit (par voyageur), une

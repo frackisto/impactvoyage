@@ -6,6 +6,8 @@ NOUVELLE → EN_COURS (commercial assigné) → DEVIS_ENVOYE (proposition + lien
 client) → ACCEPTEE (le client valide via son lien : réservation PENDING créée)
 ou REFUSEE → TERMINEE.
 """
+import uuid
+
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
@@ -134,6 +136,10 @@ def send_proposal(quote, *, amount, message, valid_until, by=None):
 
 def get_quote_for_client(reference, token):
     """Devis consulté par le client via son lien secret (sans compte)."""
+    try:
+        token = uuid.UUID(str(token))
+    except ValueError:
+        raise InvalidToken("Lien de devis invalide ou expiré.") from None
     quote = QuoteRequest.objects.filter(reference=reference, access_token=token).first()
     if quote is None:
         raise InvalidToken("Lien de devis invalide ou expiré.")

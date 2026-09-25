@@ -1,19 +1,20 @@
 """
-Point d'entrée unique de l'API v1.
-Les routes des apps métier (destinations, tours, hôtels...) seront
-ajoutées ici au fur et à mesure des phases suivantes du projet.
+Point d'entrée unique de l'API v1 (architecture § 5.2).
+Les routes d'authentification (/auth/...) sont ajoutées en Phase 7,
+la recherche globale (/search/) en Phase 16, le tableau de bord en Phase 19.
 """
-from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 
+from apps.core.views import CurrencyView, SiteSettingsView, health
 
-def health_check(request):
-    return JsonResponse({"status": "ok", "service": "voyage-api"})
-
+APPS_WITH_ROUTES = [
+    "core", "destinations", "tours", "accommodations", "vehicles", "activities", "events",
+    "media", "offers", "blog", "services", "visas", "transport", "inquiries", "bookings",
+    "reviews", "notifications",
+]
 
 urlpatterns = [
-    path("health/", health_check, name="health-check"),
-    # path("destinations/", include("apps.destinations.urls")),
-    # path("tours/", include("apps.tours.urls")),
-    # ... ajoutés progressivement dans les phases suivantes
-]
+    path("health/", health, name="health-check"),
+    path("site-settings/", SiteSettingsView.as_view(), name="site-settings"),
+    path("currencies/", CurrencyView.as_view(), name="currencies"),
+] + [path("", include(f"apps.{app}.urls")) for app in APPS_WITH_ROUTES]

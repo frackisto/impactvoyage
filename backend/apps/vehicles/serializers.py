@@ -1,6 +1,12 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from apps.core.serializers import GalleryImageSerializer, MoneyField, money_repr
+from apps.core.serializers import (
+    GalleryImageSerializer,
+    MoneyField,
+    MoneySerializer,
+    money_repr,
+)
 from apps.offers.selectors import promo_price_for
 
 from .models import Vehicle
@@ -29,6 +35,7 @@ class VehicleDetailSerializer(VehicleListSerializer):
             "description", "features", "images", "booking_mode", "promo_price",
         ]
 
+    @extend_schema_field(MoneySerializer(allow_null=True))
     def get_promo_price(self, obj):
         return money_repr(promo_price_for(obj), obj.currency, self.context.get("request"))
 

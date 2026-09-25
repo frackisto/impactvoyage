@@ -1,7 +1,14 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from apps.core.serializers import GalleryImageSerializer, MoneyField, money_repr
-from apps.destinations.serializers import DestinationMiniSerializer
+from apps.core.serializers import (
+    GalleryImageSerializer,
+    MoneyField,
+    MoneySerializer,
+    RatingSummarySerializer,
+    money_repr,
+)
+from apps.destinations.references import DestinationMiniSerializer
 from apps.offers.selectors import promo_price_for
 from apps.reviews.selectors import rating_summary
 
@@ -58,6 +65,7 @@ class HotelDetailSerializer(HotelCardSerializer):
             "description", "destination", "address", "amenities", "images", "rooms", "rating",
         ]
 
+    @extend_schema_field(RatingSummarySerializer)
     def get_rating(self, obj):
         return rating_summary(hotel=obj)
 
@@ -86,5 +94,6 @@ class ResidenceDetailSerializer(ResidenceListSerializer):
             "promo_price",
         ]
 
+    @extend_schema_field(MoneySerializer(allow_null=True))
     def get_promo_price(self, obj):
         return money_repr(promo_price_for(obj), obj.currency, self.context.get("request"))

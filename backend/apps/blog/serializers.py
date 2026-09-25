@@ -16,7 +16,7 @@ class BlogPostListSerializer(serializers.ModelSerializer):
             "author_name", "published_at", "reading_time",
         ]
 
-    def get_author_name(self, obj):
+    def get_author_name(self, obj) -> str | None:
         """Nom public uniquement : jamais l'email de l'auteur."""
         return obj.author.get_full_name() if obj.author else None
 
