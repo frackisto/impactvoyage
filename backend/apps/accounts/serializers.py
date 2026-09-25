@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.core.serializers import HoneypotSerializerMixin
 from apps.inquiries.serializers import validate_country_code, validate_phone
@@ -84,3 +85,44 @@ class PasswordChangeSerializer(serializers.Serializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
         return value
+
+
+class LoginSerializer(TokenObtainPairSerializer):
+    """
+    Connexion email + mot de passe. Le jeton d'accès porte le rôle et le nom
+    (affichage et redirections côté Next.js) ; la réponse inclut le profil.
+    """
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["role"] = user.role
+        token["name"] = user.get_full_name()
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data["user"] = UserSerializer(self.user, context=self.context).data
+        return data
+
+
+class AuthResponseSerializer(serializers.Serializer):
+    """Schéma OpenAPI des réponses d'inscription et de connexion."""
+
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+    user = UserSerializer()
+
+
+class TokenSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)

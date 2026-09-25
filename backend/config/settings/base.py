@@ -235,7 +235,13 @@ SIMPLE_JWT = {
     # la faire tourner invalide les jetons sans toucher aux sessions ni aux
     # liens de réinitialisation de mot de passe.
     "SIGNING_KEY": env("JWT_SIGNING_KEY", default=SECRET_KEY),
+    "UPDATE_LAST_LOGIN": True,
+    "TOKEN_OBTAIN_SERIALIZER": "apps.accounts.serializers.LoginSerializer",
 }
+
+# Liens envoyés par email (architecture § 6.1).
+PASSWORD_RESET_TIMEOUT = 2 * 60 * 60  # 2 heures, usage unique
+EMAIL_VERIFICATION_MAX_AGE = 3 * 24 * 60 * 60  # 3 jours
 
 # --- CORS ---
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"])

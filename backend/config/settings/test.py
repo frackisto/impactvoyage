@@ -2,6 +2,10 @@ from .base import *  # noqa: F401,F403
 
 DEBUG = False
 
+# Clés propres aux tests : indépendantes du .env local.
+SECRET_KEY = "tests-" + "x" * 60
+SIMPLE_JWT = {**SIMPLE_JWT, "SIGNING_KEY": "tests-jwt-" + "y" * 40}  # noqa: F405
+
 DATABASES["default"]["NAME"] = "test_voyage_db"  # noqa: F405
 
 PASSWORD_HASHERS = [

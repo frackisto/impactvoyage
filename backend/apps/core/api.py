@@ -46,8 +46,25 @@ def api_exception_handler(exc, context):
     return response
 
 
+def has_perm(*perms):
+    """
+    Permission DRF exigeant des permissions Django (dérivées du rôle, voir
+    accounts.roles), ex. has_perm("bookings.change_booking").
+    """
+
+    class HasPerm(permissions.BasePermission):
+        message = "Votre rôle ne permet pas cette action."
+
+        def has_permission(self, request, view):
+            user = request.user
+            return bool(user and user.is_authenticated and user.has_perms(perms))
+
+    HasPerm.__name__ = f"HasPerm({', '.join(perms)})"
+    return HasPerm
+
+
 class IsStaff(permissions.BasePermission):
-    """Membre de l'équipe (tout rôle sauf CLIENT). Affiné par rôle en Phase 7."""
+    """Membre de l'équipe (tout rôle sauf CLIENT) ; les droits fins passent par has_perm."""
 
     message = "Réservé à l'équipe de l'agence."
 

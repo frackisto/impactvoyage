@@ -1,14 +1,13 @@
 """
 Point d'entrée unique de l'API v1 (architecture § 5.2).
-Les routes d'authentification (/auth/...) sont ajoutées en Phase 7,
-la recherche globale (/search/) en Phase 16, le tableau de bord en Phase 19.
+La recherche globale (/search/) arrive en Phase 16, le tableau de bord en Phase 19.
 """
 from django.urls import include, path
 
 from apps.core.views import CurrencyView, SiteSettingsView, health
 
 APPS_WITH_ROUTES = [
-    "core", "destinations", "tours", "accommodations", "vehicles", "activities", "events",
+    "accounts", "core", "destinations", "tours", "accommodations", "vehicles", "activities", "events",
     "media", "offers", "blog", "services", "visas", "transport", "inquiries", "bookings",
     "reviews", "notifications",
 ]

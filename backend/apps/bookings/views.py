@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from apps.core.api import IsStaff, WriteThrottleMixin
+from apps.core.api import WriteThrottleMixin, has_perm
 
 from . import selectors, services
 from .models import Booking
@@ -19,6 +19,8 @@ from .serializers import (
 # Le client peut annuler lui-même tant que la réservation n'est pas confirmée ;
 # ensuite, l'annulation passe par l'agence (CdC § 11 « changements et annulations »).
 CUSTOMER_CANCELLABLE = {Booking.Status.REQUESTED, Booking.Status.PENDING}
+VIEW_ALL = "bookings.view_booking"
+CanChangeBookings = has_perm("bookings.change_booking")
 
 
 class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
@@ -36,11 +38,13 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
         if self.action == "create":
             return [permissions.AllowAny()]
         if self.action in ("confirm", "reject"):
-            return [IsStaff()]
+            return [CanChangeBookings()]
         return [permissions.IsAuthenticated()]
 
     def _is_staff(self):
-        return self.request.user.is_authenticated and self.request.user.is_staff
+        """Équipe habilitée à voir toutes les réservations (commercial, gestionnaire, admin)."""
+        user = self.request.user
+        return user.is_authenticated and user.has_perm(VIEW_ALL)
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):  # génération du schéma OpenAPI
@@ -102,7 +106,10 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
         payload = BookingDecisionSerializer(data=request.data)
         payload.is_valid(raise_exception=True)
         booking = self.get_object()
-        by_customer = not self._is_staff()
+        by_customer = not request.user.has_perm("bookings.change_booking")
+        if by_customer and booking.user_id != request.user.pk:
+            # Ex. un gestionnaire voit toutes les réservations mais ne peut annuler que les siennes.
+            raise PermissionDenied("Vous ne pouvez annuler que vos propres réservations.")
         if by_customer and booking.status not in CUSTOMER_CANCELLABLE:
             raise PermissionDenied(
                 "Cette réservation est confirmée : contactez l'agence pour l'annuler."

@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 6
+# Plateforme Web Agence de Voyage — Phase 7
 
 Backend Django + PostgreSQL + Redis + Celery, dockerisé : modèles, services métier et API REST `/api/v1/`.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -160,19 +160,43 @@ Documentation interactive : http://localhost:8000/api/v1/docs/ (Swagger) et
   `validation_error`, 404 `not_found`, 409 `not_available` / `invalid_transition`,
   429 `throttled`…
 
-Les droits sont pour l'instant « équipe » (tout rôle sauf client) / « client » ;
-la Phase 7 les affine par rôle et ajoute l'authentification JWT (`/auth/...`).
 
-## Ce qui a été validé (Phase 6)
+## Authentification et rôles (Phase 7)
 
-- 100 tests passent, dont 19 tests d'API (parcours devis et réservation complets,
-  droits, prix envoyés par le client ignorés, format d'erreur, limitation de débit).
-- Schéma OpenAPI généré **sans aucun avertissement** (`spectacular --validate
-  --fail-on-warn`, vérifié par un test) : il servira à générer les types TypeScript
-  du frontend (Phase 8).
+- **JWT** : `/auth/register/`, `/auth/login/` (email + mot de passe), `/auth/refresh/`
+  (rotation : l'ancien refresh est révoqué), `/auth/logout/`, `/auth/me/`.
+  Le jeton d'accès (15 min) porte le rôle et le nom de l'utilisateur.
+- **Emails** : vérification de l'adresse (lien valable 3 jours), mot de passe oublié
+  (lien à usage unique, 2 h, sans révéler si le compte existe).
+- **Sécurité** : 10 tentatives/min par IP sur ces routes ; changer ou réinitialiser
+  son mot de passe déconnecte tous les appareils.
+- **Rôles** : la matrice `backend/apps/accounts/roles.py` est la seule source des droits.
+  Chaque rôle a un groupe Django, synchronisé après chaque `migrate` ou par
+  `python manage.py sync_roles` ; les utilisateurs rejoignent le groupe de leur rôle
+  automatiquement.
+
+| Rôle | Droits principaux |
+|---|---|
+| Super administrateur | Tout |
+| Administrateur | Tout le contenu, devis, réservations, avis, utilisateurs ; paramètres du site et paiements en lecture |
+| Agent | Destinations, circuits, hôtels, activités, blog, médiathèque, services, visas, transport |
+| Commercial | Devis, réservations, messages de contact |
+| Gestionnaire | Véhicules, résidences, événements, offres, modération des avis ; réservations en lecture |
+| Client | Son compte, ses devis et réservations |
+
+> ⚠️ **Clés secrètes dans `.env`** : entourez-les de guillemets. Sans guillemets,
+> django-environ ignore tout ce qui suit un `#`, et une clé générée par Django peut
+> se retrouver réduite à quelques caractères. `manage.py check` le signale
+> (`core.W001`) et la configuration de production refuse de démarrer avec une clé trop courte.
+
+## Ce qui a été validé (Phase 7)
+
+- 117 tests passent, dont 17 sur l'authentification et les rôles (rotation et révocation
+  des jetons, liens à usage unique, droits par rôle sur l'API, cohérence de la matrice
+  avec les permissions existantes).
 
 ## Prochaine étape
 
-**Phase 7 : Authentification JWT et permissions** — inscription, connexion,
-rafraîchissement et révocation des jetons, mot de passe oublié, vérification de
-l'email, permissions par rôle (commercial, gestionnaire, agent…).
+**Phase 8 : Initialisation Next.js** — projet `frontend/` (App Router, TypeScript strict,
+Tailwind, shadcn/ui, next-intl FR/EN), types générés depuis le schéma OpenAPI, client API,
+authentification par cookies httpOnly (Route Handlers), service `frontend` dans Docker.

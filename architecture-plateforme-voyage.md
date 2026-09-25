@@ -586,9 +586,9 @@ frontend/
 ### 5.2 Endpoints
 
 ```
-/api/v1/auth/login/  refresh/  logout/  register/
-/api/v1/auth/verify-email/
-/api/v1/auth/password-reset/  password-reset/confirm/
+/api/v1/auth/register/  login/  refresh/  logout/
+/api/v1/auth/verify-email/  verify-email/resend/
+/api/v1/auth/password-reset/  password-reset/confirm/  password/change/
 /api/v1/auth/me/                                   # profil (GET/PATCH)
 
 /api/v1/site-settings/                             # coordonnées agence, réseaux, hero
@@ -659,7 +659,7 @@ quotes.view / .update
 …
 ```
 
-- Le mapping rôle → permissions est défini **dans le code** (`accounts/roles.py`), versionné et testé. La commande `sync_roles` crée ou met à jour un groupe Django par rôle, et un signal réaffecte le groupe quand le rôle change.
+- Le mapping rôle → permissions est défini **dans le code** (`accounts/roles.py`), versionné et testé ; `SUPER_ADMIN` est superutilisateur Django, `ADMIN` a tout sauf l'écriture des paramètres du site et des paiements. La commande `sync_roles` crée ou met à jour un groupe Django par rôle, et un signal réaffecte le groupe quand le rôle change.
 - Côté DRF : une classe `HasPermission("tours.update")` par action. Côté admin : les permissions Django natives, dérivées des mêmes groupes.
 - Un CLIENT ne voit que ses objets (filtrage du queryset par `user`, jamais seulement une vérification après coup).
 
@@ -833,8 +833,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 4 | Création des services métier | ✅ |
 | 5 | Création des serializers | ✅ |
 | 6 | Création des API REST | ✅ |
-| 7 | Authentification JWT et permissions | ⏭ prochaine étape |
-| 8 | Initialisation Next.js | |
+| 7 | Authentification JWT et permissions | ✅ |
+| 8 | Initialisation Next.js | ⏭ prochaine étape |
 | 9 | Création du design system | |
 | 10 | Création de la page d'accueil | |
 | 11 | Création des destinations | |

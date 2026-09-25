@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.bookings.serializers import BookingSerializer
-from apps.core.api import IsStaff, WriteThrottleMixin
+from apps.core.api import WriteThrottleMixin, has_perm
 
 from . import selectors, services
 from .models import QuoteRequest
@@ -21,6 +21,8 @@ from .serializers import (
 )
 
 CLIENT_ACTIONS = ("create", "retrieve", "accept", "decline")
+CanViewQuotes = has_perm("inquiries.view_quoterequest")
+CanChangeQuotes = has_perm("inquiries.change_quoterequest")
 
 
 class QuoteTokenSerializer(serializers.Serializer):
@@ -46,7 +48,9 @@ class QuoteViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
     def get_permissions(self):
         if self.action in CLIENT_ACTIONS:
             return [permissions.AllowAny()]
-        return [IsStaff()]
+        if self.action == "list":
+            return [CanViewQuotes()]
+        return [CanChangeQuotes()]
 
     def get_queryset(self):
         return selectors.quote_queryset()
@@ -73,7 +77,7 @@ class QuoteViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
     )
     def retrieve(self, request, reference=None):
         """Équipe : fiche complète. Client : sa demande, avec le jeton reçu par email."""
-        if IsStaff().has_permission(request, self):
+        if CanViewQuotes().has_permission(request, self):
             return Response(QuoteStaffSerializer(self.get_object()).data)
         quote = services.get_quote_for_client(reference, request.query_params.get("token", ""))
         return Response(QuoteClientSerializer(quote).data)

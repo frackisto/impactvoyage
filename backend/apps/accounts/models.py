@@ -34,8 +34,8 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     """
     Utilisateur de la plateforme, identifié par son email.
-    Le rôle est la seule source de vérité : is_staff en est dérivé, et les
-    groupes/permissions le seront en Phase 7 (commande sync_roles).
+    Le rôle est la seule source de vérité : is_staff, is_superuser et le groupe
+    de permissions en sont dérivés (accounts.roles, commande sync_roles).
     """
 
     UPLOAD_FOLDER = "avatars"
@@ -77,8 +77,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         self.email = self.email.lower() if self.email else self.email
-        if self.is_superuser:
-            self.role = self.Role.SUPER_ADMIN
+        self.is_superuser = self.role == self.Role.SUPER_ADMIN
         self.is_staff = self.role != self.Role.CLIENT
         super().save(*args, **kwargs)
 
