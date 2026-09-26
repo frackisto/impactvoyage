@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 12
+# Plateforme Web Agence de Voyage — Phase 13
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -23,7 +23,7 @@ docker compose up --build
 docker compose exec backend python manage.py load_agency_content
 
 # 4. (Développement uniquement) Ajouter les données de démonstration :
-#    circuits avec programme, départs et avis — fictifs, interdits en production
+#    circuits, hôtels et résidences, avis — fictifs, interdits en production
 docker compose exec backend python manage.py seed_demo
 # ... et pour les retirer : python manage.py seed_demo --reset
 ```
@@ -289,18 +289,44 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
 - **Traductions** : un test vérifie que chaque message FR/EN est valide (syntaxe ICU) et que
   les deux langues ont les mêmes clés.
 
-## Ce qui a été validé (Phase 12)
+## Hôtels et résidences (Phase 13)
 
-- Backend : `manage.py check`, aucune migration manquante, 123 tests pytest dont le
-  chargement idempotent de la démonstration, son retrait et son refus en production.
-- Frontend : TypeScript, ESLint, 21 tests Vitest ; 52 tests Playwright sur ordinateur et
-  mobile : audit axe (WCAG 2.2 AA) de 7 pages sans violation grave, portée, filtres et tri
-  dans l'URL, moteur de recherche de l'accueil, programme, départs, places restantes,
-  circuit sur mesure, JSON-LD, barre de réservation mobile, absence de défilement
-  horizontal.
+- **Hébergements** `/hotels` : hôtels, appartements et hébergements partenaires, filtrés
+  par destination, dates, voyageurs, nombre de chambres, type, catégorie, équipements et
+  budget par nuit ; tri par prix, catégorie ou nom. Le prix « à partir de » est celui de
+  la chambre la moins chère **qui convient** (capacité, nombre de chambres, disponibilité
+  aux dates choisies) ; un hôtel sans chambre adaptée disparaît des résultats. Le moteur
+  de recherche de l'accueil y mène directement.
+- **Fiche hôtel** `/hotels/{slug}` : équipements, chambres et tarifs. Avec des dates, chaque
+  chambre indique « Disponible : N chambres libres », « Complet à ces dates » ou
+  « Capacité insuffisante », le total indicatif du séjour et une demande de devis
+  préremplie (`/devis?hotel=…&room=…&start=…&end=…`). Galerie, avis, hébergements proches,
+  JSON-LD `Hotel`.
+- **Résidences meublées** `/residences` et `/residences/{slug}` : filtres (dates, voyageurs,
+  chambres, équipements, budget), services inclus, conditions, vérification de
+  disponibilité avec les périodes déjà réservées et le total du séjour.
+- **API** : `/hotels/` accepte `available_from`, `available_to` et `rooms` (paramètres du
+  moteur de recherche) ; nouvelles actions `/hotels/{slug}/availability/` (chambres libres
+  par type) et `/residences/{slug}/availability/` ; `/amenities/?kind=hotel|residence`
+  liste les équipements utilisés, pour les filtres.
+- **Démonstration** : `seed_demo` ajoute 5 hébergements (chambres, équipements), une villa
+  et des avis.
+- **Frontend** : `FilterPanel`, `SortSelect`, `CatalogLayout` et `SegmentedNav` sont communs
+  aux circuits et aux hébergements (et serviront aux véhicules et activités). La galerie
+  choisit sa disposition pour ne jamais laisser de case vide.
+
+## Ce qui a été validé (Phase 13)
+
+- Backend : `manage.py check`, aucune migration manquante, 128 tests pytest dont le prix
+  « à partir de » selon voyageurs, chambres et dates, la disponibilité des chambres et des
+  résidences, les équipements utilisés et la démonstration.
+- Frontend : TypeScript, ESLint, 26 tests Vitest ; 70 tests Playwright sur ordinateur et
+  mobile : audit axe (WCAG 2.2 AA) de 10 pages sans violation grave, filtres (cases à
+  cocher, budget) dans l'URL, moteur de recherche de l'accueil, disponibilités et devis
+  prérempli, formulaire de dates, JSON-LD, absence de défilement horizontal.
 
 ## Prochaine étape
 
-**Phase 13 : Création des hôtels et résidences** — liste des hébergements filtrable
-(destination, dates, voyageurs, catégorie, budget), fiche hôtel (chambres, équipements,
-disponibilités) et fiche résidence meublée.
+**Phase 14 : Création des véhicules** — location de véhicules : liste filtrable (catégorie,
+places, boîte, dates, budget), fiche véhicule avec calendrier de disponibilité et demande
+de réservation.

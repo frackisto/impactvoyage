@@ -13,6 +13,17 @@ import { cn } from "@/lib/utils";
 export type GalleryPhoto = { id: number; image: string | null; alt: string };
 
 /**
+ * Disposition sans case vide : la première photo est mise en avant (2 × 2
+ * cases) seulement si le reste remplit exactement les rangées, sur 3 colonnes
+ * (3, 6, 9 photos) ou 4 colonnes (5, 9 photos) ; sinon, grille régulière.
+ */
+export function galleryLayout(total: number): { columns: string; feature: boolean } {
+  if (total >= 3 && total % 3 === 0) return { columns: "sm:grid-cols-3", feature: true };
+  if (total >= 5 && (total + 3) % 4 === 0) return { columns: "sm:grid-cols-3 lg:grid-cols-4", feature: true };
+  const columns: Record<number, string> = { 1: "grid-cols-1", 2: "sm:grid-cols-2", 4: "lg:grid-cols-4" };
+  return { columns: columns[total] ?? "sm:grid-cols-3 lg:grid-cols-4", feature: false };
+}
+/**
  * Galerie photo (CdC § 8, § 18) : grille de vignettes, puis visionneuse plein
  * écran navigable au clavier (flèches gauche/droite, Échap pour fermer).
  */
@@ -26,6 +37,7 @@ export function Gallery({ photos, title }: { photos: GalleryPhoto[]; title: stri
   if (!items.length) return null;
 
   const total = items.length;
+  const layout = galleryLayout(total);
   const current = index === null ? null : items[index];
   const go = (step: number) => setIndex((i) => (i === null ? i : (i + step + total) % total));
 
@@ -38,10 +50,10 @@ export function Gallery({ photos, title }: { photos: GalleryPhoto[]; title: stri
 
   return (
     <>
-      {/* 3 photos : la grande à gauche, les deux autres empilées à droite, sans case vide. */}
-      <ul className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3", total !== 3 && "lg:grid-cols-4")}>
+      {/* Grande première photo seulement si la grille reste pleine (voir galleryLayout). */}
+      <ul className={cn("grid grid-cols-2 gap-3", layout.columns)}>
         {items.map((photo, i) => (
-          <li key={photo.id} className={cn(i === 0 && total > 2 && "col-span-2 row-span-2")}>
+          <li key={photo.id} className={cn(i === 0 && layout.feature && "col-span-2 row-span-2")}>
             <button
               type="button"
               onClick={() => setIndex(i)}
@@ -52,7 +64,7 @@ export function Gallery({ photos, title }: { photos: GalleryPhoto[]; title: stri
                 src={photo.src}
                 alt=""
                 fill
-                sizes={i === 0 && total > 2 ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 25vw, 50vw"}
+                sizes={i === 0 && layout.feature ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 25vw, 50vw"}
                 className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               />
             </button>

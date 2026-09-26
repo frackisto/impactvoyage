@@ -38,17 +38,3 @@ class VehicleDetailSerializer(VehicleListSerializer):
     @extend_schema_field(MoneySerializer(allow_null=True))
     def get_promo_price(self, obj):
         return money_repr(promo_price_for(obj), obj.currency, self.context.get("request"))
-
-
-class AvailabilityQuerySerializer(serializers.Serializer):
-    """Paramètres ?start=&end= de /vehicles/{slug}/availability/ (fin exclue)."""
-
-    start = serializers.DateField()
-    end = serializers.DateField()
-
-    def validate(self, attrs):
-        if attrs["end"] <= attrs["start"]:
-            raise serializers.ValidationError({"end": "La fin doit suivre le début."})
-        if (attrs["end"] - attrs["start"]).days > 366:
-            raise serializers.ValidationError({"end": "Période limitée à un an."})
-        return attrs

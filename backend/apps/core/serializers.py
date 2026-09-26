@@ -170,3 +170,10 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExchangeRate
         fields = ["currency", "label", "rate_from_xof", "fetched_at"]
+
+
+class AvailabilitySerializer(serializers.Serializer):
+    """Réponse des actions /availability/ (véhicules, résidences)."""
+
+    available = serializers.BooleanField()
+    booked_periods = serializers.ListField(child=serializers.ListField(child=serializers.DateField()))

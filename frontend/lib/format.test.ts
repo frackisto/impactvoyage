@@ -34,5 +34,6 @@ describe("isActive", () => {
     expect(isActive("/destinations", "/destinations/cote-divoire")).toBe(true);
     expect(isActive("/circuits/nationaux", "/circuits/decouverte-assinie")).toBe(true);
     expect(isActive("/hotels", "/hotels-luxe")).toBe(false);
+    expect(isActive("/hotels", "/residences/studio-yopougon")).toBe(true);
   });
 });

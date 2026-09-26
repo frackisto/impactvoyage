@@ -3,13 +3,13 @@ import { getTranslations } from "next-intl/server";
 
 import { Container } from "@/components/common/container";
 import { PageHeader } from "@/components/common/page-header";
+import { SegmentedNav } from "@/components/common/segmented-nav";
 import { Pagination } from "@/components/common/pagination";
 import { EmptyState, ErrorState } from "@/components/common/states";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { dateParam, intParam, pageParam, param, type SearchParams } from "@/lib/search-params";
 import { alternates } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 import {
   listTours,
   SCOPE_PATHS,
@@ -22,10 +22,12 @@ import {
 import type { Paginated, TourList } from "@/types";
 
 import { TourCard } from "./tour-card";
-import { TourFilters, type TourFilterValues } from "./tour-filters";
-import { TourSort as SortSelect } from "./tour-sort";
+import { CatalogLayout, ResultGrid } from "@/components/search/catalog-layout";
+import { FilterPanel, type FilterField, type FilterValues } from "@/components/search/filter-panel";
+import { SortSelect } from "@/components/search/sort-select";
 
 const PAGE_SIZE = 12;
+const DURATIONS = [1, 2, 3, 5, 7, 10, 15];
 const SCOPE_KEY = { NATIONAL: "national", INTERNATIONAL: "international" } as const;
 
 /** Filtres lus dans l'URL ; une valeur invalide est ignorée plutôt que de provoquer une erreur. */
@@ -48,7 +50,7 @@ function parseFilters(params: SearchParams): Filters {
   };
 }
 
-function asStrings(filters: Filters): TourFilterValues {
+function asStrings(filters: Filters): FilterValues {
   const s = (value: string | number | undefined) => (value === undefined ? undefined : String(value));
   return {
     destination: filters.destination,
@@ -91,6 +93,25 @@ export async function TourListPage({ scope, query }: { scope: TourScope; query: 
     facets = await tourFacets(scope).catch(() => null);
   }
 
+  const fields: FilterField[] = [
+    {
+      type: "select", name: "destination", label: t("destination"), anyLabel: t("anyDestination"),
+      options: (facets?.destinations ?? []).map((d) => ({ value: d.slug, label: d.name })),
+    },
+    {
+      type: "select", name: "theme", label: t("theme"), anyLabel: t("anyTheme"),
+      options: (facets?.themes ?? []).map((theme) => ({ value: theme.slug, label: theme.name })),
+    },
+    { type: "date", name: "departure_from", label: t("departureFrom") },
+    { type: "date", name: "departure_to", label: t("departureTo") },
+    {
+      type: "select", name: "max_days", label: t("maxDays"), anyLabel: t("anyDuration"),
+      options: DURATIONS.map((days) => ({ value: String(days), label: t("upToDays", { count: days }) })),
+    },
+    { type: "number", name: "travelers", label: t("travelers"), min: 1, max: 99 },
+    { type: "number", name: "max_price", label: t("maxPrice"), min: 0, step: 5000 },
+  ];
+
   const other: TourScope = scope === "NATIONAL" ? "INTERNATIONAL" : "NATIONAL";
   const quoteHref = "/devis?service=CIRCUIT";
 
@@ -102,24 +123,14 @@ export async function TourListPage({ scope, query }: { scope: TourScope; query: 
         breadcrumbs={[{ label: t(`${SCOPE_KEY[scope]}.title`) }]}
       />
       <Container className="flex flex-col gap-8 py-10 sm:py-14">
-        <nav aria-label={t("scopeLabel")}>
-          <ul className="inline-flex rounded-full border bg-ocean-50 p-1">
-            {(["NATIONAL", "INTERNATIONAL"] as const).map((value) => (
-              <li key={value}>
-                <Link
-                  href={SCOPE_PATHS[value]}
-                  aria-current={value === scope ? "page" : undefined}
-                  className={cn(
-                    "inline-flex h-10 items-center rounded-full px-5 text-sm font-semibold transition-colors",
-                    value === scope ? "bg-ocean-600 text-white" : "text-ocean-900 hover:bg-white",
-                  )}
-                >
-                  {t(`${SCOPE_KEY[value]}.short`)}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <SegmentedNav
+          label={t("scopeLabel")}
+          current={pathname}
+          items={(["NATIONAL", "INTERNATIONAL"] as const).map((value) => ({
+            href: SCOPE_PATHS[value],
+            label: t(`${SCOPE_KEY[value]}.short`),
+          }))}
+        />
 
         {facets === null && result === null ? (
           <ErrorState title={t("errorTitle")} description={t("errorText")} />
@@ -139,33 +150,37 @@ export async function TourListPage({ scope, query }: { scope: TourScope; query: 
             }
           />
         ) : (
-          <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)]">
-            <aside className="lg:sticky lg:top-24 lg:self-start">
-              <TourFilters
+          <CatalogLayout
+            heading={t("results", { count: result?.count ?? 0 })}
+            filters={
+              <FilterPanel
                 pathname={pathname}
-                destinations={facets?.destinations ?? []}
-                themes={facets?.themes ?? []}
-                current={current}
+                fields={fields}
+                current={{ ...current, ordering: undefined }}
+                keep={{ ordering: current.ordering }}
+                labels={{ title: t("filters"), formLabel: t("filtersLabel"), apply: t("apply"), reset: t("reset") }}
               />
-            </aside>
-
-            <section aria-labelledby="tours-results" className="flex flex-col gap-6">
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                <h2 id="tours-results" className="text-lg font-semibold text-ocean-900">
-                  {t("results", { count: result?.count ?? 0 })}
-                </h2>
-                {result && result.count > 1 && <SortSelect pathname={pathname} query={current} />}
-              </div>
-
+            }
+            sort={
+              result && result.count > 1 && (
+                <SortSelect
+                  pathname={pathname}
+                  query={current}
+                  label={t("sortLabel")}
+                  options={TOUR_SORTS.map((sort) => ({ value: sort, label: t(`sort.${sort}`) }))}
+                />
+              )
+            }
+          >
               {result && result.count > 0 ? (
                 <>
-                  <ul className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  <ResultGrid>
                     {result.results.map((tour, index) => (
                       <li key={tour.id} className="grid">
                         <TourCard tour={tour} priority={index < 2} />
                       </li>
                     ))}
-                  </ul>
+                  </ResultGrid>
                   <Pagination page={filters.page ?? 1} count={result.count} pageSize={PAGE_SIZE} pathname={pathname} query={current} />
                 </>
               ) : (
@@ -184,8 +199,7 @@ export async function TourListPage({ scope, query }: { scope: TourScope; query: 
                   }
                 />
               )}
-            </section>
-          </div>
+          </CatalogLayout>
         )}
       </Container>
     </>

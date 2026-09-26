@@ -275,6 +275,154 @@ TOUR_REVIEWS = [
 
 DEMO_EMAIL = "demo@example.com"
 
+# Équipements : (nom FR, nom EN, icône Lucide) — « Climatisation » et « Internet illimité »
+# existent déjà (studio de l'agence) et sont réutilisés.
+AMENITIES = [
+    ("Climatisation", "Air conditioning", "air-vent"),
+    ("Internet illimité", "Unlimited internet", "wifi"),
+    ("Piscine", "Swimming pool", "waves"),
+    ("Restaurant", "Restaurant", "utensils"),
+    ("Parking", "Parking", "square-parking"),
+    ("Navette aéroport", "Airport shuttle", "bus"),
+    ("Petit-déjeuner inclus", "Breakfast included", "coffee"),
+    ("Vue sur mer", "Sea view", "sunset"),
+    ("Cuisine équipée", "Equipped kitchen", "cooking-pot"),
+]
+
+# Chambres : (nom FR, nom EN, description FR, description EN, capacité, nombre, prix/nuit)
+HOTELS = [
+    {
+        "slug": "hotel-lagune-plateau",
+        "destination": "abidjan",
+        "type": "HOTEL", "stars": 4,
+        "name": "Hôtel Lagune Plateau",
+        "short": ("Au cœur du Plateau, vue sur la lagune Ébrié et piscine sur le toit.",
+                  "In the heart of the Plateau, Ébrié lagoon view and rooftop pool."),
+        "description": (
+            "Idéal pour un séjour d'affaires ou une escale à Abidjan : chambres climatisées, "
+            "restaurant ivoirien et international, piscine sur le toit et navette aéroport.",
+            "Ideal for a business trip or a stopover in Abidjan: air-conditioned rooms, Ivorian "
+            "and international restaurant, rooftop pool and airport shuttle.",
+        ),
+        "address": "Boulevard de la République, Plateau, Abidjan",
+        "amenities": ["Climatisation", "Internet illimité", "Piscine", "Restaurant", "Parking", "Navette aéroport"],
+        "rooms": [
+            ("Chambre standard", "Standard room", "Lit double, bureau, salle de douche.", "Double bed, desk, shower room.", 2, 5, "55000"),
+            ("Chambre supérieure", "Superior room", "Vue sur la lagune, balcon.", "Lagoon view, balcony.", 2, 3, "75000"),
+            ("Suite familiale", "Family suite", "Deux chambres communicantes et un salon.", "Two connecting rooms and a lounge.", 4, 2, "120000"),
+        ],
+        "cover": None, "gallery": [], "featured": True,
+    },
+    {
+        "slug": "bassam-beach-hotel",
+        "destination": "mondoukou",
+        "type": "HOTEL", "stars": 3,
+        "name": "Bassam Beach Hôtel",
+        "short": ("Bungalows les pieds dans le sable, entre Grand-Bassam et Mondoukou.",
+                  "Bungalows right on the sand, between Grand-Bassam and Mondoukou."),
+        "description": (
+            "Un hôtel simple et chaleureux au bord de l'océan, parfait pour un week-end : "
+            "restaurant de poissons et fruits de mer, transats et paillotes.",
+            "A simple and friendly hotel by the ocean, perfect for a weekend: fish and seafood "
+            "restaurant, sunbeds and straw huts.",
+        ),
+        "address": "Route de Mondoukou, Grand-Bassam",
+        "amenities": ["Climatisation", "Restaurant", "Parking", "Vue sur mer", "Petit-déjeuner inclus"],
+        "rooms": [
+            ("Bungalow vue mer", "Sea-view bungalow", "Terrasse privée face à l'océan.", "Private terrace facing the ocean.", 3, 6, "40000"),
+        ],
+        "cover": "mondoukou.jpg", "gallery": [], "featured": False,
+    },
+    {
+        "slug": "marina-view-dubai",
+        "destination": "dubai",
+        "type": "HOTEL", "stars": 4,
+        "name": "Marina View Hotel Dubaï",
+        "short": ("Hôtel 4 étoiles face à la marina, à deux pas du métro.",
+                  "4-star hotel facing the marina, a short walk from the metro."),
+        "description": (
+            "Chambres spacieuses avec vue sur la marina, piscine extérieure et petit-déjeuner "
+            "buffet. L'hôtel de nos circuits à Dubaï.",
+            "Spacious rooms overlooking the marina, outdoor pool and buffet breakfast. The hotel "
+            "used for our Dubai tours.",
+        ),
+        "address": "Dubai Marina, Dubaï, Émirats arabes unis",
+        "amenities": ["Climatisation", "Internet illimité", "Piscine", "Restaurant", "Petit-déjeuner inclus"],
+        "rooms": [
+            ("Chambre double", "Double room", "Vue sur la ville.", "City view.", 2, 10, "95000"),
+            ("Chambre familiale", "Family room", "Vue sur la marina, deux grands lits.", "Marina view, two large beds.", 4, 4, "150000"),
+        ],
+        "cover": "hero-dubai-marina.jpg", "gallery": ["dubai-burj-al-arab.jpg", "dubai-mall.jpg"], "featured": True,
+    },
+    {
+        "slug": "appartements-cocody",
+        "destination": "abidjan",
+        "type": "APARTMENT", "stars": None,
+        "name": "Appartements Cocody Riviera",
+        "short": ("Appartements meublés de 2 pièces, pour les séjours de plusieurs semaines.",
+                  "Furnished 2-room apartments for stays of several weeks."),
+        "description": (
+            "Appartements indépendants avec cuisine équipée, dans un quartier calme de Cocody. "
+            "Ménage hebdomadaire et gardiennage 24 h/24.",
+            "Independent apartments with an equipped kitchen, in a quiet area of Cocody. Weekly "
+            "cleaning and 24-hour security.",
+        ),
+        "address": "Riviera 3, Cocody, Abidjan",
+        "amenities": ["Climatisation", "Internet illimité", "Cuisine équipée", "Parking"],
+        "rooms": [
+            ("Appartement 2 pièces", "2-room apartment", "Chambre, salon, cuisine.", "Bedroom, lounge, kitchen.", 3, 2, "50000"),
+        ],
+        "cover": None, "gallery": [], "featured": False,
+    },
+    {
+        "slug": "campement-lagunaire-grand-lahou",
+        "destination": "grand-lahou",
+        "type": "PARTNER", "stars": None,
+        "name": "Campement lagunaire de Grand-Lahou",
+        "short": ("Hébergement partenaire en cases traditionnelles au bord de la lagune.",
+                  "Partner accommodation in traditional huts by the lagoon."),
+        "description": (
+            "Notre partenaire pour les sorties de groupe à Grand-Lahou : cases rafraîchies, "
+            "repas locaux et excursions en pirogue.",
+            "Our partner for group outings to Grand-Lahou: cool huts, local meals and canoe trips.",
+        ),
+        "address": "Lagune Tagba, Grand-Lahou",
+        "amenities": ["Restaurant", "Parking"],
+        "rooms": [
+            ("Case double", "Double hut", "Deux lits simples, ventilateur.", "Two single beds, fan.", 2, 8, "25000"),
+        ],
+        "cover": "grand-lahou-nuit.jpg", "gallery": [], "featured": False,
+    },
+]
+
+RESIDENCES = [
+    {
+        "slug": "villa-familiale-grand-bassam",
+        "destination": "mondoukou",
+        "name": "Villa familiale à Grand-Bassam",
+        "short": ("Villa de 3 chambres avec jardin, à 5 minutes de la plage.",
+                  "3-bedroom villa with a garden, 5 minutes from the beach."),
+        "description": (
+            "Grande villa meublée pour les familles et les groupes d'amis : trois chambres "
+            "climatisées, salon, cuisine équipée, jardin et parking.",
+            "Large furnished villa for families and groups of friends: three air-conditioned "
+            "bedrooms, lounge, equipped kitchen, garden and parking.",
+        ),
+        "address": "Quartier France, Grand-Bassam",
+        "rooms": 3, "capacity": 6, "price": "85000",
+        "amenities": ["Climatisation", "Internet illimité", "Cuisine équipée", "Parking"],
+        "services": ("Ménage à l'arrivée\nLinge de maison fourni\nGardien",
+                     "Cleaning on arrival\nBed linen provided\nCaretaker"),
+        "conditions": ("Caution de 100 000 F CFA. Arrivée à partir de 14 h, départ avant 12 h.",
+                       "Deposit of 100,000 CFA francs. Check-in from 2 pm, check-out before noon."),
+    },
+]
+
+HOTEL_REVIEWS = [
+    ("marina-view-dubai", "Fatou B.", 5, "Chambre impeccable et vue magnifique sur la marina."),
+    ("hotel-lagune-plateau", "Jean-Marc A.", 4, "Très bien situé pour mes rendez-vous au Plateau."),
+]
+
 
 def price(value):
     return Decimal(value) if value is not None else None

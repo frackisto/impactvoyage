@@ -1,5 +1,6 @@
 """Lectures liées aux réservations et à la disponibilité (architecture § 3.8)."""
-from django.db.models import Exists, OuterRef, Sum
+from django.db.models import Exists, IntegerField, OuterRef, Subquery, Sum
+from django.db.models.functions import Coalesce
 
 from .models import Booking, BookingItem
 
@@ -23,13 +24,31 @@ def vehicle_is_available(vehicle, start, end):
     return not _blocking_overlaps(start, end, vehicle=vehicle).exists()
 
 
-def vehicle_booked_periods(vehicle, from_date):
+def units_taken(relation, start, end):
+    """
+    Expression : unités déjà réservées (quantité) de la ligne courante (OuterRef)
+    sur la période, 0 si aucune. Même estimation prudente que room_units_left.
+    """
+    overlaps = (
+        _blocking_overlaps(start, end, **{relation: OuterRef("pk")})
+        .values(relation)
+        .annotate(n=Sum("quantity"))
+        .values("n")[:1]
+    )
+    return Coalesce(Subquery(overlaps, output_field=IntegerField()), 0)
+
+
+def booked_periods(from_date, **target):
     """Périodes déjà réservées (fin exclue), pour le calendrier de disponibilité."""
     return list(
-        BookingItem.objects.filter(vehicle=vehicle, is_blocking=True, end_date__gt=from_date)
+        BookingItem.objects.filter(is_blocking=True, end_date__gt=from_date, **target)
         .order_by("start_date")
         .values_list("start_date", "end_date")
     )
+
+
+def vehicle_booked_periods(vehicle, from_date):
+    return booked_periods(from_date, vehicle=vehicle)
 
 
 def residence_is_available(residence, start, end):

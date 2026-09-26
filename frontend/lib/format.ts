@@ -38,3 +38,13 @@ export function formatDate(value: string | Date, locale: string, options?: Intl.
   const date = typeof value === "string" ? new Date(value) : value;
   return new Intl.DateTimeFormat(intlLocale(locale), options ?? { dateStyle: "long" }).format(date);
 }
+
+/** Montant multiplié (ex. prix par nuit × nuits × chambres), conversion d'affichage comprise. */
+export function multiplyMoney(money: Money, factor: number): Money {
+  const times = (amount: string) => (Number(amount) * factor).toFixed(2);
+  return {
+    ...money,
+    amount: times(money.amount),
+    display: money.display ? { ...money.display, amount: times(money.display.amount) } : money.display,
+  };
+}

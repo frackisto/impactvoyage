@@ -1,12 +1,13 @@
 """
 Données de démonstration (architecture § 14) : circuits nationaux et
-internationaux avec programme, départs et avis. Fictives mais cohérentes.
+internationaux (programme, départs), hôtels (chambres, équipements), résidence
+et avis. Fictives mais cohérentes.
 
     python manage.py seed_demo          # charge le contenu de l'agence puis la démo
     python manage.py seed_demo --reset  # supprime les données de démonstration
 
 Idempotent. Refusé si DEMO_DATA_ALLOWED est faux (production).
-Les phases suivantes ajouteront hôtels, véhicules, activités, offres et comptes.
+Les phases suivantes ajouteront véhicules, activités, offres et comptes.
 """
 from datetime import timedelta
 from pathlib import Path
@@ -18,6 +19,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
+from apps.accommodations.models import Amenity, Hotel, HotelImage, Residence, Room
 from apps.core import demo_content as demo
 from apps.core.models import Category
 from apps.destinations.models import Destination
@@ -43,25 +45,33 @@ class Command(BaseCommand):
         if not getattr(settings, "DEMO_DATA_ALLOWED", False):
             raise CommandError("Données de démonstration interdites ici (DEMO_DATA_ALLOWED = False).")
         if reset:
-            count = self.reset()
-            self.stdout.write(self.style.SUCCESS(f"Démonstration supprimée : {count} circuits."))
+            tours, hotels, residences = self.reset()
+            self.stdout.write(self.style.SUCCESS(
+                f"Démonstration supprimée : {tours} circuits, {hotels} hôtels, {residences} résidences."
+            ))
             return
         # Destinations, thèmes et photos viennent du contenu réel de l'agence.
         call_command("load_agency_content", verbosity=0)
         with transaction.atomic():
             tours = self.tours()
+            amenities = self.amenities()
+            hotels = self.hotels(amenities)
+            residences = self.residences(amenities)
             reviews = self.reviews()
         self.stdout.write(self.style.SUCCESS(
-            f"Démonstration chargée : {tours} circuits, {reviews} avis."
+            f"Démonstration chargée : {tours} circuits, {hotels} hôtels, {residences} résidences, "
+            f"{reviews} avis."
         ))
 
     @transaction.atomic
     def reset(self):
-        slugs = [item["slug"] for item in demo.TOURS]
-        count = Tour.objects.filter(slug__in=slugs).count()
-        # Les avis et les départs sont supprimés avec les circuits (CASCADE).
-        Tour.objects.filter(slug__in=slugs).delete()
-        return count
+        """Supprime les contenus de démonstration (avis, départs, chambres : en cascade)."""
+        counts = []
+        for model, items in [(Tour, demo.TOURS), (Hotel, demo.HOTELS), (Residence, demo.RESIDENCES)]:
+            deleted = model.objects.filter(slug__in=[item["slug"] for item in items])
+            counts.append(deleted.count())
+            deleted.delete()
+        return counts
 
     def tours(self):
         today = timezone.localdate()
@@ -111,28 +121,94 @@ class Command(BaseCommand):
                         "price_override": demo.price(override),
                     },
                 )
-            self.photos(tour, item)
+            self.photos(tour, item["cover"], item["gallery"], TourImage, "tour", item["title"])
         return len(demo.TOURS)
 
-    def photos(self, tour, item):
-        if item["cover"] and not tour.cover_image:
-            with open(FIXTURES / item["cover"], "rb") as handle:
-                tour.cover_image.save(item["cover"], File(handle), save=True)
-        if tour.images.exists():
+    def amenities(self):
+        result = {}
+        for name_fr, name_en, icon in demo.AMENITIES:
+            amenity, _ = Amenity.objects.update_or_create(
+                name_fr=name_fr,
+                defaults={"name": name_fr, "name_en": name_en, "icon": icon, "scope": Amenity.Scope.BOTH},
+            )
+            result[name_fr] = amenity
+        return result
+
+    def hotels(self, amenities):
+        for item in demo.HOTELS:
+            hotel, _ = Hotel.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    "name": item["name"],
+                    **translated("short_description", item["short"]),
+                    **translated("description", item["description"]),
+                    **translated("cover_alt", (item["name"], item["name"])),
+                    "destination": Destination.objects.get(slug=item["destination"]),
+                    "address": item["address"],
+                    "accommodation_type": item["type"],
+                    "stars": item["stars"],
+                    "is_featured": item["featured"],
+                    "is_published": True,
+                },
+            )
+            hotel.amenities.set([amenities[name] for name in item["amenities"]])
+            for name_fr, name_en, desc_fr, desc_en, capacity, quantity, price in item["rooms"]:
+                Room.objects.update_or_create(
+                    hotel=hotel, name_fr=name_fr,
+                    defaults={
+                        **translated("name", (name_fr, name_en)),
+                        **translated("description", (desc_fr, desc_en)),
+                        "capacity": capacity, "quantity": quantity,
+                        "base_price": demo.price(price), "is_active": True,
+                    },
+                )
+            alt = (item["name"], item["name"])
+            self.photos(hotel, item["cover"], item["gallery"], HotelImage, "hotel", alt)
+        return len(demo.HOTELS)
+
+    def residences(self, amenities):
+        for item in demo.RESIDENCES:
+            residence, _ = Residence.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    "name": item["name"],
+                    **translated("short_description", item["short"]),
+                    **translated("description", item["description"]),
+                    **translated("services", item["services"]),
+                    **translated("conditions", item["conditions"]),
+                    **translated("cover_alt", (item["name"], item["name"])),
+                    "destination": Destination.objects.get(slug=item["destination"]),
+                    "address": item["address"],
+                    "rooms_count": item["rooms"], "capacity": item["capacity"],
+                    "base_price": demo.price(item["price"]),
+                    "is_published": True,
+                },
+            )
+            residence.amenities.set([amenities[name] for name in item["amenities"]])
+        return len(demo.RESIDENCES)
+
+    def photos(self, obj, cover, gallery, image_model, owner_field, alt):
+        """Photo principale et galerie depuis les fixtures, seulement si absentes."""
+        if cover and not obj.cover_image:
+            with open(FIXTURES / cover, "rb") as handle:
+                obj.cover_image.save(cover, File(handle), save=True)
+        if obj.images.exists():
             return
-        for order, filename in enumerate(item["gallery"]):
-            image = TourImage(tour=tour, order=order, **translated("alt_text", item["title"]))
+        for order, filename in enumerate(gallery):
+            image = image_model(**{owner_field: obj}, order=order, **translated("alt_text", alt))
             with open(FIXTURES / filename, "rb") as handle:
                 image.image.save(filename, File(handle), save=False)
             image.save()
 
     def reviews(self):
-        for slug, author, rating, comment in demo.TOUR_REVIEWS:
+        targets = [("tour", Tour, row) for row in demo.TOUR_REVIEWS]
+        targets += [("hotel", Hotel, row) for row in demo.HOTEL_REVIEWS]
+        for field, model, (slug, author, rating, comment) in targets:
             Review.objects.update_or_create(
-                tour=Tour.objects.get(slug=slug), author_name=author,
+                **{field: model.objects.get(slug=slug)}, author_name=author,
                 defaults={
                     "author_email": demo.DEMO_EMAIL, "rating": rating, "comment": comment,
                     "status": Review.Status.APPROUVE,
                 },
             )
-        return len(demo.TOUR_REVIEWS)
+        return len(targets)

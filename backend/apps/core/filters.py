@@ -43,3 +43,17 @@ class PeriodParams(serializers.Serializer):
         if start and end <= start:
             raise serializers.ValidationError({self.end_field: "La fin doit suivre le début."})
         return attrs
+
+
+class AvailabilityQuerySerializer(serializers.Serializer):
+    """Paramètres ?start=&end= des actions /availability/ (fin exclue, un an au plus)."""
+
+    start = serializers.DateField()
+    end = serializers.DateField()
+
+    def validate(self, attrs):
+        if attrs["end"] <= attrs["start"]:
+            raise serializers.ValidationError({"end": "La fin doit suivre le début."})
+        if (attrs["end"] - attrs["start"]).days > 366:
+            raise serializers.ValidationError({"end": "Période limitée à un an."})
+        return attrs

@@ -8,7 +8,6 @@ import {
   MedalIcon,
   PhoneIcon,
   RefreshCwIcon,
-  UsersIcon,
   WalletIcon,
   ZapIcon,
   type LucideIcon,
@@ -16,6 +15,7 @@ import {
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { ResidenceCard } from "@/components/accommodations/stay-cards";
 import { Container } from "@/components/common/container";
 import { ContentCard } from "@/components/common/content-card";
 import { OfferBadge, type OfferBadgeCode } from "@/components/common/offer-badge";
@@ -303,21 +303,7 @@ export async function ResidencesSection({ residences }: { residences: ResidenceL
       <SectionHeader eyebrow={t("stayEyebrow")} title={t("stayTitle")} href="/residences" linkLabel={t("allResidences")} />
       <div className={grid}>
         {residences.map((residence) => (
-          <ContentCard
-            key={residence.id}
-            href={`/residences/${residence.slug}`}
-            title={residence.name}
-            eyebrow={residence.destination.name}
-            description={residence.short_description}
-            image={residence.cover_image}
-            imageAlt={residence.cover_alt || residence.name}
-            meta={
-              <span className="inline-flex items-center gap-1">
-                <UsersIcon aria-hidden="true" className="size-4" /> {residence.capacity}
-              </span>
-            }
-            footer={<Price value={residence.price_per_night} from unit="night" />}
-          />
+          <ResidenceCard key={residence.id} residence={residence} />
         ))}
       </div>
     </Section>

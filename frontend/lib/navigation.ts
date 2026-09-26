@@ -31,9 +31,15 @@ export const LEGAL_NAV: NavItem[] = [
   { key: "terms", href: "/conditions-generales" },
 ];
 
+/** Rubriques rattachées à une entrée de menu (les résidences sous « Hébergements »). */
+const RELATED_SECTIONS: Record<string, string[]> = { hotels: ["residences"] };
+
 /** Vrai si `pathname` (sans préfixe de langue) correspond à l'entrée de menu. */
 export function isActive(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
   const section = href.split("/")[1];
-  return pathname === href || pathname.startsWith(`/${section}/`) || pathname === `/${section}`;
+  return (
+    pathname === href ||
+    [section, ...(RELATED_SECTIONS[section] ?? [])].some((s) => pathname === `/${s}` || pathname.startsWith(`/${s}/`))
+  );
 }

@@ -48,6 +48,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/amenities/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Équipements proposés par au moins un hébergement publié (filtres des listes). */
+        get: operations["amenities_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login/": {
         parameters: {
             query?: never;
@@ -519,7 +536,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Hôtels, appartements, partenaires : /hotels, /hotels/{slug}. */
+        /** @description Hôtels, appartements, partenaires : /hotels, /hotels/{slug}, /availability. */
         get: operations["hotels_list"];
         put?: never;
         post?: never;
@@ -536,8 +553,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Hôtels, appartements, partenaires : /hotels, /hotels/{slug}. */
+        /** @description Hôtels, appartements, partenaires : /hotels, /hotels/{slug}, /availability. */
         get: operations["hotels_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hotels/{slug}/availability/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Chambres libres par type de chambre sur la période [start, end). */
+        get: operations["hotels_availability_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -837,7 +871,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Résidences meublées (CdC § 13) : /residences, /residences/{slug}. */
+        /** @description Résidences meublées (CdC § 13) : /residences, /residences/{slug}, /availability. */
         get: operations["residences_list"];
         put?: never;
         post?: never;
@@ -854,8 +888,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Résidences meublées (CdC § 13) : /residences, /residences/{slug}. */
+        /** @description Résidences meublées (CdC § 13) : /residences, /residences/{slug}, /availability. */
         get: operations["residences_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/residences/{slug}/availability/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Disponibilité sur une période [start, end) et périodes déjà réservées. */
+        get: operations["residences_availability_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1265,6 +1316,7 @@ export interface components {
             refresh: string;
             user: components["schemas"]["User"];
         };
+        /** @description Réponse des actions /availability/ (véhicules, résidences). */
         Availability: {
             available: boolean;
             booked_periods: string[][];
@@ -2561,6 +2613,16 @@ export interface components {
             /** Mode de réservation */
             booking_mode?: components["schemas"]["BookingModeEnum"];
         };
+        RoomAvailability: {
+            /** @description Identifiant du type de chambre */
+            room: number;
+            /** @description Chambres encore libres sur la période */
+            units_left: number;
+            /** @description Capacité suffisante pour les voyageurs */
+            fits: boolean;
+            /** @description Assez de chambres libres et capacité suffisante */
+            available: boolean;
+        };
         /**
          * @description * `NATIONAL` - National
          *     * `INTERNATIONAL` - International
@@ -3028,6 +3090,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityDetail"];
+                };
+            };
+        };
+    };
+    amenities_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `hotel` - hotel
+                 *     * `residence` - residence
+                 */
+                kind?: "hotel" | "residence";
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un terme de recherche. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Amenity"][];
                 };
             };
         };
@@ -3759,6 +3850,8 @@ export interface operations {
                  */
                 accommodation_type?: "HOTEL" | "APARTMENT" | "PARTNER";
                 amenities?: string;
+                available_from?: string;
+                available_to?: string;
                 destination?: string;
                 max_price?: string;
                 min_price?: string;
@@ -3768,6 +3861,7 @@ export interface operations {
                 page?: number;
                 /** @description Nombre de résultats à retourner par page. */
                 page_size?: number;
+                rooms?: number;
                 /** @description Un terme de recherche. */
                 search?: string;
                 stars?: number;
@@ -3806,6 +3900,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HotelDetail"];
+                };
+            };
+        };
+    };
+    hotels_availability_list: {
+        parameters: {
+            query: {
+                /** @description Départ (AAAA-MM-JJ, exclu) */
+                end: string;
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Chambres souhaitées (1 par défaut) */
+                rooms?: number;
+                /** @description Un terme de recherche. */
+                search?: string;
+                /** @description Arrivée (AAAA-MM-JJ) */
+                start: string;
+                /** @description Voyageurs au total */
+                travelers?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomAvailability"][];
                 };
             };
         };
@@ -4274,6 +4402,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResidenceDetail"];
+                };
+            };
+        };
+    };
+    residences_availability_retrieve: {
+        parameters: {
+            query: {
+                /** @description Départ (AAAA-MM-JJ, exclu) */
+                end: string;
+                /** @description Arrivée (AAAA-MM-JJ) */
+                start: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Availability"];
                 };
             };
         };

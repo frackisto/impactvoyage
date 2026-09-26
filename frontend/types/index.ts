@@ -23,6 +23,12 @@ export type ResidenceList = Schemas["ResidenceList"];
 export type Category = Schemas["Category"];
 export type RatingSummary = Schemas["RatingSummary"];
 export type TourDeparture = Schemas["TourDeparture"];
+export type HotelList = Schemas["HotelList"];
+export type HotelDetail = Schemas["HotelDetail"];
+export type ResidenceDetail = Schemas["ResidenceDetail"];
+export type Amenity = Schemas["Amenity"];
+export type RoomAvailability = Schemas["RoomAvailability"];
+export type Availability = Schemas["Availability"];
 
 export type Paginated<T> = {
   count: number;

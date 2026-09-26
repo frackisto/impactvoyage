@@ -9,6 +9,9 @@ const PAGES = [
   "/destinations/dubai",
   "/circuits/nationaux",
   "/circuits/dubai-ville-des-records",
+  "/hotels",
+  "/hotels/hotel-lagune-plateau",
+  "/residences/studio-meuble-yopougon-maroc",
 ];
 
 test.describe("design system", () => {

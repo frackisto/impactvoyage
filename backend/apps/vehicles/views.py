@@ -5,11 +5,12 @@ from rest_framework.response import Response
 
 from apps.bookings.selectors import vehicle_booked_periods, vehicle_is_available
 from apps.core.api import SelectorReadOnlyViewSet
-from apps.core.filters import PeriodParams
+from apps.core.filters import AvailabilityQuerySerializer, PeriodParams
+from apps.core.serializers import AvailabilitySerializer
 
 from . import selectors
 from .models import Vehicle
-from .serializers import AvailabilityQuerySerializer, VehicleDetailSerializer, VehicleListSerializer
+from .serializers import VehicleDetailSerializer, VehicleListSerializer
 
 
 class VehicleFilterParams(PeriodParams):
@@ -20,11 +21,6 @@ class VehicleFilterParams(PeriodParams):
                                          required=False)
     available_from = serializers.DateField(required=False)
     available_to = serializers.DateField(required=False)
-
-
-class AvailabilitySerializer(serializers.Serializer):
-    available = serializers.BooleanField()
-    booked_periods = serializers.ListField(child=serializers.ListField(child=serializers.DateField()))
 
 
 @extend_schema_view(list=extend_schema(parameters=[VehicleFilterParams]))

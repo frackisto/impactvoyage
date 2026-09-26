@@ -62,7 +62,9 @@ besoin. Les Server Components utilisent `apiGet()` (langue et devise du visiteur
 - Autres briques partagées : `Section`/`SectionHeader` (sections de page), `Breadcrumbs`,
   `Pagination` (liens, logique dans `lib/pagination.ts`), `Gallery` (visionneuse au
   clavier), `ReviewList`, `JsonLd` et `lib/seo.ts` (URL canonique, hreflang),
-  `ImmersiveHero` (en-tête des fiches), `lib/search-params.ts` (lecture tolérante des
+  `ImmersiveHero` (en-tête des fiches), `FilterPanel` / `SortSelect` / `CatalogLayout`
+  (listes filtrables décrites par une configuration de champs), `SegmentedNav`,
+  `lib/stay.ts` (séjour lu dans l'URL, nuits), `lib/search-params.ts` (lecture tolérante des
   filtres d'URL), `lib/text.ts` (paragraphes, résumés).
 - Traductions : `messages/messages.test.ts` vérifie la syntaxe ICU de chaque message et
   l'égalité des clés FR/EN. Attention : en ICU, une apostrophe devant `#`, `{` ou `}` ouvre
