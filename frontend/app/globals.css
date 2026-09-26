@@ -41,8 +41,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-body);
-  --font-heading: var(--font-display);
+  /* Drapeaux emoji sous Windows (voir providers.tsx) : police utilisée pour les seuls drapeaux. */
+  --font-sans: "Twemoji Country Flags", var(--font-body);
+  --font-heading: "Twemoji Country Flags", var(--font-display);
   --font-script: var(--font-slogan);
 
   --color-cta: var(--cta);

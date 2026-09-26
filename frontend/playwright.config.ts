@@ -10,6 +10,9 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   reporter: [["list"]],
+  // Un seul serveur de production pour tous les workers : sous charge, un changement de
+  // langue (rechargement complet, autre root layout) peut dépasser les 5 s par défaut.
+  expect: { timeout: 10_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
     locale: "fr-FR",

@@ -1,13 +1,13 @@
 from django.db.models import Count, Prefetch, Q
 
-from apps.accommodations.models import Hotel
+from apps.accommodations.models import Hotel, Residence
 from apps.activities.models import Activity
 from apps.tours.models import Tour
 
 from .models import Destination
 
 
-def destination_list(continent=None, featured=None):
+def destination_list(continent=None, country=None, featured=None):
     """Destinations publiées avec le nombre de circuits et d'hôtels publiés."""
     qs = Destination.objects.published().annotate(
         tours_count=Count("tours", filter=Q(tours__is_published=True), distinct=True),
@@ -15,20 +15,26 @@ def destination_list(continent=None, featured=None):
     )
     if continent:
         qs = qs.filter(continent=continent)
+    if country:
+        qs = qs.filter(country_code=country.upper())
     if featured is not None:
         qs = qs.filter(is_featured=featured)
     return qs
 
 
 def destination_detail(slug):
-    """Page détail immersive (CdC § 8) : galerie, tags, circuits, hôtels, activités."""
+    """
+    Page détail immersive (CdC § 8) : galerie, tags, circuits, hôtels,
+    résidences et activités publiés.
+    """
     return (
         Destination.objects.published()
         .prefetch_related(
             "images",
             "tags",
-            Prefetch("tours", queryset=Tour.objects.published().select_related("theme")),
+            Prefetch("tours", queryset=Tour.objects.published()),
             Prefetch("hotels", queryset=Hotel.objects.published()),
+            Prefetch("residences", queryset=Residence.objects.published()),
             Prefetch("activities", queryset=Activity.objects.published()),
         )
         .get(slug=slug)

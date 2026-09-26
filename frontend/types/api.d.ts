@@ -1489,7 +1489,10 @@ export interface components {
          * @enum {string}
          */
         DepartureStatusEnum: "OPEN" | "FULL" | "CANCELLED";
-        /** @description Page immersive (CdC § 8) : galerie, attractions, conseils, offres liées publiées. */
+        /**
+         * @description Page immersive (CdC § 8) : galerie, attractions, conseils, offres liées
+         *     publiées (circuits, hôtels, résidences, activités) et note des avis.
+         */
         DestinationDetail: {
             readonly id: number;
             slug: string;
@@ -1519,7 +1522,9 @@ export interface components {
             readonly tags: components["schemas"]["Tag"][];
             readonly tours: components["schemas"]["TourCard"][];
             readonly hotels: components["schemas"]["HotelCard"][];
+            readonly residences: components["schemas"]["ResidenceCard"][];
             readonly activities: components["schemas"]["ActivityCard"][];
+            readonly rating: components["schemas"]["RatingSummary"];
         };
         DestinationList: {
             readonly id: number;
@@ -2424,16 +2429,14 @@ export interface components {
          * @enum {string}
          */
         RequestedServiceEnum: "VOL" | "HEBERGEMENT" | "CIRCUIT" | "VISA" | "ASSURANCE" | "TRANSPORT" | "LOCATION_VEHICULE" | "ACTIVITES" | "EVENEMENT" | "CONSEIL";
-        ResidenceDetail: {
+        /** @description Carte imbriquée dans une page destination (sans la destination elle-même). */
+        ResidenceCard: {
             readonly id: number;
             slug: string;
             /** Nom */
             name: string;
             /** Accroche */
             short_description?: string;
-            readonly destination: components["schemas"]["DestinationMini"];
-            /** Adresse */
-            address?: string;
             /** Nombre de chambres */
             rooms_count: number;
             /** Capacité */
@@ -2446,6 +2449,30 @@ export interface components {
             /** Texte alternatif */
             cover_alt?: string;
             readonly price_per_night: components["schemas"]["Money"] | null;
+        };
+        /** @description Fiche d'une résidence : équipements, services, conditions, galerie. */
+        ResidenceDetail: {
+            readonly id: number;
+            slug: string;
+            /** Nom */
+            name: string;
+            /** Accroche */
+            short_description?: string;
+            /** Nombre de chambres */
+            rooms_count: number;
+            /** Capacité */
+            capacity: number;
+            /**
+             * Image principale
+             * Format: uri
+             */
+            cover_image?: string | null;
+            /** Texte alternatif */
+            cover_alt?: string;
+            readonly price_per_night: components["schemas"]["Money"] | null;
+            readonly destination: components["schemas"]["DestinationMini"];
+            /** Adresse */
+            address?: string;
             /** Mise en avant */
             is_featured?: boolean;
             description: string;
@@ -2457,6 +2484,7 @@ export interface components {
             booking_mode?: components["schemas"]["BookingModeEnum"];
             readonly promo_price: components["schemas"]["Money"] | null;
         };
+        /** @description Carte de la liste des résidences meublées (CdC § 13). */
         ResidenceList: {
             readonly id: number;
             slug: string;
@@ -2464,9 +2492,6 @@ export interface components {
             name: string;
             /** Accroche */
             short_description?: string;
-            readonly destination: components["schemas"]["DestinationMini"];
-            /** Adresse */
-            address?: string;
             /** Nombre de chambres */
             rooms_count: number;
             /** Capacité */
@@ -2479,6 +2504,9 @@ export interface components {
             /** Texte alternatif */
             cover_alt?: string;
             readonly price_per_night: components["schemas"]["Money"] | null;
+            readonly destination: components["schemas"]["DestinationMini"];
+            /** Adresse */
+            address?: string;
             /** Mise en avant */
             is_featured?: boolean;
         };
@@ -3590,6 +3618,8 @@ export interface operations {
                  *     * `OCEANIE` - Océanie
                  */
                 continent?: "AFRIQUE" | "EUROPE" | "AMERIQUES" | "ASIE" | "MOYEN_ORIENT" | "OCEANIE";
+                /** @description Code pays ISO 3166-1, ex. CI */
+                country?: string;
                 featured?: boolean | null;
                 /** @description Quel champ utiliser pour classer les résultats. */
                 ordering?: string;

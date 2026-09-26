@@ -10,6 +10,9 @@ from .serializers import DestinationDetailSerializer, DestinationListSerializer
 
 class DestinationFilterParams(serializers.Serializer):
     continent = serializers.ChoiceField(choices=Destination.Continent.choices, required=False)
+    country = serializers.RegexField(
+        r"^[A-Za-z]{2}$", required=False, help_text="Code pays ISO 3166-1, ex. CI"
+    )
     featured = serializers.BooleanField(required=False, allow_null=True, default=None)
 
 

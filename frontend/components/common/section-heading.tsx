@@ -6,6 +6,8 @@ type SectionHeadingProps = {
   description?: string;
   align?: "start" | "center";
   as?: "h1" | "h2" | "h3";
+  /** Identifiant du titre (aria-labelledby de la section). */
+  id?: string;
   className?: string;
 };
 
@@ -16,6 +18,7 @@ export function SectionHeading({
   description,
   align = "start",
   as: Heading = "h2",
+  id,
   className,
 }: SectionHeadingProps) {
   return (
@@ -23,7 +26,7 @@ export function SectionHeading({
       {eyebrow && (
         <p className="text-sm font-semibold uppercase tracking-wider text-sunset-700">{eyebrow}</p>
       )}
-      <Heading className="text-balance text-3xl font-bold text-ocean-900 sm:text-4xl">{title}</Heading>
+      <Heading id={id} className="text-balance text-3xl font-bold text-ocean-900 sm:text-4xl">{title}</Heading>
       {description && <p className="text-pretty text-lg text-muted-foreground">{description}</p>}
     </div>
   );

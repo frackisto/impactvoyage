@@ -841,8 +841,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 8 | Initialisation Next.js | ✅ |
 | 9 | Création du design system | ✅ |
 | 10 | Création de la page d'accueil | ✅ |
-| 11 | Création des destinations | ⏭ prochaine étape |
-| 12 | Création des circuits | |
+| 11 | Création des destinations | ✅ |
+| 12 | Création des circuits | ⏭ prochaine étape |
 | 13 | Création des hôtels et résidences | |
 | 14 | Création des véhicules | |
 | 15 | Création des activités et événements | |

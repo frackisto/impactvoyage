@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 10
+# Plateforme Web Agence de Voyage — Phase 11
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -238,16 +238,40 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
 - **Photos Django** : servies au navigateur par le relais `/media/*` de Next.js (plus besoin
   de `NEXT_PUBLIC_MEDIA_URL`) ; en production, Nginx les servira directement.
 
-## Ce qui a été validé (Phase 10)
+## Destinations (Phase 11)
 
-- Backend : `manage.py check`, aucune migration manquante, 118 tests pytest dont le
-  chargement idempotent du contenu de l'agence.
-- Frontend : TypeScript, ESLint, 15 tests Vitest ; 22 tests Playwright sur ordinateur et
-  mobile : audit axe (WCAG 2.2 AA) de l'accueil FR/EN sans violation grave, sections et
-  photos du catalogue, recherche de circuits, d'hôtels (onglets au clavier) et de visas,
-  absence de défilement horizontal.
+- **Liste** `/destinations` : filtres par continent (en un clic, avec le nombre de
+  destinations), pays (limité au continent choisi) et nom ; les filtres sont dans l'URL
+  (partageable), la pagination fonctionne par liens. Seules la liste complète et les pages
+  par continent sont indexées.
+- **Fiche** `/destinations/{slug}` : en-tête immersif, description, attractions, conseils,
+  encadré « Préparer votre voyage » (pays, meilleure période, lien vers le visa du pays,
+  devis prérempli `/devis?destination=…`, WhatsApp), galerie avec visionneuse au clavier,
+  circuits, hôtels, résidences et activités publiés, avis, destinations proches. Sans offre
+  publiée, un bandeau « sur mesure » invite à demander un devis.
+- **SEO** : titre, description, URL canonique, hreflang FR/EN, Open Graph et JSON-LD
+  (`TouristDestination`, `BreadcrumbList`).
+- **API** : filtre `?country=CI` sur `/api/v1/destinations/` ; la fiche expose aussi
+  `residences` et `rating` (note moyenne des avis validés).
+- **Drapeaux** : Chrome et Edge sous Windows n'affichent pas les drapeaux emoji ; une police
+  de drapeaux (Twemoji, 77 ko, auto-hébergée) n'est chargée que dans ce cas.
+
+> Une page introuvable renvoie le statut HTTP 200 (avec `noindex`) et non 404 : le
+> `loading.tsx` commun à toutes les pages démarre l'envoi avant que la page ne sache que
+> le contenu n'existe pas. C'est le comportement documenté de Next.js, sans effet sur
+> l'indexation.
+
+## Ce qui a été validé (Phase 11)
+
+- Backend : `manage.py check`, aucune migration manquante, 121 tests pytest dont les
+  filtres par continent et par pays, les offres publiées et la note d'une destination.
+- Frontend : TypeScript, ESLint, 18 tests Vitest ; 37 tests Playwright sur ordinateur et
+  mobile : audit axe (WCAG 2.2 AA) de l'accueil, de la liste et d'une fiche sans violation
+  grave, filtres dans l'URL, état vide, encadré pratique et JSON-LD, visionneuse au
+  clavier, page introuvable, version anglaise, absence de défilement horizontal.
 
 ## Prochaine étape
 
-**Phase 11 : Création des destinations** — liste filtrable par continent et pays, fiche
-destination (galerie, circuits, hôtels et activités associés).
+**Phase 12 : Création des circuits** — circuits nationaux et internationaux, filtres
+(destination, dates, durée, budget, thème), fiche circuit (programme jour par jour,
+départs et places restantes, inclus/non inclus).

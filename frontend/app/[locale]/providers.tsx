@@ -1,7 +1,8 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { polyfillCountryFlagEmojis } from "country-flag-emoji-polyfill";
+import { useEffect, useState, type ReactNode } from "react";
 
 /** Fournisseurs côté client : cache TanStack Query (recherche, pagination, formulaires). */
 export function Providers({ children }: { children: ReactNode }) {
@@ -13,5 +14,10 @@ export function Providers({ children }: { children: ReactNode }) {
         },
       }),
   );
+  useEffect(() => {
+    // Chrome et Edge sous Windows n'affichent pas les drapeaux emoji (« CI » au lieu de 🇨🇮) :
+    // la police Twemoji (77 ko, auto-hébergée) n'est chargée que dans ce cas.
+    polyfillCountryFlagEmojis("Twemoji Country Flags", "/fonts/TwemojiCountryFlags.woff2");
+  }, []);
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

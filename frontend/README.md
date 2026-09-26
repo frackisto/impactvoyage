@@ -59,6 +59,16 @@ besoin. Les Server Components utilisent `apiGet()` (langue et devise du visiteur
   des paramètres du site).
 - Page de référence : **`/charte-graphique`** (non indexée) — palette, typographies,
   composants, formulaire modèle (React Hook Form + Zod), états.
+- Autres briques partagées : `Section`/`SectionHeader` (sections de page), `Breadcrumbs`,
+  `Pagination` (liens, logique dans `lib/pagination.ts`), `Gallery` (visionneuse au
+  clavier), `ReviewList`, `JsonLd` et `lib/seo.ts` (URL canonique, hreflang).
+
+## Crédits
+
+Drapeaux sous Windows : police « Twemoji Country Flags »
+([country-flag-emoji-polyfill](https://github.com/talkjs/country-flag-emoji-polyfill), MIT),
+graphismes [Twemoji](https://github.com/twitter/twemoji) © Twitter, sous licence
+[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ## Charte graphique
 

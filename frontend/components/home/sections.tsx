@@ -1,5 +1,4 @@
 import {
-  ArrowRightIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
   ClockIcon,
@@ -9,7 +8,6 @@ import {
   MapPinIcon,
   MedalIcon,
   PhoneIcon,
-  QuoteIcon,
   RefreshCwIcon,
   UsersIcon,
   WalletIcon,
@@ -22,11 +20,13 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Container } from "@/components/common/container";
 import { ContentCard } from "@/components/common/content-card";
 import { OfferBadge, type OfferBadgeCode } from "@/components/common/offer-badge";
+import { Section, SectionHeader } from "@/components/common/page-section";
 import { Price } from "@/components/common/price";
 import { Rating } from "@/components/common/rating";
 import { SectionHeading } from "@/components/common/section-heading";
 import { ServiceIcon } from "@/components/common/service-icon";
 import { SocialIcon } from "@/components/common/social-icons";
+import { ReviewList } from "@/components/reviews/review-list";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryFlag, countryName } from "@/lib/countries";
@@ -44,28 +44,6 @@ import type {
   TourList,
   VisaService,
 } from "@/types";
-
-function Section({ children, className, tone = "light" }: { children: React.ReactNode; className?: string; tone?: "light" | "tint" }) {
-  return (
-    <section className={cn("py-16 sm:py-20", tone === "tint" && "bg-ocean-50/60", className)}>
-      <Container className="flex flex-col gap-10">{children}</Container>
-    </section>
-  );
-}
-
-function SectionHeader({ eyebrow, title, text, href, linkLabel }: { eyebrow: string; title: string; text?: string; href?: string; linkLabel?: string }) {
-  return (
-    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <SectionHeading eyebrow={eyebrow} title={title} description={text} />
-      {href && linkLabel && (
-        <Link href={href} className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}>
-          {linkLabel}
-          <ArrowRightIcon aria-hidden="true" data-icon="inline-end" className="rtl:rotate-180" />
-        </Link>
-      )}
-    </div>
-  );
-}
 
 const grid = "grid gap-6 sm:grid-cols-2 lg:grid-cols-3";
 
@@ -408,18 +386,7 @@ export async function ReviewsSection({ reviews }: { reviews: Review[] }) {
   return (
     <Section>
       <SectionHeader eyebrow={t("reviewsEyebrow")} title={t("reviewsTitle")} />
-      <ul className={grid}>
-        {reviews.map((review) => (
-          <li key={review.id} className="flex flex-col gap-4 rounded-2xl border bg-card p-6">
-            <QuoteIcon aria-hidden="true" className="size-8 text-sunset-500" />
-            <blockquote className="flex-1 text-ocean-950">{review.comment}</blockquote>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-ocean-900">{review.author_name}</span>
-              <Rating value={review.rating} />
-            </div>
-          </li>
-        ))}
-      </ul>
+      <ReviewList reviews={reviews} />
     </Section>
   );
 }

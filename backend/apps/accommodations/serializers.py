@@ -70,20 +70,31 @@ class HotelDetailSerializer(HotelCardSerializer):
         return rating_summary(hotel=obj)
 
 
-class ResidenceListSerializer(serializers.ModelSerializer):
-    destination = DestinationMiniSerializer(read_only=True)
+class ResidenceCardSerializer(serializers.ModelSerializer):
+    """Carte imbriquée dans une page destination (sans la destination elle-même)."""
+
     price_per_night = MoneyField(amount="base_price")
 
     class Meta:
         model = Residence
         fields = [
-            "id", "slug", "name", "short_description", "destination", "address",
-            "rooms_count", "capacity", "cover_image", "cover_alt", "price_per_night",
-            "is_featured",
+            "id", "slug", "name", "short_description", "rooms_count", "capacity",
+            "cover_image", "cover_alt", "price_per_night",
         ]
 
 
+class ResidenceListSerializer(ResidenceCardSerializer):
+    """Carte de la liste des résidences meublées (CdC § 13)."""
+
+    destination = DestinationMiniSerializer(read_only=True)
+
+    class Meta(ResidenceCardSerializer.Meta):
+        fields = ResidenceCardSerializer.Meta.fields + ["destination", "address", "is_featured"]
+
+
 class ResidenceDetailSerializer(ResidenceListSerializer):
+    """Fiche d'une résidence : équipements, services, conditions, galerie."""
+
     amenities = AmenitySerializer(many=True, read_only=True)
     images = GalleryImageSerializer(many=True, read_only=True)
     promo_price = serializers.SerializerMethodField()

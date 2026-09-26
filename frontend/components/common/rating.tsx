@@ -4,10 +4,16 @@ import { useLocale, useTranslations } from "next-intl";
 import { formatRating } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-type RatingProps = { value: number | null | undefined; count?: number; className?: string };
+type RatingProps = {
+  value: number | null | undefined;
+  count?: number;
+  /** Sur fond sombre ou photo. */
+  inverse?: boolean;
+  className?: string;
+};
 
 /** Note sur 5 étoiles, lisible par les lecteurs d'écran (« Note : 4,5 sur 5 »). */
-export function Rating({ value, count, className }: RatingProps) {
+export function Rating({ value, count, inverse, className }: RatingProps) {
   const t = useTranslations("Rating");
   const locale = useLocale();
   if (value == null) return null;
@@ -27,11 +33,11 @@ export function Rating({ value, count, className }: RatingProps) {
         ))}
       </span>
       <span className="sr-only">{t("label", { value: formatRating(value, locale) })}</span>
-      <span aria-hidden="true" className="font-semibold text-ocean-900">
+      <span aria-hidden="true" className={cn("font-semibold", inverse ? "text-white" : "text-ocean-900")}>
         {formatRating(value, locale)}
       </span>
       {count !== undefined && (
-        <span className="text-muted-foreground">({t("count", { count })})</span>
+        <span className={inverse ? "text-ocean-100" : "text-muted-foreground"}>({t("count", { count })})</span>
       )}
     </span>
   );

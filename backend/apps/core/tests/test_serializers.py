@@ -125,9 +125,9 @@ class CatalogRepresentationTests(TestCase):
         make_tour(destination=destination, is_published=False)
         make_activity(destination=destination)
         make_activity(destination=destination, is_published=False)
-        # Destination, photos, tags, circuits (+ thème), hôtels, activités : 6 requêtes,
-        # quel que soit le nombre de contenus liés.
-        with self.assertNumQueries(6):
+        # Destination, photos, tags, circuits, hôtels, résidences, activités et note des
+        # avis : 8 requêtes, quel que soit le nombre de contenus liés.
+        with self.assertNumQueries(8):
             data = DestinationDetailSerializer(
                 destination_detail(destination.slug), context={"request": api_request()}
             ).data
