@@ -15,6 +15,8 @@ import {
   VisaSection,
   WhyUsSection,
 } from "@/components/home/sections";
+import { JsonLd } from "@/components/seo/json-ld";
+import { absoluteUrl } from "@/lib/seo";
 import { getHomeData } from "@/services/home.service";
 import { getSiteSettings } from "@/services/site.service";
 
@@ -40,6 +42,20 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <>
+      {/* Zone de recherche du site dans les résultats Google (sitelinks search box). */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: settings.agency_name,
+          url: absoluteUrl("/", locale),
+          potentialAction: {
+            "@type": "SearchAction",
+            target: { "@type": "EntryPoint", urlTemplate: `${absoluteUrl("/recherche", locale)}?q={search_term_string}` },
+            "query-input": "required name=search_term_string",
+          },
+        }}
+      />
       <Hero settings={settings}>
         <SearchWidget options={searchOptions} />
       </Hero>

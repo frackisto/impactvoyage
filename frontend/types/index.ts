@@ -36,6 +36,8 @@ export type ActivityDetail = Schemas["ActivityDetail"];
 export type ActivityAvailability = Schemas["ActivityAvailability"];
 export type EventDetail = Schemas["EventDetail"];
 export type MediaAsset = Schemas["MediaAsset"];
+export type SearchResponse = Schemas["SearchResponse"];
+export type SearchResult = Schemas["SearchResult"];
 
 export type Paginated<T> = {
   count: number;

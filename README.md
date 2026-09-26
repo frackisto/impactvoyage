@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 15
+# Plateforme Web Agence de Voyage — Phase 16
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -375,19 +375,42 @@ pris tel quel et permettait de contourner les limites.
 - `X-Forwarded-For` n'est plus pris en compte par défaut (`NUM_PROXIES=0` ; 1 derrière
   Nginx, qui devra poser `X-Real-IP`).
 
-## Ce qui a été validé (Phase 15)
+## Moteur de recherche (Phase 16)
 
-- Backend : `manage.py check`, aucune migration manquante, 136 tests pytest dont le filtre
-  par date et les places restantes, la limitation de débit (lectures du serveur non
-  limitées, limite par visiteur, écritures toujours limitées, en-têtes falsifiés sans
-  effet) et la démonstration.
-- Frontend : TypeScript, ESLint, 30 tests Vitest ; 130 tests Playwright sur ordinateur et
-  mobile, stables sur deux passages avec le cache de données vidé au démarrage : audit axe
-  (WCAG 2.2 AA) de 16 pages sans violation grave, filtres, places restantes, moteur de
-  recherche, activités incluses dans un circuit, événements, JSON-LD.
+- **API** `/api/v1/search/?q=&type=&destination=&limit=` : destinations, circuits, hôtels,
+  résidences, véhicules, activités et événements publiés, fusionnés et triés par
+  pertinence, avec le nombre de résultats par type. PostgreSQL `pg_trgm` + `unaccent`,
+  sans table dédiée : fautes de frappe (« dubay ») et accents tolérés ; chaque mot doit
+  correspondre (titre, accroche, destination, thème… en français et en anglais), les mots
+  vides sont ignorés, le titre compte davantage dans le score.
+- **Recherche instantanée** : la loupe de l'en-tête ouvre une fenêtre qui affiche les
+  6 meilleurs résultats pendant la frappe (requêtes espacées de 250 ms, via le relais
+  Next.js) ; Entrée ou « Voir les N résultats » ouvre la page complète.
+- **Page** `/recherche?q=…&type=…` : onglets par type avec compteurs, vignette, contexte
+  (destination ou pays), accroche et prix ; invitation sans requête, suggestions et devis
+  sans résultat. Jamais indexée.
+- **SEO** : JSON-LD `WebSite` + `SearchAction` sur l'accueil (zone de recherche dans Google).
+
+## Ce qui a été validé (Phase 16)
+
+- Backend : `manage.py check`, aucune migration manquante, 141 tests pytest dont la
+  recherche (fautes et accents, tous les mots requis, contenus non publiés exclus, filtres
+  par type et destination, paramètres invalides).
+- Frontend : TypeScript, ESLint, 32 tests Vitest ; 144 tests Playwright sur ordinateur et
+  mobile, stables sur deux passages : audit axe (WCAG 2.2 AA) de 17 pages sans violation
+  grave, page de résultats et onglets, faute de frappe, aucun résultat, recherche
+  instantanée au clavier, JSON-LD.
+
+## Pages encore manquantes
+
+Ces pages sont liées depuis le menu, le pied de page ou les fiches mais n'existent pas
+encore (« Page introuvable ») : `/devis` (Phase 17), connexion et inscription, et des
+rubriques **absentes du plan de développement** — services, offres, visas (`/visa/france`),
+transport, médiathèque, à propos, contact, blog et pages légales (mentions, confidentialité,
+conditions générales).
 
 ## Prochaine étape
 
-**Phase 16 : Création du moteur de recherche** — recherche globale (`/recherche`) dans les
-destinations, circuits, hébergements, véhicules, activités et événements, avec la barre de
-recherche de l'en-tête.
+**Phase 17 : Création du système de devis** — formulaire de demande de devis (prérempli
+depuis les fiches : circuit, départ, hôtel, chambre, résidence, véhicule, activité, dates),
+suivi et réponse de l'agence, acceptation par le client.

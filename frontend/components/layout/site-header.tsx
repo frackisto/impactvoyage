@@ -1,10 +1,11 @@
-import { MailIcon, PhoneIcon, SearchIcon } from "lucide-react";
+import { MailIcon, PhoneIcon } from "lucide-react";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import { Container } from "@/components/common/container";
 import { SocialIcon } from "@/components/common/social-icons";
+import { SearchDialog } from "@/components/search/search-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { CURRENCY_COOKIE } from "@/lib/api/server";
@@ -77,13 +78,7 @@ export async function SiteHeader() {
           <DesktopNav />
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <Link
-              href="/recherche"
-              aria-label={t("Header.search")}
-              className={buttonVariants({ variant: "ghost", size: "icon" })}
-            >
-              <SearchIcon aria-hidden="true" className="size-5" />
-            </Link>
+            <SearchDialog label={t("Header.search")} />
             <Link href="/devis" className={cn(buttonVariants({ variant: "cta" }), "hidden sm:inline-flex")}>
               {t("Nav.quote")}
             </Link>

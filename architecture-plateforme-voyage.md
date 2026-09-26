@@ -846,8 +846,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 13 | Création des hôtels et résidences | ✅ |
 | 14 | Création des véhicules | ✅ |
 | 15 | Création des activités et événements | ✅ |
-| 16 | Création du moteur de recherche | ⏭ prochaine étape |
-| 17 | Création du système de devis | |
+| 16 | Création du moteur de recherche | ✅ |
+| 17 | Création du système de devis | ⏭ prochaine étape |
 | 18 | Création des réservations | |
 | 19 | Création du backoffice | |
 | 20 | Notifications | |

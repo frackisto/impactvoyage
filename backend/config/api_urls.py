@@ -1,6 +1,6 @@
 """
 Point d'entrée unique de l'API v1 (architecture § 5.2).
-La recherche globale (/search/) arrive en Phase 16, le tableau de bord en Phase 19.
+Le tableau de bord arrive en Phase 19.
 """
 from django.urls import include, path
 
@@ -9,7 +9,7 @@ from apps.core.views import CurrencyView, SiteSettingsView, health
 APPS_WITH_ROUTES = [
     "accounts", "core", "destinations", "tours", "accommodations", "vehicles", "activities", "events",
     "media", "offers", "blog", "services", "visas", "transport", "inquiries", "bookings",
-    "reviews", "notifications",
+    "reviews", "notifications", "search",
 ]
 
 urlpatterns = [

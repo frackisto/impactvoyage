@@ -18,6 +18,7 @@ const PAGES = [
   "/activites/visite-guidee-grand-bassam",
   "/evenements",
   "/evenements/voyage-de-groupe-dubai-2026",
+  "/recherche?q=dubai",
 ];
 
 test.describe("design system", () => {

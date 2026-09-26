@@ -948,6 +948,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Recherche globale (CdC § 7) : destinations, circuits, hébergements, véhicules,
+         *     activités et événements publiés. /search/?q=dubai&type=tour,hotel&limit=24
+         *     Les résultats de tous les types sont fusionnés et triés par pertinence.
+         */
+        get: operations["search_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/services/": {
         parameters: {
             query?: never;
@@ -1897,6 +1918,8 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /** @enum {unknown} */
+        NullEnum: null;
         OfferDetail: {
             readonly id: number;
             slug: string;
@@ -2261,6 +2284,13 @@ export interface components {
             /** Devise préférée */
             preferred_currency?: components["schemas"]["CurrencyEnum"];
         };
+        /**
+         * @description * `person` - person
+         *     * `night` - night
+         *     * `day` - day
+         * @enum {string}
+         */
+        PriceUnitEnum: "person" | "night" | "day";
         /**
          * @description * `TOURISME` - Tourisme
          *     * `AFFAIRES` - Affaires
@@ -2646,6 +2676,31 @@ export interface components {
          * @enum {string}
          */
         ScopeEnum: "NATIONAL" | "INTERNATIONAL";
+        SearchResponse: {
+            query: string;
+            /** @description Nombre total de résultats (tous types confondus) */
+            count: number;
+            /** @description Nombre de résultats par type */
+            counts: {
+                [key: string]: number;
+            };
+            results: components["schemas"]["SearchResult"][];
+        };
+        SearchResult: {
+            type: components["schemas"]["TypeEnum"];
+            slug: string;
+            title: string;
+            excerpt: string;
+            /** @description URL de l'image principale */
+            image: string | null;
+            image_alt: string;
+            /** @description Destination, lieu ou pays */
+            context: string;
+            price: components["schemas"]["Money"] | null;
+            price_unit: (components["schemas"]["PriceUnitEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: double */
+            score: number;
+        };
         Service: {
             readonly id: number;
             slug: string;
@@ -2912,6 +2967,17 @@ export interface components {
          * @enum {string}
          */
         TravelTypeEnum: "LOISIRS" | "AFFAIRES" | "FAMILLE" | "LUNE_DE_MIEL" | "GROUPE" | "PELERINAGE" | "ETUDES" | "AUTRE";
+        /**
+         * @description * `destination` - destination
+         *     * `tour` - tour
+         *     * `hotel` - hotel
+         *     * `residence` - residence
+         *     * `vehicle` - vehicle
+         *     * `activity` - activity
+         *     * `event` - event
+         * @enum {string}
+         */
+        TypeEnum: "destination" | "tour" | "hotel" | "residence" | "vehicle" | "activity" | "event";
         /** @description Profil de l'utilisateur connecté (/auth/me/). Rôle et vérification en lecture seule. */
         User: {
             readonly id: number;
@@ -4533,6 +4599,32 @@ export interface operations {
                     "application/json": {
                         message?: string;
                     };
+                };
+            };
+        };
+    };
+    search_retrieve: {
+        parameters: {
+            query: {
+                destination?: string;
+                limit?: number;
+                /** @description Mots recherchés (fautes et accents tolérés) */
+                q: string;
+                /** @description Types séparés par des virgules : destination, tour, hotel, residence, vehicle, activity, event */
+                type?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
         };

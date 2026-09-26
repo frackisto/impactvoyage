@@ -655,5 +655,49 @@
     "relatedEyebrow": "Nos réalisations",
     "relatedTitle": "Autres événements",
     "allEvents": "Tout l'événementiel"
+  },
+  "GlobalSearch": {
+    "title": "Recherche",
+    "metaTitleQuery": "Recherche : {query}",
+    "resultsFor": "Résultats pour « {query} »",
+    "dialogTitle": "Rechercher sur le site",
+    "inputLabel": "Rechercher une destination, un circuit, un hôtel…",
+    "placeholder": "Destination, circuit, hôtel, activité…",
+    "submit": "Rechercher",
+    "close": "Fermer la recherche",
+    "hint": "Tapez au moins 2 caractères.",
+    "error": "La recherche est momentanément indisponible.",
+    "found": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
+    "seeAll": "{count, plural, one {Voir le résultat pour « {query} »} other {Voir les # résultats pour « {query} »}}",
+    "typesLabel": "Types de résultats",
+    "all": "Tout",
+    "type": {
+      "destination": "Destination",
+      "tour": "Circuit",
+      "hotel": "Hébergement",
+      "residence": "Résidence",
+      "vehicle": "Véhicule",
+      "activity": "Activité",
+      "event": "Événement"
+    },
+    "types": {
+      "destination": "Destinations",
+      "tour": "Circuits",
+      "hotel": "Hébergements",
+      "residence": "Résidences",
+      "vehicle": "Véhicules",
+      "activity": "Activités",
+      "event": "Événements"
+    },
+    "startTitle": "Que recherchez-vous ?",
+    "startText": "Une destination, un circuit, un hôtel, un véhicule ou une activité. Ou explorez nos rubriques :",
+    "noneTitle": "Aucun résultat pour « {query} »",
+    "noneText": "Vérifiez l'orthographe, essayez un mot plus général, ou confiez-nous votre projet.",
+    "emptyTypeTitle": "Aucun résultat de ce type",
+    "emptyTypeText": "Essayez un autre onglet.",
+    "refine": "{shown} premiers résultats sur {count} : précisez votre recherche pour les affiner.",
+    "errorTitle": "Recherche momentanément indisponible",
+    "errorText": "Réessayez dans un instant.",
+    "askAgency": "Demander à l'agence"
   }
 }
