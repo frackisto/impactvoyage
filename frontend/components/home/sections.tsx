@@ -1,5 +1,4 @@
 import {
-  CalendarDaysIcon,
   CheckCircle2Icon,
   GlobeIcon,
   HeadsetIcon,
@@ -24,12 +23,12 @@ import { Price } from "@/components/common/price";
 import { SectionHeading } from "@/components/common/section-heading";
 import { ServiceIcon } from "@/components/common/service-icon";
 import { SocialIcon } from "@/components/common/social-icons";
+import { EventCard } from "@/components/events/event-card";
 import { ReviewList } from "@/components/reviews/review-list";
 import { TourCard } from "@/components/tours/tour-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryFlag, countryName } from "@/lib/countries";
-import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { whatsappUrl } from "@/services/site.service";
 import type {
@@ -312,30 +311,13 @@ export async function ResidencesSection({ residences }: { residences: ResidenceL
 
 export async function EventsSection({ events }: { events: EventList[] }) {
   if (!events.length) return null;
-  const [t, locale] = await Promise.all([getTranslations("Home"), getLocale()]);
+  const t = await getTranslations("Home");
   return (
     <Section tone="tint">
       <SectionHeader eyebrow={t("eventsEyebrow")} title={t("eventsTitle")} href="/evenements" linkLabel={t("allEvents")} />
       <div className={grid}>
         {events.map((event) => (
-          <ContentCard
-            key={event.id}
-            href={`/evenements/${event.slug}`}
-            title={event.title}
-            description={event.short_description}
-            image={event.cover_image}
-            imageAlt={event.cover_alt || event.title}
-            meta={
-              <>
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDaysIcon aria-hidden="true" className="size-4" /> {formatDate(event.date, locale)}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <MapPinIcon aria-hidden="true" className="size-4" /> {event.location}
-                </span>
-              </>
-            }
-          />
+          <EventCard key={event.id} event={event} />
         ))}
       </div>
     </Section>

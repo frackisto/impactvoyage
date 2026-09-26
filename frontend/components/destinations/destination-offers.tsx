@@ -1,12 +1,9 @@
-import { ClockIcon } from "lucide-react";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { HotelCard, ResidenceCard } from "@/components/accommodations/stay-cards";
-import { ContentCard } from "@/components/common/content-card";
+import { ActivityCard } from "@/components/activities/activity-card";
 import { Section, SectionHeader } from "@/components/common/page-section";
-import { Price } from "@/components/common/price";
 import { TourCard } from "@/components/tours/tour-card";
-import { intlLocale } from "@/lib/format";
 import type { DestinationDetail } from "@/types";
 
 const grid = "grid gap-6 sm:grid-cols-2 lg:grid-cols-3";
@@ -16,10 +13,8 @@ const grid = "grid gap-6 sm:grid-cols-2 lg:grid-cols-3";
  * une section par type d'offre publiée ; rien n'est affiché pour un type vide.
  */
 export async function DestinationOffers({ destination }: { destination: DestinationDetail }) {
-  const [t, locale] = await Promise.all([getTranslations("Destinations"), getLocale()]);
+  const t = await getTranslations("Destinations");
   const { tours, hotels, residences, activities } = destination;
-  const hours = (value: string) =>
-    t("hours", { count: Number(value), formatted: new Intl.NumberFormat(intlLocale(locale)).format(Number(value)) });
 
   return (
     <>
@@ -61,20 +56,7 @@ export async function DestinationOffers({ destination }: { destination: Destinat
           <SectionHeader id="destination-activities" eyebrow={t("doEyebrow")} title={t("activitiesTitle")} />
           <div className={grid}>
             {activities.map((activity) => (
-              <ContentCard
-                key={activity.id}
-                href={`/activites/${activity.slug}`}
-                title={activity.title}
-                description={activity.short_description}
-                image={activity.cover_image}
-                imageAlt={activity.cover_alt || activity.title}
-                meta={
-                  <span className="inline-flex items-center gap-1">
-                    <ClockIcon aria-hidden="true" className="size-4" /> {hours(activity.duration_hours)}
-                  </span>
-                }
-                footer={<Price value={activity.price} from unit="person" />}
-              />
+              <ActivityCard key={activity.id} activity={activity} showDestination={false} />
             ))}
           </div>
         </Section>

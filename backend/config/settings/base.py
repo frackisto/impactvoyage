@@ -153,6 +153,11 @@ EXCHANGE_RATES_API_URL = env(
 BOOKING_HOLD_MINUTES = 30  # réservation directe en attente de paiement
 QUOTE_BOOKING_HOLD_HOURS = 48  # réservation issue d'un devis accepté
 
+# Secret partagé avec le serveur Next.js (en-tête X-Frontend-Secret) : il transmet
+# l'adresse réelle des visiteurs pour la limitation de débit (apps/core/throttling.py).
+# Vide : mécanisme désactivé (toutes les pages seraient limitées comme un seul client).
+FRONTEND_SHARED_SECRET = env("FRONTEND_SHARED_SECRET", default="")
+
 # Données fictives (python manage.py seed_demo) : autorisées en dev et en tests seulement.
 DEMO_DATA_ALLOWED = False
 
@@ -190,9 +195,13 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "apps.core.api.api_exception_handler",
     # Rate limiting (cahier § 29). Les scopes "auth", "quotes", "contact" et
     # "reviews" sont appliqués aux vues concernées via ScopedRateThrottle.
+    # Adresse du client : voir apps/core/throttling.py (serveur Next.js de confiance).
+    # NUM_PROXIES = nombre de proxys devant Django (1 derrière Nginx) ; 0 : l'en-tête
+    # X-Forwarded-For est ignoré et ne peut pas servir à contourner les limites.
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=0),
     "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
+        "apps.core.throttling.AnonRateThrottle",
+        "apps.core.throttling.UserRateThrottle",
     ),
     "DEFAULT_THROTTLE_RATES": {
         "anon": "120/min",

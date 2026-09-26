@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { ApiError } from "@/lib/api/errors";
+import { nullIfNotFound } from "@/lib/api/errors";
 import { apiGet } from "@/lib/api/server";
 import type { Paginated, Review, TourDetail, TourList } from "@/types";
 
@@ -58,14 +58,9 @@ export const tourFacets = cache(async (scope: TourScope) => {
 });
 
 /** Fiche d'un circuit ; null s'il n'existe pas ou n'est pas publié. */
-export const getTour = cache(async (slug: string): Promise<TourDetail | null> => {
-  try {
-    return await apiGet<TourDetail>(`tours/${encodeURIComponent(slug)}/`, { tags: TAGS });
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
-  }
-});
+export const getTour = cache((slug: string) =>
+  nullIfNotFound(apiGet<TourDetail>(`tours/${encodeURIComponent(slug)}/`, { tags: TAGS })),
+);
 
 export function tourReviews(slug: string) {
   return apiGet<Paginated<Review>>("reviews/", {

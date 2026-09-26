@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { ApiError } from "@/lib/api/errors";
+import { nullIfNotFound } from "@/lib/api/errors";
 import { apiGet } from "@/lib/api/server";
 import type {
   Amenity,
@@ -53,15 +53,6 @@ export type ResidenceFilters = {
 const HOTEL_TAGS = ["hotels"];
 const RESIDENCE_TAGS = ["residences"];
 
-async function orNull<T>(request: Promise<T>): Promise<T | null> {
-  try {
-    return await request;
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
-  }
-}
-
 /* ---------- Hôtels ---------- */
 
 export function listHotels(filters: HotelFilters) {
@@ -87,7 +78,7 @@ export const amenities = cache((kind: "hotel" | "residence") =>
 );
 
 export const getHotel = cache((slug: string) =>
-  orNull(apiGet<HotelDetail>(`hotels/${encodeURIComponent(slug)}/`, { tags: HOTEL_TAGS })),
+  nullIfNotFound(apiGet<HotelDetail>(`hotels/${encodeURIComponent(slug)}/`, { tags: HOTEL_TAGS })),
 );
 
 /** Disponibilité de chaque type de chambre ; null sans période valide ou si l'API refuse. */
@@ -134,7 +125,7 @@ export const residenceFacets = cache(async () => {
 });
 
 export const getResidence = cache((slug: string) =>
-  orNull(apiGet<ResidenceDetail>(`residences/${encodeURIComponent(slug)}/`, { tags: RESIDENCE_TAGS })),
+  nullIfNotFound(apiGet<ResidenceDetail>(`residences/${encodeURIComponent(slug)}/`, { tags: RESIDENCE_TAGS })),
 );
 
 export async function residenceAvailability(slug: string, stay: Stay) {

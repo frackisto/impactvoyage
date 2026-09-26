@@ -15,7 +15,16 @@ class EventListSerializer(serializers.ModelSerializer):
         ]
 
 
+class PartnerSerializer(serializers.Serializer):
+    """Partenaire d'un événement (champ JSON « partenaires » de l'admin)."""
+
+    name = serializers.CharField()
+    logo = serializers.URLField(required=False, allow_blank=True)
+    url = serializers.URLField(required=False, allow_blank=True)
+
+
 class EventDetailSerializer(EventListSerializer):
+    partners = PartnerSerializer(many=True, read_only=True)
     destination = DestinationMiniSerializer(read_only=True)
     media = MediaAssetSerializer(many=True, read_only=True)
     albums = serializers.SlugRelatedField(slug_field="slug", many=True, read_only=True)

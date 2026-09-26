@@ -767,7 +767,7 @@ media/
 - HTTPS obligatoire (HSTS), `SECURE_PROXY_SSL_HEADER` derrière Nginx, CORS limité au domaine du frontend, `CSRF_TRUSTED_ORIGINS` en production.
 - Protection CSRF, XSS (échappement React, contenu blog nettoyé avec `nh3`), injection SQL (ORM, aucun SQL brut non paramétré).
 - En-têtes : `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy` (posés par Next.js et Nginx).
-- **Rate limiting** DRF (déjà configuré en Phase 2) : anon 120/min, user 300/min, auth 10/min, devis 5/h, contact 5/h, avis 3/h.
+- **Rate limiting** DRF (déjà configuré en Phase 2) : anon 120/min, user 300/min, auth 10/min, devis 5/h, contact 5/h, avis 3/h. Les pages étant rendues par Next.js, le serveur Next.js s'identifie auprès de Django par un secret partagé (`FRONTEND_SHARED_SECRET`) et transmet l'adresse réelle du visiteur (`X-Client-IP`) : les limites s'appliquent à chaque visiteur, les lectures publiques mises en cache par Next.js ne sont pas limitées par Django (limitation des pages par Nginx), les écritures le sont toujours. `X-Forwarded-For` n'est lu que derrière un proxy déclaré (`NUM_PROXIES`). Voir `apps/core/throttling.py` (Phase 15).
 - **Anti-spam** des formulaires publics (devis, contact, avis, inscription) : champ *honeypot* + **Cloudflare Turnstile**, vérifié côté Django.
 - Validation systématique côté backend, permissions strictes par action (§ 6.3).
 - Uploads contrôlés : extension, MIME réel, taille, renommage (§ 8).
@@ -845,8 +845,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 12 | Création des circuits | ✅ |
 | 13 | Création des hôtels et résidences | ✅ |
 | 14 | Création des véhicules | ✅ |
-| 15 | Création des activités et événements | ⏭ prochaine étape |
-| 16 | Création du moteur de recherche | |
+| 15 | Création des activités et événements | ✅ |
+| 16 | Création du moteur de recherche | ⏭ prochaine étape |
 | 17 | Création du système de devis | |
 | 18 | Création des réservations | |
 | 19 | Création du backoffice | |

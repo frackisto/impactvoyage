@@ -31,6 +31,11 @@ export type RoomAvailability = Schemas["RoomAvailability"];
 export type Availability = Schemas["Availability"];
 export type VehicleList = Schemas["VehicleList"];
 export type VehicleDetail = Schemas["VehicleDetail"];
+export type ActivityList = Schemas["ActivityList"];
+export type ActivityDetail = Schemas["ActivityDetail"];
+export type ActivityAvailability = Schemas["ActivityAvailability"];
+export type EventDetail = Schemas["EventDetail"];
+export type MediaAsset = Schemas["MediaAsset"];
 
 export type Paginated<T> = {
   count: number;

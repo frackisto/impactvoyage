@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { backendFetch, refreshTokens, unavailableResponse } from "@/lib/api/backend";
+import { backendFetch, clientIp, refreshTokens, unavailableResponse } from "@/lib/api/backend";
 import { CURRENCY_COOKIE } from "@/lib/api/server";
 import {
   ACCESS_COOKIE,
@@ -10,7 +10,6 @@ import {
   setAuthCookies,
   type TokenPair,
 } from "@/lib/auth/cookies";
-import { forwardedFor } from "@/lib/auth/handlers";
 import { isTokenExpired } from "@/lib/auth/jwt";
 
 /**
@@ -27,12 +26,13 @@ async function relay(request: NextRequest, context: RouteContext<"/api/backend/[
     );
   }
 
+  const ip = clientIp(request.headers);
   const store = await cookies();
   let access = store.get(ACCESS_COOKIE)?.value;
   const refresh = store.get(REFRESH_COOKIE)?.value;
   let renewed: TokenPair | null = null;
   if (refresh && isTokenExpired(access)) {
-    renewed = await refreshTokens(refresh);
+    renewed = await refreshTokens(refresh, ip);
     access = renewed?.access;
   }
 
@@ -48,7 +48,8 @@ async function relay(request: NextRequest, context: RouteContext<"/api/backend/[
         token,
         locale: request.headers.get("accept-language") ?? undefined,
         currency: store.get(CURRENCY_COOKIE)?.value,
-        headers: { ...(contentType ? { "Content-Type": contentType } : {}), ...forwardedFor(request) },
+        headers: contentType ? { "Content-Type": contentType } : undefined,
+        clientIp: ip,
         cache: "no-store",
       },
       request.nextUrl.search,
@@ -56,7 +57,7 @@ async function relay(request: NextRequest, context: RouteContext<"/api/backend/[
 
   let upstream = await send(access).catch(() => null);
   if (upstream?.status === 401 && refresh && !renewed) {
-    renewed = await refreshTokens(refresh);
+    renewed = await refreshTokens(refresh, ip);
     if (renewed) upstream = await send(renewed.access).catch(() => null);
   }
   if (!upstream) return unavailableResponse();

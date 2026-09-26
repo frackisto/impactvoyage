@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { ApiError } from "@/lib/api/errors";
+import { nullIfNotFound } from "@/lib/api/errors";
 import { apiGet } from "@/lib/api/server";
 import type { DestinationDetail, DestinationList, Paginated, Review, VisaService } from "@/types";
 
@@ -39,14 +39,9 @@ export const allDestinations = cache(async (): Promise<DestinationList[]> => {
 });
 
 /** Fiche d'une destination ; null si elle n'existe pas ou n'est pas publiée. */
-export const getDestination = cache(async (slug: string): Promise<DestinationDetail | null> => {
-  try {
-    return await apiGet<DestinationDetail>(`destinations/${encodeURIComponent(slug)}/`, { tags: TAGS });
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
-  }
-});
+export const getDestination = cache((slug: string) =>
+  nullIfNotFound(apiGet<DestinationDetail>(`destinations/${encodeURIComponent(slug)}/`, { tags: TAGS })),
+);
 
 /** Compléments de la fiche : une erreur ici n'empêche pas d'afficher la destination. */
 async function optional<T>(request: Promise<T>, fallback: T): Promise<T> {

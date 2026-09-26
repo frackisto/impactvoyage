@@ -14,6 +14,10 @@ const PAGES = [
   "/residences/studio-meuble-yopougon-maroc",
   "/vehicules",
   "/vehicules/demo-suzuki-vitara",
+  "/activites",
+  "/activites/visite-guidee-grand-bassam",
+  "/evenements",
+  "/evenements/voyage-de-groupe-dubai-2026",
 ];
 
 test.describe("design system", () => {

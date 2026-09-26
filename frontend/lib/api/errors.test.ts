@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ApiError, toApiError } from "./errors";
+import { ApiError, nullIfNotFound, toApiError } from "./errors";
 
 describe("toApiError", () => {
   it("lit le format d'erreur unique du backend", () => {
@@ -25,5 +25,13 @@ describe("toApiError", () => {
 
   it("reste utilisable face à une réponse inattendue", () => {
     expect(toApiError(502, "<html>Bad gateway</html>").code).toBe("unexpected_error");
+  });
+});
+
+describe("nullIfNotFound", () => {
+  it("renvoie null pour une 404 et laisse passer les autres erreurs", async () => {
+    await expect(nullIfNotFound(Promise.resolve("fiche"))).resolves.toBe("fiche");
+    await expect(nullIfNotFound(Promise.reject(new ApiError(404, "not_found", "…")))).resolves.toBeNull();
+    await expect(nullIfNotFound(Promise.reject(new ApiError(503, "down", "…")))).rejects.toBeInstanceOf(ApiError);
   });
 });

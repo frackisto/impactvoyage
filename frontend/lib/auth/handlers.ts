@@ -2,7 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
-import { backendFetch, unavailableResponse } from "@/lib/api/backend";
+import { backendFetch, clientIp, unavailableResponse } from "@/lib/api/backend";
 
 import { setAuthCookies, type TokenPair } from "./cookies";
 
@@ -18,7 +18,8 @@ export async function forwardAuth(path: "auth/login/" | "auth/register/", reques
     method: "POST",
     json: payload,
     locale: request.headers.get("accept-language") ?? undefined,
-    headers: forwardedFor(request),
+    // Limite de débit « connexion » appliquée à l'adresse du visiteur, pas au serveur.
+    clientIp: clientIp(request.headers),
     cache: "no-store",
   }).catch(() => null);
   if (!response) return unavailableResponse();
@@ -29,13 +30,4 @@ export async function forwardAuth(path: "auth/login/" | "auth/register/", reques
   const result = NextResponse.json({ user }, { status: response.status });
   setAuthCookies(result.cookies, { access, refresh });
   return result;
-}
-
-/**
- * Transmet l'IP du visiteur à Django : sans cela, toutes les requêtes du BFF
- * partageraient le même quota de débit (celui du serveur Next.js).
- */
-export function forwardedFor(request: Request): HeadersInit {
-  const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
-  return ip ? { "X-Forwarded-For": ip } : {};
 }

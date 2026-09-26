@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 14
+# Plateforme Web Agence de Voyage — Phase 15
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -11,6 +11,8 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 # ⚠️ Éditer les deux fichiers .env et définir le même mot de passe
 #    pour DATABASE_PASSWORD, ainsi qu'une SECRET_KEY forte.
+#    Dans le .env racine, remplacer FRONTEND_SHARED_SECRET par une valeur aléatoire
+#    (secret partagé backend / serveur Next.js, voir « Limitation de débit » ci-dessous).
 
 # 2. Construire et démarrer les services
 docker compose up --build
@@ -23,7 +25,7 @@ docker compose up --build
 docker compose exec backend python manage.py load_agency_content
 
 # 4. (Développement uniquement) Ajouter les données de démonstration :
-#    circuits, hébergements, véhicules, avis — fictifs, interdits en production
+#    circuits, hébergements, véhicules, activités, événements, avis — fictifs, interdits en production
 docker compose exec backend python manage.py seed_demo
 # ... et pour les retirer : python manage.py seed_demo --reset
 ```
@@ -335,17 +337,57 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
 - **Tests E2E** : 4 workers au plus (la moitié des cœurs par défaut saturait le serveur de
   test et faisait échouer des tests au hasard) ; un test de défilement horizontal par page.
 
-## Ce qui a été validé (Phase 14)
+## Activités et événements (Phase 15)
 
-- Backend : `manage.py check`, aucune migration manquante, 128 tests pytest dont la
-  démonstration (véhicules, réservation fictive recréée sans doublon, retrait complet).
-- Frontend : TypeScript, ESLint, 29 tests Vitest (dont la grille du calendrier) ; 102 tests
-  Playwright sur ordinateur et mobile, stables sur deux passages : audit axe (WCAG 2.2 AA)
-  de 12 pages sans violation grave, filtres et période dans l'URL, disponibilité et total,
-  calendrier, JSON-LD, absence de défilement horizontal.
+- **Activités** `/activites` : filtres par destination, date, nombre de participants, type,
+  durée et budget. Avec une date, seules les activités qui ont encore assez de places ce
+  jour-là sont proposées, avec les places restantes sur chaque carte. Le moteur de
+  recherche de l'accueil (onglet Activités) y mène directement.
+- **Fiche activité** : informations clés, vérification des places à une date pour N
+  participants (« Plus que 2 places le mardi 6 octobre », total indicatif, demande
+  préremplie `/devis?activity=…&date=…&participants=…`), galerie, activités proches. Les
+  activités incluses dans un circuit s'affichent sur la fiche du circuit.
+- **Événementiel** `/evenements` : réalisations de l'agence filtrables par type et par
+  année ; fiche avec période, lieu, participants, partenaires, photos (visionneuse),
+  vidéos (lien vers YouTube/Vimeo) et invitation à organiser son événement. JSON-LD `Event`.
+- **API** : filtre `date` (+ `participants`) et `places_left` sur `/activities/`, action
+  `/activities/{slug}/availability/?date=` ; partenaires d'événement typés.
+- **Démonstration** : 6 activités (dont 3 incluses dans le circuit Dubaï), une inscription
+  fictive (18 places sur 20 à J+10) et 2 événements passés.
+
+> La **médiathèque** (albums, CdC § 16) n'a pas encore de page : les photos et vidéos des
+> événements s'affichent sur leur fiche.
+
+### Limitation de débit (correction importante)
+
+Toutes les pages sont rendues par le serveur Next.js : Django voyait donc **une seule
+adresse IP pour tous les visiteurs**, et les limites (120 lectures/min, 10 connexions/min)
+s'appliquaient au site entier — sous trafic modéré, les pages se seraient affichées vides
+et les connexions bloquées pour tout le monde. De plus, l'en-tête `X-Forwarded-For` était
+pris tel quel et permettait de contourner les limites.
+
+- Le serveur Next.js s'identifie avec `FRONTEND_SHARED_SECRET` (même valeur des deux côtés,
+  fichier `.env` racine avec Docker, `frontend/.env.local` hors Docker ; obligatoire en
+  production). Il transmet l'adresse réelle du visiteur (`X-Client-IP`) pour les requêtes
+  qui lui sont propres : connexion, formulaires, disponibilités.
+- Les lectures publiques mises en cache par Next.js ne sont pas limitées par Django (le
+  trafic des pages sera limité par Nginx, Phase 24) ; les écritures le sont toujours.
+- `X-Forwarded-For` n'est plus pris en compte par défaut (`NUM_PROXIES=0` ; 1 derrière
+  Nginx, qui devra poser `X-Real-IP`).
+
+## Ce qui a été validé (Phase 15)
+
+- Backend : `manage.py check`, aucune migration manquante, 136 tests pytest dont le filtre
+  par date et les places restantes, la limitation de débit (lectures du serveur non
+  limitées, limite par visiteur, écritures toujours limitées, en-têtes falsifiés sans
+  effet) et la démonstration.
+- Frontend : TypeScript, ESLint, 30 tests Vitest ; 130 tests Playwright sur ordinateur et
+  mobile, stables sur deux passages avec le cache de données vidé au démarrage : audit axe
+  (WCAG 2.2 AA) de 16 pages sans violation grave, filtres, places restantes, moteur de
+  recherche, activités incluses dans un circuit, événements, JSON-LD.
 
 ## Prochaine étape
 
-**Phase 15 : Création des activités et événements** — activités (excursions, visites)
-filtrables par destination, catégorie, date et budget avec places restantes ; événements
-de l'agence (sorties, séminaires) avec leur médiathèque.
+**Phase 16 : Création du moteur de recherche** — recherche globale (`/recherche`) dans les
+destinations, circuits, hébergements, véhicules, activités et événements, avec la barre de
+recherche de l'en-tête.

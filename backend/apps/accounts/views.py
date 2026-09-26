@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
@@ -15,6 +14,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from apps.core.throttling import AnonRateThrottle, ScopedRateThrottle, UserRateThrottle
 
 from . import services
 from .serializers import (

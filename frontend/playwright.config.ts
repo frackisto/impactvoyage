@@ -27,7 +27,9 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: `npx next start -p ${PORT}`,
+    // Cache de données vidé au démarrage : sinon, des réponses de l'API mises en cache lors
+    // d'une exécution précédente (5 min) masqueraient les données de démonstration à jour.
+    command: `node -e "require('fs').rmSync('.next/cache/fetch-cache', { recursive: true, force: true })" && npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     // Jamais de réutilisation : un ancien serveur resté ouvert fausserait les tests.
     reuseExistingServer: false,

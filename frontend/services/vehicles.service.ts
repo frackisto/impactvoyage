@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { ApiError } from "@/lib/api/errors";
+import { nullIfNotFound } from "@/lib/api/errors";
 import { apiGet } from "@/lib/api/server";
 import type { Availability, Paginated, VehicleDetail, VehicleList } from "@/types";
 
@@ -43,14 +43,9 @@ export const vehicleFacets = cache(async () => {
   };
 });
 
-export const getVehicle = cache(async (slug: string): Promise<VehicleDetail | null> => {
-  try {
-    return await apiGet<VehicleDetail>(`vehicles/${encodeURIComponent(slug)}/`, { tags: TAGS });
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
-  }
-});
+export const getVehicle = cache((slug: string) =>
+  nullIfNotFound(apiGet<VehicleDetail>(`vehicles/${encodeURIComponent(slug)}/`, { tags: TAGS })),
+);
 
 /** Disponibilité sur [start, end) et périodes réservées à partir de start ; null en cas d'échec. */
 export function vehicleAvailability(slug: string, start: string, end: string) {

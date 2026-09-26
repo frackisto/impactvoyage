@@ -40,6 +40,9 @@ services:
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --reload"
     env_file:
       - ./backend/.env
+    environment:
+      # Même valeur que le frontend (fichier .env racine).
+      FRONTEND_SHARED_SECRET: ${FRONTEND_SHARED_SECRET:-}
     volumes:
       - ./backend:/app
       - static_volume:/app/staticfiles
@@ -95,6 +98,8 @@ services:
     environment:
       # Adresse interne du backend, vue depuis le serveur Next.js (jamais par le navigateur).
       API_URL: http://backend:8000/api/v1
+      # Identifie le serveur Next.js auprès de Django (fichier .env racine).
+      FRONTEND_SHARED_SECRET: ${FRONTEND_SHARED_SECRET:-}
     ports:
       - "3000:3000"
     depends_on:

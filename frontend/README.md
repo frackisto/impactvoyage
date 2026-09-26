@@ -11,6 +11,7 @@ next-intl (FR/EN) · TanStack Query · React Hook Form + Zod · Axios.
 
 ```bash
 cp .env.example .env.local   # API_URL=http://localhost:8000/api/v1
+# + FRONTEND_SHARED_SECRET : même valeur que dans le .env racine (limitation de débit)
 npm install
 npm run dev                  # http://localhost:3000 (le backend Django doit tourner)
 ```
@@ -19,7 +20,7 @@ npm run dev                  # http://localhost:3000 (le backend Django doit tou
 |---|---|
 | `npm run dev` / `build` / `start` | Développement, build de production, serveur de production |
 | `npm run lint` · `npm run typecheck` · `npm test` | ESLint, TypeScript, Vitest |
-| `npm run test:e2e` | Playwright (bureau + mobile) et audit d'accessibilité axe — après `npm run build` |
+| `npm run test:e2e` | Playwright (bureau + mobile, 4 workers, cache de données vidé au démarrage) et audit d'accessibilité axe — après `npm run build` ; suppose `load_agency_content` et `seed_demo` |
 | `npm run api:types` | Régénère `types/api.d.ts` depuis le schéma OpenAPI du backend |
 
 ## Architecture

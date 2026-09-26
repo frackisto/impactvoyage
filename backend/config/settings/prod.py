@@ -8,8 +8,11 @@ from django.core.exceptions import ImproperlyConfigured  # noqa: E402
 # si une clé manque ou est trop courte (ex. tronquée au premier « # » d'un .env).
 SECRET_KEY = env("SECRET_KEY")  # noqa: F405
 SIMPLE_JWT["SIGNING_KEY"] = env("JWT_SIGNING_KEY")  # noqa: F405
+# Sans ce secret, tous les visiteurs partageraient une seule limite de débit.
+FRONTEND_SHARED_SECRET = env("FRONTEND_SHARED_SECRET")  # noqa: F405
 for _name, _value, _min in (("SECRET_KEY", SECRET_KEY, 50),
-                            ("JWT_SIGNING_KEY", SIMPLE_JWT["SIGNING_KEY"], 32)):  # noqa: F405
+                            ("JWT_SIGNING_KEY", SIMPLE_JWT["SIGNING_KEY"], 32),  # noqa: F405
+                            ("FRONTEND_SHARED_SECRET", FRONTEND_SHARED_SECRET, 32)):
     if len(_value) < _min:
         raise ImproperlyConfigured(f"{_name} doit faire au moins {_min} caractères.")
 

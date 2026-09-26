@@ -2,7 +2,7 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { routing } from "@/i18n/routing";
-import { refreshTokens } from "@/lib/api/backend";
+import { clientIp, refreshTokens } from "@/lib/api/backend";
 import { ACCESS_COOKIE, clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from "@/lib/auth/cookies";
 import { isTokenExpired } from "@/lib/auth/jwt";
 
@@ -32,7 +32,7 @@ export default async function proxy(request: NextRequest) {
 
   if (isProtected && isTokenExpired(request.cookies.get(ACCESS_COOKIE)?.value)) {
     const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
-    const renewed = refresh ? await refreshTokens(refresh) : null;
+    const renewed = refresh ? await refreshTokens(refresh, clientIp(request.headers)) : null;
     if (!renewed) {
       const response = NextResponse.redirect(loginUrl(request, locale));
       clearAuthCookies(response.cookies);

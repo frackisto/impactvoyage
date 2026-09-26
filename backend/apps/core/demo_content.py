@@ -484,6 +484,134 @@ VEHICLES = [
     },
 ]
 
+ACTIVITY_CATEGORIES = [
+    ("excursions", "Excursions", "Excursions"),
+    ("visites-culturelles", "Visites culturelles", "Cultural visits"),
+    ("loisirs-nautiques", "Loisirs nautiques", "Water activities"),
+    ("aventure", "Aventure", "Adventure"),
+]
+
+ACTIVITIES = [
+    {
+        "slug": "balade-pirogue-lagune-tagba", "destination": "grand-lahou", "category": "loisirs-nautiques",
+        "title": ("Balade en pirogue sur la lagune Tagba", "Canoe ride on the Tagba lagoon"),
+        "short": ("Deux heures au fil de l'eau jusqu'à l'embouchure du Bandama.",
+                  "Two hours on the water to the mouth of the Bandama river."),
+        "description": (
+            "Un piroguier du village vous emmène à travers la mangrove jusqu'à l'embouchure du "
+            "Bandama, où la lagune rencontre l'océan. Gilets de sauvetage fournis.",
+            "A village boatman takes you through the mangrove to the mouth of the Bandama, where "
+            "the lagoon meets the ocean. Life jackets provided.",
+        ),
+        "hours": "2", "price": "10000", "max": 12, "cover": "grand-lahou-visite.jpg",
+    },
+    {
+        "slug": "visite-guidee-grand-bassam", "destination": "mondoukou", "category": "visites-culturelles",
+        "title": ("Visite guidée de Grand-Bassam historique", "Guided tour of historic Grand-Bassam"),
+        "short": ("Le quartier France, patrimoine mondial de l'UNESCO, avec un guide local.",
+                  "The Quartier France, a UNESCO World Heritage site, with a local guide."),
+        "description": (
+            "Découvrez la première capitale de la Côte d'Ivoire : maisons coloniales, musée "
+            "national du costume, phare et village artisanal.",
+            "Discover the first capital of Côte d'Ivoire: colonial houses, national costume "
+            "museum, lighthouse and craft village.",
+        ),
+        "hours": "3", "price": "15000", "max": 20, "cover": None,
+    },
+    {
+        "slug": "tour-abidjan-a-velo", "destination": "abidjan", "category": "excursions",
+        "title": ("Abidjan à vélo", "Abidjan by bike"),
+        "short": ("Le Plateau et les berges de la lagune à vélo, tôt le matin.",
+                  "The Plateau and the lagoon shores by bike, early in the morning."),
+        "description": (
+            "Une balade à vélo encadrée, de la cathédrale Saint-Paul aux berges de la lagune "
+            "Ébrié, avant la chaleur. Vélos et casques fournis.",
+            "A guided bike ride from St Paul's Cathedral to the shores of the Ébrié lagoon, "
+            "before the heat. Bikes and helmets provided.",
+        ),
+        "hours": "3", "price": "12000", "max": 10, "cover": None,
+    },
+    {
+        "slug": "safari-desert-dubai", "destination": "dubai", "category": "aventure",
+        "title": ("Safari dans le désert en 4x4", "4x4 desert safari"),
+        "short": ("Dunes en 4x4, coucher de soleil et dîner-spectacle dans un camp bédouin.",
+                  "Dunes by 4x4, sunset and dinner show in a Bedouin camp."),
+        "description": (
+            "Départ de votre hôtel en milieu d'après-midi, descente des dunes en 4x4, balade à "
+            "dos de chameau, puis dîner barbecue et spectacle sous les étoiles.",
+            "Hotel pick-up mid-afternoon, 4x4 dune bashing, camel ride, then barbecue dinner and "
+            "show under the stars.",
+        ),
+        "hours": "6", "price": "65000", "max": 30, "cover": None,
+    },
+    {
+        "slug": "burj-khalifa-niveau-124", "destination": "dubai", "category": "visites-culturelles",
+        "title": ("Burj Khalifa, niveau 124", "Burj Khalifa, level 124"),
+        "short": ("La vue depuis la plus haute tour du monde, billet coupe-file.",
+                  "The view from the world's tallest tower, skip-the-line ticket."),
+        "description": (
+            "Montée en ascenseur ultra-rapide jusqu'aux terrasses d'observation du 124e étage, "
+            "avec une vue à 360° sur Dubaï.",
+            "Ultra-fast lift up to the observation decks on the 124th floor, with a 360° view "
+            "over Dubai.",
+        ),
+        "hours": "1.5", "price": "45000", "max": None, "cover": "dubai-burj-khalifa.jpg",
+    },
+    {
+        "slug": "diner-croisiere-marina-dubai", "destination": "dubai", "category": "loisirs-nautiques",
+        "title": ("Dîner-croisière dans la marina", "Marina dinner cruise"),
+        "short": ("Deux heures en dhow traditionnel, buffet international.",
+                  "Two hours on a traditional dhow, international buffet."),
+        "description": (
+            "Embarquez sur un dhow illuminé pour découvrir les gratte-ciel de la marina de nuit, "
+            "autour d'un buffet international.",
+            "Board an illuminated dhow to see the marina skyscrapers by night, with an "
+            "international buffet.",
+        ),
+        "hours": "2.5", "price": "55000", "max": 40, "cover": "hero-dubai-marina.jpg",
+    },
+]
+
+# Activités incluses dans un circuit : (circuit, [activités]).
+TOUR_ACTIVITIES = [
+    ("dubai-ville-des-records", ["burj-khalifa-niveau-124", "safari-desert-dubai", "diner-croisiere-marina-dubai"]),
+]
+
+# Inscriptions confirmées fictives : (activité, dans N jours, participants).
+ACTIVITY_BOOKINGS = [("visite-guidee-grand-bassam", 10, 18)]
+
+# Événements passés de démonstration (le contenu réel de l'agence en compte déjà un).
+EVENTS = [
+    {
+        "slug": "voyage-de-groupe-dubai-2026", "category": "VOYAGE_GROUPE", "destination": "dubai",
+        "title": ("Voyage de groupe à Dubaï", "Group trip to Dubai"),
+        "short": ("25 voyageurs à la découverte de Dubaï, du désert à la marina.",
+                  "25 travellers discovering Dubai, from the desert to the marina."),
+        "description": (
+            "Une semaine à Dubaï pour un groupe de 25 voyageurs : Burj Khalifa, safari dans le "
+            "désert, souks et croisière dans la marina. Vols, visas et hôtel organisés par l'agence.",
+            "A week in Dubai for a group of 25 travellers: Burj Khalifa, desert safari, souks and "
+            "marina cruise. Flights, visas and hotel arranged by the agency.",
+        ),
+        "date": (2026, 3, 14), "end": (2026, 3, 20), "location": "Dubaï, Émirats arabes unis",
+        "participants": 25, "cover": "dubai-burj-al-arab.jpg", "gallery": ["dubai-mall.jpg", "hero-dubai-marina.jpg"],
+    },
+    {
+        "slug": "journee-culturelle-grand-bassam", "category": "CULTUREL", "destination": "mondoukou",
+        "title": ("Journée culturelle à Grand-Bassam", "Cultural day in Grand-Bassam"),
+        "short": ("Visite du quartier France et déjeuner au bord de l'océan.",
+                  "Visit of the Quartier France and lunch by the ocean."),
+        "description": (
+            "Une journée pour 40 participants : visite guidée du quartier historique, musée du "
+            "costume, puis détente et déjeuner à Mondoukou.",
+            "A day for 40 participants: guided tour of the historic district, costume museum, then "
+            "relaxation and lunch in Mondoukou.",
+        ),
+        "date": (2025, 11, 22), "end": None, "location": "Grand-Bassam, Côte d'Ivoire",
+        "participants": 40, "cover": "mondoukou.jpg", "gallery": [],
+    },
+]
+
 # Réservation confirmée fictive (calendrier de disponibilité) : (véhicule, dans N jours, durée).
 VEHICLE_BOOKINGS = [("demo-suzuki-vitara", 5, 4)]
 

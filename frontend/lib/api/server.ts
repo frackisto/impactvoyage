@@ -1,12 +1,12 @@
 import "server-only";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getLocale } from "next-intl/server";
 
 import { ACCESS_COOKIE } from "@/lib/auth/cookies";
 import { isTokenExpired } from "@/lib/auth/jwt";
 
-import { backendFetch } from "./backend";
+import { backendFetch, clientIp } from "./backend";
 import { toApiError } from "./errors";
 
 export const CURRENCY_COOKIE = "iv_currency";
@@ -39,13 +39,17 @@ function toSearch(query?: Query): string {
 export async function apiGet<T>(path: string, options: ServerGetOptions = {}): Promise<T> {
   const [locale, store] = await Promise.all([getLocale(), cookies()]);
   const token = options.auth ? store.get(ACCESS_COOKIE)?.value : undefined;
+  const personal = options.auth || options.revalidate === false;
   const response = await backendFetch(
     path,
     {
       locale,
       currency: store.get(CURRENCY_COOKIE)?.value,
       token: token && !isTokenExpired(token, 0) ? token : undefined,
-      ...(options.auth || options.revalidate === false
+      // Requête propre au visiteur (non mise en cache) : Django limite son adresse à lui.
+      // Pas pour les lectures en cache : l'adresse ferait partie de la clé de cache.
+      clientIp: personal ? clientIp(await headers()) : undefined,
+      ...(personal
         ? { cache: "no-store" as const }
         : { next: { revalidate: options.revalidate ?? 300, tags: options.tags } }),
     },

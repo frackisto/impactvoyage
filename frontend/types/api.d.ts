@@ -11,12 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description Lecture publique branchée sur les selectors :
-         *     - list : list_selector(**paramètres validés par filter_params_class) ;
-         *     - retrieve : detail_selector(slug), 404 si absent ou non publié.
-         *     La recherche (?search=) et le tri (?ordering=) passent par les backends DRF.
-         */
+        /** @description Activités et excursions : /activities, /activities/{slug}, /availability. */
         get: operations["activities_list"];
         put?: never;
         post?: never;
@@ -33,13 +28,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description Lecture publique branchée sur les selectors :
-         *     - list : list_selector(**paramètres validés par filter_params_class) ;
-         *     - retrieve : detail_selector(slug), 404 si absent ou non publié.
-         *     La recherche (?search=) et le tri (?ordering=) passent par les backends DRF.
-         */
+        /** @description Activités et excursions : /activities, /activities/{slug}, /availability. */
         get: operations["activities_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activities/{slug}/availability/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Places restantes à une date. */
+        get: operations["activities_availability_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1183,6 +1190,13 @@ export interface components {
          * @enum {string}
          */
         AccommodationTypeEnum: "HOTEL" | "APARTMENT" | "PARTNER";
+        ActivityAvailability: {
+            /** Format: date */
+            date: string;
+            /** @description null : sans limite de places */
+            places_left: number | null;
+            available: boolean;
+        };
         ActivityCard: {
             readonly id: number;
             slug: string;
@@ -1262,6 +1276,7 @@ export interface components {
             booking_mode?: components["schemas"]["BookingModeEnum"];
             /** Mise en avant */
             is_featured?: boolean;
+            readonly places_left: number | null;
         };
         AlbumDetail: {
             readonly id: number;
@@ -1662,11 +1677,7 @@ export interface components {
             readonly destination: components["schemas"]["DestinationMini"];
             /** Participants */
             participants_count?: number | null;
-            /**
-             * Partenaires
-             * @description Ex. [{"name": "…", "logo": "https://…", "url": "https://…"}]
-             */
-            partners?: unknown;
+            readonly partners: components["schemas"]["Partner"][];
             readonly media: components["schemas"]["MediaAsset"][];
             readonly albums: string[];
         };
@@ -2212,6 +2223,12 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["VisaService"][];
+        };
+        /** @description Partenaire d'un événement (champ JSON « partenaires » de l'admin). */
+        Partner: {
+            name: string;
+            logo?: string;
+            url?: string;
         };
         PasswordChangeRequest: {
             current_password: string;
@@ -3041,6 +3058,8 @@ export interface operations {
         parameters: {
             query?: {
                 category?: string;
+                /** @description Activités ayant encore des places ce jour-là */
+                date?: string;
                 destination?: string;
                 max_hours?: string;
                 max_price?: string;
@@ -3050,6 +3069,7 @@ export interface operations {
                 page?: number;
                 /** @description Nombre de résultats à retourner par page. */
                 page_size?: number;
+                participants?: number;
                 /** @description Un terme de recherche. */
                 search?: string;
             };
@@ -3086,6 +3106,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityDetail"];
+                };
+            };
+        };
+    };
+    activities_availability_retrieve: {
+        parameters: {
+            query: {
+                /** @description AAAA-MM-JJ */
+                date: string;
+                /** @description 1 par défaut */
+                participants?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityAvailability"];
                 };
             };
         };

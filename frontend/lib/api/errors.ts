@@ -41,3 +41,13 @@ export function toApiError(status: number, body: unknown): ApiError {
   }
   return new ApiError(status, "unexpected_error", "Une erreur inattendue est survenue.");
 }
+
+/** Résultat de la requête, ou null si la ressource n'existe pas (404) ; les autres erreurs remontent. */
+export async function nullIfNotFound<T>(request: Promise<T>): Promise<T | null> {
+  try {
+    return await request;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
+}

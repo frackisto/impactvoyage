@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ContentCard } from "@/components/common/content-card";
+import { ActivityCard } from "@/components/activities/activity-card";
 import { Container } from "@/components/common/container";
 import { ImmersiveHero } from "@/components/common/immersive-hero";
 import { Section, SectionHeader } from "@/components/common/page-section";
@@ -276,14 +276,7 @@ export default async function TourPage({ params }: Props) {
           <SectionHeader id="tour-activities" eyebrow={t("activitiesEyebrow")} title={t("activitiesTitle")} />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {tour.activities.map((activity) => (
-              <ContentCard
-                key={activity.id}
-                href={`/activites/${activity.slug}`}
-                title={activity.title}
-                description={activity.short_description}
-                image={activity.cover_image}
-                imageAlt={activity.cover_alt || activity.title}
-              />
+              <ActivityCard key={activity.id} activity={activity} />
             ))}
           </div>
         </Section>

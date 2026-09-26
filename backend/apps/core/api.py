@@ -9,10 +9,10 @@ from django.http import Http404
 from rest_framework import exceptions, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.serializers import as_serializer_error
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import exception_handler as drf_exception_handler
 
 from .exceptions import BusinessError
+from .throttling import ScopedRateThrottle
 
 
 def error_body(code, message, details=None):

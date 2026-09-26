@@ -64,6 +64,17 @@ def room_units_left(room, start, end):
     return max(room.quantity - taken, 0)
 
 
+def places_taken_on(day):
+    """Expression : participants déjà inscrits à l'activité courante (OuterRef) ce jour-là, 0 sinon."""
+    taken = (
+        BookingItem.objects.filter(activity=OuterRef("pk"), is_blocking=True, start_date=day)
+        .values("activity")
+        .annotate(n=Sum("quantity"))
+        .values("n")[:1]
+    )
+    return Coalesce(Subquery(taken, output_field=IntegerField()), 0)
+
+
 def activity_places_left(activity, day):
     """Places restantes pour une activité à une date (None si pas de limite)."""
     if activity.max_participants is None:

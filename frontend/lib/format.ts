@@ -48,3 +48,10 @@ export function multiplyMoney(money: Money, factor: number): Money {
     display: money.display ? { ...money.display, amount: times(money.display.amount) } : money.display,
   };
 }
+
+/** Durée en heures : « 1,5 h » (fr), « 1.5 hr » (en). */
+export function formatHours(value: string | number, locale: string): string {
+  return new Intl.NumberFormat(intlLocale(locale), { style: "unit", unit: "hour", unitDisplay: "short", maximumFractionDigits: 1 }).format(
+    Number(value),
+  );
+}
