@@ -20,7 +20,8 @@ export type GalleryPhoto = { id: number; image: string | null; alt: string };
 export function galleryLayout(total: number): { columns: string; feature: boolean } {
   if (total >= 3 && total % 3 === 0) return { columns: "sm:grid-cols-3", feature: true };
   if (total >= 5 && (total + 3) % 4 === 0) return { columns: "sm:grid-cols-3 lg:grid-cols-4", feature: true };
-  const columns: Record<number, string> = { 1: "grid-cols-1", 2: "sm:grid-cols-2", 4: "lg:grid-cols-4" };
+  // Une seule photo : largeur limitée pour ne pas occuper tout l'écran.
+  const columns: Record<number, string> = { 1: "grid-cols-1 max-w-3xl", 2: "sm:grid-cols-2", 4: "lg:grid-cols-4" };
   return { columns: columns[total] ?? "sm:grid-cols-3 lg:grid-cols-4", feature: false };
 }
 /**

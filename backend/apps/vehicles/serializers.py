@@ -27,6 +27,7 @@ class VehicleListSerializer(serializers.ModelSerializer):
 
 
 class VehicleDetailSerializer(VehicleListSerializer):
+    features = serializers.ListField(child=serializers.CharField(), read_only=True)
     images = GalleryImageSerializer(many=True, read_only=True)
     promo_price = serializers.SerializerMethodField()
 

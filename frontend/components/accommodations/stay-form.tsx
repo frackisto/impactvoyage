@@ -8,19 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "@/i18n/navigation";
 import { pageHref } from "@/lib/pagination";
-import type { Stay } from "@/lib/stay";
-
-const addDays = (date: string, days: number) => {
-  const d = new Date(`${date}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-};
+import { addDays, type Stay } from "@/lib/stay";
 
 /**
  * Dates de séjour (et voyageurs / chambres pour un hôtel) sur une fiche : la
  * page est rendue à nouveau côté serveur avec les disponibilités de la période.
  */
-export function StayForm({ pathname, current, withRooms = false }: { pathname: string; current: Stay; withRooms?: boolean }) {
+type StayFormProps = {
+  pathname: string;
+  current: Stay;
+  withRooms?: boolean;
+  /** Libellés des dates (par défaut : arrivée, départ). */
+  labels?: { start: string; end: string };
+};
+
+export function StayForm({ pathname, current, withRooms = false, labels }: StayFormProps) {
   const t = useTranslations("Stays");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -55,7 +57,7 @@ export function StayForm({ pathname, current, withRooms = false }: { pathname: s
     >
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${id}-start`} className="text-sm font-semibold text-ocean-900">
-          {t("arrival")}
+          {labels?.start ?? t("arrival")}
         </label>
         <Input
           id={`${id}-start`}
@@ -69,7 +71,7 @@ export function StayForm({ pathname, current, withRooms = false }: { pathname: s
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${id}-end`} className="text-sm font-semibold text-ocean-900">
-          {t("departure")}
+          {labels?.end ?? t("departure")}
         </label>
         <Input
           id={`${id}-end`}

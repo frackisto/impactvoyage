@@ -12,11 +12,15 @@ const PAGES = [
   "/hotels",
   "/hotels/hotel-lagune-plateau",
   "/residences/studio-meuble-yopougon-maroc",
+  "/vehicules",
+  "/vehicules/demo-suzuki-vitara",
 ];
 
 test.describe("design system", () => {
   for (const path of PAGES) {
     test(`accessibilité WCAG 2.2 AA : ${path}`, async ({ page }, testInfo) => {
+      // axe est lent sur les pages riches (calendriers) en émulation mobile.
+      test.setTimeout(60_000);
       await page.goto(path);
       // Trace visuelle seulement : Chrome refuse parfois une capture pleine page en
       // émulation mobile sous charge, ce qui ne doit pas faire échouer l'audit.
@@ -93,13 +97,14 @@ test.describe("navigation", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("pas de défilement horizontal", async ({ page }) => {
-    for (const path of PAGES) {
+  // Un test par page : la liste s'allonge à chaque phase.
+  for (const path of PAGES) {
+    test(`pas de défilement horizontal : ${path}`, async ({ page }) => {
       await page.goto(path);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
-      expect(overflow, path).toBeLessThanOrEqual(0);
-    }
-  });
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  }
 });

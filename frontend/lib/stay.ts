@@ -37,3 +37,15 @@ export function stayQuery(stay: Stay): Record<string, string | undefined> {
     rooms: stay.rooms && stay.rooms > 1 ? String(stay.rooms) : undefined,
   };
 }
+
+/** Date AAAA-MM-JJ décalée de `days` jours (calcul en UTC, sans effet de fuseau). */
+export function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Aujourd'hui, AAAA-MM-JJ. */
+export function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}

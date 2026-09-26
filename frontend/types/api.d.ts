@@ -2971,11 +2971,7 @@ export interface components {
             /** Mise en avant */
             is_featured?: boolean;
             description?: string;
-            /**
-             * Caractéristiques
-             * @description Ex. ["GPS", "Bluetooth"]
-             */
-            features?: unknown;
+            readonly features: string[];
             readonly images: components["schemas"]["GalleryImage"][];
             /** Mode de réservation */
             booking_mode?: components["schemas"]["BookingModeEnum"];

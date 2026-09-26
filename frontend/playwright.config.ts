@@ -9,6 +9,10 @@ const PORT = 3100;
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // Par défaut, la moitié des cœurs (12 sur la machine de développement) : trop pour un
+  // seul serveur Next et le Django de développement, qui saturent et font échouer des
+  // tests au hasard. 4 workers suffisent.
+  workers: 4,
   reporter: [["list"]],
   // Un seul serveur de production pour tous les workers : sous charge, un changement de
   // langue (rechargement complet, autre root layout) peut dépasser les 5 s par défaut.

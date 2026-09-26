@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 13
+# Plateforme Web Agence de Voyage — Phase 14
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -23,7 +23,7 @@ docker compose up --build
 docker compose exec backend python manage.py load_agency_content
 
 # 4. (Développement uniquement) Ajouter les données de démonstration :
-#    circuits, hôtels et résidences, avis — fictifs, interdits en production
+#    circuits, hébergements, véhicules, avis — fictifs, interdits en production
 docker compose exec backend python manage.py seed_demo
 # ... et pour les retirer : python manage.py seed_demo --reset
 ```
@@ -315,18 +315,37 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
   aux circuits et aux hébergements (et serviront aux véhicules et activités). La galerie
   choisit sa disposition pour ne jamais laisser de case vide.
 
-## Ce qui a été validé (Phase 13)
+## Location de véhicules (Phase 14)
 
-- Backend : `manage.py check`, aucune migration manquante, 128 tests pytest dont le prix
-  « à partir de » selon voyageurs, chambres et dates, la disponibilité des chambres et des
-  résidences, les équipements utilisés et la démonstration.
-- Frontend : TypeScript, ESLint, 26 tests Vitest ; 70 tests Playwright sur ordinateur et
-  mobile : audit axe (WCAG 2.2 AA) de 10 pages sans violation grave, filtres (cases à
-  cocher, budget) dans l'URL, moteur de recherche de l'accueil, disponibilités et devis
-  prérempli, formulaire de dates, JSON-LD, absence de défilement horizontal.
+- **Liste** `/vehicules` : filtres par période de location (seuls les véhicules libres sur
+  toute la période sont affichés), catégorie, nombre de places, boîte de vitesses et budget
+  par jour ; tri par prix, places ou année. La période est transmise à la fiche.
+- **Fiche** `/vehicules/{slug}` : caractéristiques (catégorie, année, places, boîte,
+  carburant, climatisation), équipements, vérification de disponibilité avec le total de la
+  location et une demande préremplie (`/devis?vehicle=…&start=…&end=…` ; la réservation en
+  ligne arrive en Phase 18), **calendrier de disponibilité** sur deux mois (jours réservés
+  barrés, annoncés aux lecteurs d'écran), galerie, véhicules proches, JSON-LD `Car` avec
+  prix par jour.
+- **Résidences** : la fiche affiche aussi le calendrier ; l'encadré de disponibilité est
+  commun aux résidences et aux véhicules.
+- **Démonstration** : `seed_demo` ajoute 6 véhicules et une réservation confirmée fictive
+  (Suzuki Vitara, de J+5 à J+9) pour le calendrier. Les 4 véhicules réels de l'agence
+  restent non publiés tant que leurs fiches (année, prix, immatriculation) ne sont pas
+  complétées.
+- **Tests E2E** : 4 workers au plus (la moitié des cœurs par défaut saturait le serveur de
+  test et faisait échouer des tests au hasard) ; un test de défilement horizontal par page.
+
+## Ce qui a été validé (Phase 14)
+
+- Backend : `manage.py check`, aucune migration manquante, 128 tests pytest dont la
+  démonstration (véhicules, réservation fictive recréée sans doublon, retrait complet).
+- Frontend : TypeScript, ESLint, 29 tests Vitest (dont la grille du calendrier) ; 102 tests
+  Playwright sur ordinateur et mobile, stables sur deux passages : audit axe (WCAG 2.2 AA)
+  de 12 pages sans violation grave, filtres et période dans l'URL, disponibilité et total,
+  calendrier, JSON-LD, absence de défilement horizontal.
 
 ## Prochaine étape
 
-**Phase 14 : Création des véhicules** — location de véhicules : liste filtrable (catégorie,
-places, boîte, dates, budget), fiche véhicule avec calendrier de disponibilité et demande
-de réservation.
+**Phase 15 : Création des activités et événements** — activités (excursions, visites)
+filtrables par destination, catégorie, date et budget avec places restantes ; événements
+de l'agence (sorties, séminaires) avec leur médiathèque.

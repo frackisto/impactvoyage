@@ -1,11 +1,13 @@
-import { BedDoubleIcon, CheckCircle2Icon, CheckIcon, MapPinIcon, UsersIcon, XCircleIcon } from "lucide-react";
+import { BedDoubleIcon, CheckIcon, MapPinIcon, UsersIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { AmenityList } from "@/components/accommodations/amenity-list";
 import { ResidenceCard } from "@/components/accommodations/stay-cards";
 import { StayForm } from "@/components/accommodations/stay-form";
+import { AvailabilityCalendar } from "@/components/booking/availability-calendar";
+import { PeriodAvailability } from "@/components/booking/period-availability";
 import { Container } from "@/components/common/container";
 import { ImmersiveHero } from "@/components/common/immersive-hero";
 import { Section, SectionHeader } from "@/components/common/page-section";
@@ -16,11 +18,10 @@ import { breadcrumbList, JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryFlag } from "@/lib/countries";
-import { formatDate, multiplyMoney } from "@/lib/format";
 import { mediaSrc } from "@/lib/media";
 import { pageHref } from "@/lib/pagination";
 import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
-import { nights, parseStay, stayQuery } from "@/lib/stay";
+import { addDays, parseStay, stayQuery, today } from "@/lib/stay";
 import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { getResidence, relatedResidences, residenceAvailability } from "@/services/accommodations.service";
@@ -61,11 +62,12 @@ export default async function ResidencePage({ params, searchParams }: Props) {
   if (!residence) notFound();
 
   const stay = parseStay(query);
-  const [t, tNav, lang, availability, related, settings] = await Promise.all([
+  const [t, tNav, availability, calendar, related, settings] = await Promise.all([
     getTranslations("Stays"),
     getTranslations("Nav"),
-    getLocale(),
     residenceAvailability(slug, stay),
+    // Calendrier : périodes réservées sur les deux prochains mois.
+    residenceAvailability(slug, { start: today(), end: addDays(today(), 62) }),
     relatedResidences(residence),
     getSiteSettings(),
   ]);
@@ -76,11 +78,8 @@ export default async function ResidencePage({ params, searchParams }: Props) {
     { label: residence.name },
   ];
   const price = residence.promo_price ?? residence.price_per_night;
-  const count = nights(stay.start, stay.end);
-  const total = count && price ? multiplyMoney(price, count) : null;
   const whatsapp = whatsappUrl(settings.whatsapp);
   const quoteHref = pageHref("/devis", { residence: residence.slug, ...stayQuery({ start: stay.start, end: stay.end }) }, 1);
-  const date = (value: string) => formatDate(value, lang, { day: "numeric", month: "long" });
   const image = mediaSrc(residence.cover_image);
   const services = lines(residence.services);
 
@@ -180,49 +179,16 @@ export default async function ResidencePage({ params, searchParams }: Props) {
             </h2>
             <StayForm pathname={`/residences/${slug}`} current={stay} />
             {stay.start && stay.end && (
-              <div
-                role="status"
-                className={cn(
-                  "flex flex-col gap-3 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between",
-                  availability?.available ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50",
-                )}
-              >
-                {availability === null ? (
-                  <p className="text-rose-800">{t("availabilityError")}</p>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-1">
-                      <p className={cn("inline-flex items-center gap-2 font-semibold", availability.available ? "text-emerald-800" : "text-rose-800")}>
-                        {availability.available ? (
-                          <CheckCircle2Icon aria-hidden="true" className="size-5" />
-                        ) : (
-                          <XCircleIcon aria-hidden="true" className="size-5" />
-                        )}
-                        {availability.available
-                          ? t("availableFromTo", { start: date(stay.start), end: date(stay.end) })
-                          : t("bookedOnDates")}
-                      </p>
-                      {!availability.available && availability.booked_periods.length > 0 && (
-                        <p className="text-sm text-rose-800">
-                          {t("bookedPeriods")}{" "}
-                          {availability.booked_periods.map(([from, to]) => t("period", { start: date(from), end: date(to) })).join(", ")}
-                        </p>
-                      )}
-                      {availability.available && total && (
-                        <p className="text-sm text-emerald-900">
-                          {t("totalNights", { nights: count })} <Price value={total} compact className="inline-flex" />
-                        </p>
-                      )}
-                    </div>
-                    {availability.available && (
-                      <Link href={quoteHref} className={cn(buttonVariants({ variant: "cta" }), "shrink-0")}>
-                        {t("request")}
-                      </Link>
-                    )}
-                  </>
-                )}
-              </div>
+              <PeriodAvailability
+                availability={availability}
+                start={stay.start}
+                end={stay.end}
+                unitPrice={price}
+                unit="night"
+                requestHref={quoteHref}
+              />
             )}
+            <AvailabilityCalendar booked={calendar?.booked_periods ?? []} from={today()} />
           </section>
 
           {residence.conditions && (

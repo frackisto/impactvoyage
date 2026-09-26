@@ -1,12 +1,17 @@
+from datetime import timedelta
+
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
-from django.utils import translation
+from django.utils import timezone, translation
 
 from apps.accommodations.models import Hotel, Residence
+from apps.bookings.models import Booking
+from apps.bookings.selectors import vehicle_is_available
 from apps.reviews.models import Review
 from apps.tours.models import Tour
 from apps.tours.selectors import open_departures
+from apps.vehicles.models import Vehicle
 
 
 class SeedDemoTests(TestCase):
@@ -35,12 +40,21 @@ class SeedDemoTests(TestCase):
         # La résidence réelle de l'agence et la villa de démonstration.
         self.assertEqual(Residence.objects.count(), 2)
 
+        # 6 véhicules publiés ; les 4 véhicules réels, incomplets, restent non publiés.
+        self.assertEqual(Vehicle.objects.filter(is_published=True).count(), 6)
+        vitara = Vehicle.objects.get(slug="demo-suzuki-vitara")
+        start = timezone.localdate() + timedelta(days=6)
+        self.assertFalse(vehicle_is_available(vitara, start, start + timedelta(days=1)))
+        self.assertEqual(Booking.objects.count(), 1)  # recréée, pas dupliquée
+
         call_command("seed_demo", reset=True, verbosity=0)
         self.assertFalse(Tour.objects.exists())
         self.assertFalse(Hotel.objects.exists())
         self.assertFalse(Review.objects.exists())
+        self.assertFalse(Booking.objects.exists())
         # Le contenu réel de l'agence n'est pas touché.
         self.assertEqual(Residence.objects.count(), 1)
+        self.assertEqual(Vehicle.objects.count(), 4)
 
     @override_settings(DEMO_DATA_ALLOWED=False)
     def test_refused_in_production(self):

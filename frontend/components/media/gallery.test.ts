@@ -9,6 +9,6 @@ describe("galleryLayout", () => {
     expect(galleryLayout(6)).toEqual({ columns: "sm:grid-cols-3", feature: true });
     expect(galleryLayout(4)).toEqual({ columns: "lg:grid-cols-4", feature: false });
     expect(galleryLayout(2).feature).toBe(false);
-    expect(galleryLayout(1)).toEqual({ columns: "grid-cols-1", feature: false });
+    expect(galleryLayout(1)).toEqual({ columns: "grid-cols-1 max-w-3xl", feature: false });
   });
 });

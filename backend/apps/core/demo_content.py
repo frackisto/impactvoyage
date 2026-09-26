@@ -418,6 +418,75 @@ RESIDENCES = [
     },
 ]
 
+# Véhicules de démonstration (les 4 véhicules réels de l'agence restent non publiés tant que
+# leurs fiches ne sont pas complétées). Plaques fictives « DEMO-… », jamais affichées.
+VEHICLES = [
+    {
+        "slug": "demo-suzuki-vitara", "brand": "Suzuki", "model": "Vitara", "category": "SUV",
+        "year": 2023, "seats": 5, "transmission": "AUTOMATIQUE", "fuel": "ESSENCE", "price": "35000",
+        "features": ["GPS", "Bluetooth", "Caméra de recul", "Régulateur de vitesse"],
+        "description": (
+            "SUV compact, confortable en ville comme sur les routes de l'intérieur du pays. "
+            "Kilométrage illimité à Abidjan.",
+            "Compact SUV, comfortable in town and on inland roads. Unlimited mileage in Abidjan.",
+        ),
+        "cover": "suzuki-vitara.jpg", "gallery": ["suzuki-vitara-avant.jpg"], "featured": True,
+    },
+    {
+        "slug": "demo-suzuki-ertiga", "brand": "Suzuki", "model": "Ertiga", "category": "MINIBUS",
+        "year": 2022, "seats": 7, "transmission": "MANUELLE", "fuel": "ESSENCE", "price": "40000",
+        "features": ["7 places", "Grand coffre", "Bluetooth"],
+        "description": (
+            "Monospace 7 places, idéal pour les familles et les transferts aéroport.",
+            "7-seater MPV, ideal for families and airport transfers.",
+        ),
+        "cover": "suzuki-ertiga.jpg", "gallery": [], "featured": False,
+    },
+    {
+        "slug": "demo-suzuki-grand-vitara", "brand": "Suzuki", "model": "Grand Vitara", "category": "4X4",
+        "year": 2021, "seats": 5, "transmission": "MANUELLE", "fuel": "ESSENCE", "price": "45000",
+        "features": ["4 roues motrices", "Bluetooth"],
+        "description": (
+            "4x4 robuste pour les pistes et les excursions hors des grands axes.",
+            "Sturdy 4x4 for dirt roads and trips off the main routes.",
+        ),
+        "cover": "suzuki-grand-vitara.jpg", "gallery": [], "featured": False,
+    },
+    {
+        "slug": "demo-changan-cs35", "brand": "Changan", "model": "CS35 Plus", "category": "SUV",
+        "year": 2023, "seats": 5, "transmission": "AUTOMATIQUE", "fuel": "ESSENCE", "price": "30000",
+        "features": ["Écran tactile", "Caméra de recul", "Bluetooth"],
+        "description": (
+            "SUV récent et économique, parfait pour les déplacements professionnels.",
+            "Recent and economical SUV, perfect for business trips.",
+        ),
+        "cover": "changan-avant.jpg", "gallery": ["changan-arriere.jpg"], "featured": True,
+    },
+    {
+        "slug": "demo-toyota-hiace", "brand": "Toyota", "model": "Hiace", "category": "MINIBUS",
+        "year": 2020, "seats": 15, "transmission": "MANUELLE", "fuel": "DIESEL", "price": "90000",
+        "features": ["15 places", "Climatisation arrière"],
+        "description": (
+            "Minibus 15 places avec chauffeur sur demande, pour les sorties de groupe et les séminaires.",
+            "15-seat minibus, driver available on request, for group outings and seminars.",
+        ),
+        "cover": None, "gallery": [], "featured": False,
+    },
+    {
+        "slug": "demo-toyota-land-cruiser", "brand": "Toyota", "model": "Land Cruiser Prado", "category": "LUXE",
+        "year": 2022, "seats": 7, "transmission": "AUTOMATIQUE", "fuel": "DIESEL", "price": "120000",
+        "features": ["Sièges cuir", "GPS", "4 roues motrices", "Toit ouvrant"],
+        "description": (
+            "4x4 haut de gamme pour vos déplacements VIP et vos événements.",
+            "Premium 4x4 for VIP transport and events.",
+        ),
+        "cover": None, "gallery": [], "featured": False,
+    },
+]
+
+# Réservation confirmée fictive (calendrier de disponibilité) : (véhicule, dans N jours, durée).
+VEHICLE_BOOKINGS = [("demo-suzuki-vitara", 5, 4)]
+
 HOTEL_REVIEWS = [
     ("marina-view-dubai", "Fatou B.", 5, "Chambre impeccable et vue magnifique sur la marina."),
     ("hotel-lagune-plateau", "Jean-Marc A.", 4, "Très bien situé pour mes rendez-vous au Plateau."),

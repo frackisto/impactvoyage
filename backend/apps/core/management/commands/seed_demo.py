@@ -1,13 +1,14 @@
 """
 Données de démonstration (architecture § 14) : circuits nationaux et
-internationaux (programme, départs), hôtels (chambres, équipements), résidence
+internationaux (programme, départs), hôtels (chambres, équipements), résidence,
+véhicules (et une réservation confirmée pour le calendrier de disponibilité)
 et avis. Fictives mais cohérentes.
 
     python manage.py seed_demo          # charge le contenu de l'agence puis la démo
     python manage.py seed_demo --reset  # supprime les données de démonstration
 
 Idempotent. Refusé si DEMO_DATA_ALLOWED est faux (production).
-Les phases suivantes ajouteront véhicules, activités, offres et comptes.
+Les phases suivantes ajouteront activités, offres et comptes.
 """
 from datetime import timedelta
 from pathlib import Path
@@ -20,11 +21,13 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accommodations.models import Amenity, Hotel, HotelImage, Residence, Room
+from apps.bookings.models import Booking, BookingItem
 from apps.core import demo_content as demo
 from apps.core.models import Category
 from apps.destinations.models import Destination
 from apps.reviews.models import Review
 from apps.tours.models import Tour, TourDay, TourDeparture, TourImage
+from apps.vehicles.models import Vehicle, VehicleImage
 
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "agency"
 
@@ -45,9 +48,10 @@ class Command(BaseCommand):
         if not getattr(settings, "DEMO_DATA_ALLOWED", False):
             raise CommandError("Données de démonstration interdites ici (DEMO_DATA_ALLOWED = False).")
         if reset:
-            tours, hotels, residences = self.reset()
+            tours, hotels, residences, vehicles = self.reset()
             self.stdout.write(self.style.SUCCESS(
-                f"Démonstration supprimée : {tours} circuits, {hotels} hôtels, {residences} résidences."
+                f"Démonstration supprimée : {tours} circuits, {hotels} hôtels, {residences} résidences, "
+                f"{vehicles} véhicules."
             ))
             return
         # Destinations, thèmes et photos viennent du contenu réel de l'agence.
@@ -57,21 +61,64 @@ class Command(BaseCommand):
             amenities = self.amenities()
             hotels = self.hotels(amenities)
             residences = self.residences(amenities)
+            vehicles = self.vehicles()
+            self.bookings()
             reviews = self.reviews()
         self.stdout.write(self.style.SUCCESS(
             f"Démonstration chargée : {tours} circuits, {hotels} hôtels, {residences} résidences, "
-            f"{reviews} avis."
+            f"{vehicles} véhicules, {reviews} avis."
         ))
 
     @transaction.atomic
     def reset(self):
         """Supprime les contenus de démonstration (avis, départs, chambres : en cascade)."""
+        # Réservations fictives d'abord : leurs lignes protègent les offres (PROTECT).
+        Booking.objects.filter(contact_email=demo.DEMO_EMAIL).delete()
         counts = []
-        for model, items in [(Tour, demo.TOURS), (Hotel, demo.HOTELS), (Residence, demo.RESIDENCES)]:
+        for model, items in [
+            (Tour, demo.TOURS), (Hotel, demo.HOTELS), (Residence, demo.RESIDENCES), (Vehicle, demo.VEHICLES),
+        ]:
             deleted = model.objects.filter(slug__in=[item["slug"] for item in items])
             counts.append(deleted.count())
             deleted.delete()
         return counts
+
+    def vehicles(self):
+        for number, item in enumerate(demo.VEHICLES, start=1):
+            vehicle, _ = Vehicle.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    "brand": item["brand"], "model": item["model"], "category": item["category"],
+                    "year": item["year"], "seats": item["seats"], "transmission": item["transmission"],
+                    "fuel": item["fuel"], "features": item["features"],
+                    "plate_number": f"DEMO-{number:03d}",
+                    **translated("description", item["description"]),
+                    **translated("cover_alt", (f"{item['brand']} {item['model']}",) * 2),
+                    "base_price": demo.price(item["price"]),
+                    "is_featured": item["featured"], "is_published": True,
+                },
+            )
+            alt = (f"{item['brand']} {item['model']}",) * 2
+            self.photos(vehicle, item["cover"], item["gallery"], VehicleImage, "vehicle", alt)
+        return len(demo.VEHICLES)
+
+    def bookings(self):
+        """Réservations confirmées fictives, recréées à chaque chargement (dates relatives)."""
+        Booking.objects.filter(contact_email=demo.DEMO_EMAIL).delete()
+        today = timezone.localdate()
+        for slug, in_days, days in demo.VEHICLE_BOOKINGS:
+            vehicle = Vehicle.objects.get(slug=slug)
+            total = vehicle.base_price * days
+            booking = Booking.objects.create(
+                contact_name="Client de démonstration", contact_email=demo.DEMO_EMAIL,
+                contact_phone="+2250700000000", status=Booking.Status.CONFIRMED, total_amount=total,
+            )
+            start = today + timedelta(days=in_days)
+            BookingItem.objects.create(
+                booking=booking, vehicle=vehicle, label=str(vehicle), unit_price=vehicle.base_price,
+                line_total=total, start_date=start, end_date=start + timedelta(days=days),
+                is_blocking=True,
+            )
 
     def tours(self):
         today = timezone.localdate()
