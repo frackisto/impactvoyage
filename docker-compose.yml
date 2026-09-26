@@ -89,7 +89,7 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_SITE_URL: http://localhost:3000
-        NEXT_PUBLIC_MEDIA_URL: http://localhost:8000
+        API_URL: http://backend:8000/api/v1
     container_name: voyage_frontend
     restart: unless-stopped
     environment:

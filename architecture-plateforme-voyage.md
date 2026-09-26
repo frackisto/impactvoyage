@@ -840,8 +840,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 7 | Authentification JWT et permissions | ✅ |
 | 8 | Initialisation Next.js | ✅ |
 | 9 | Création du design system | ✅ |
-| 10 | Création de la page d'accueil | ⏭ prochaine étape |
-| 11 | Création des destinations | |
+| 10 | Création de la page d'accueil | ✅ |
+| 11 | Création des destinations | ⏭ prochaine étape |
 | 12 | Création des circuits | |
 | 13 | Création des hôtels et résidences | |
 | 14 | Création des véhicules | |

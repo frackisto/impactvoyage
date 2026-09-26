@@ -3,8 +3,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
-/** Hôte public des médias Django (photos du catalogue), ex. http://localhost:8000. */
-const mediaUrl = new URL(process.env.NEXT_PUBLIC_MEDIA_URL ?? "http://localhost:8000");
+/**
+ * Origine de Django vue par le serveur Next.js. Figée au build : les réécritures
+ * (rewrites) sont compilées dans l'application.
+ */
+const backendOrigin = new URL(process.env.API_URL ?? "http://localhost:8000/api/v1").origin;
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -19,14 +22,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
-    remotePatterns: [
-      {
-        protocol: mediaUrl.protocol.replace(":", "") as "http" | "https",
-        hostname: mediaUrl.hostname,
-        port: mediaUrl.port,
-        pathname: "/media/**",
-      },
-    ],
+    // Seules les images du site et les médias Django sont optimisées.
+    localPatterns: [{ pathname: "/brand/**" }, { pathname: "/images/**" }, { pathname: "/media/**" }],
+  },
+  // Photos du catalogue : /media/* relayé vers Django (voir lib/media.ts).
+  async rewrites() {
+    return [{ source: "/media/:path*", destination: `${backendOrigin}/media/:path*` }];
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

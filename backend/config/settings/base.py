@@ -156,7 +156,10 @@ QUOTE_BOOKING_HOLD_HOURS = 48  # réservation issue d'un devis accepté
 # --- Fichiers statiques / médias ---
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# « default » est obligatoire dès que STORAGES est défini : sans lui, aucun upload
+# (photos, avatars) ne fonctionne.
 STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 

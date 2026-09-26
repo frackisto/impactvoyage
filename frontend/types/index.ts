@@ -14,6 +14,13 @@ export type TourDetail = Schemas["TourDetail"];
 export type DestinationList = Schemas["DestinationList"];
 export type DestinationDetail = Schemas["DestinationDetail"];
 export type Booking = Schemas["Booking"];
+export type Service = Schemas["Service"];
+export type VisaService = Schemas["VisaService"];
+export type EventList = Schemas["EventList"];
+export type OfferList = Schemas["OfferList"];
+export type Review = Schemas["Review"];
+export type ResidenceList = Schemas["ResidenceList"];
+export type Category = Schemas["Category"];
 
 export type Paginated<T> = {
   count: number;

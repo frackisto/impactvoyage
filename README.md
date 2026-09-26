@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 9
+# Plateforme Web Agence de Voyage — Phase 10
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -17,6 +17,10 @@ docker compose up --build
 
 # Le backend applique automatiquement les migrations au démarrage
 # (voir la commande du service "backend" dans docker-compose.yml).
+
+# 3. Charger le contenu réel de l'agence (coordonnées, services et tarifs,
+#    destinations, visas, studio meublé, événements, photos)
+docker compose exec backend python manage.py load_agency_content
 ```
 
 Services démarrés :
@@ -73,6 +77,13 @@ cd backend
 pip install -r requirements-dev.txt
 DATABASE_HOST=localhost pytest
 ```
+
+> Dans le conteneur `backend`, `DJANGO_SETTINGS_MODULE` vaut `config.settings.dev` et
+> prime sur `pytest.ini` : forcer les réglages de test, sinon les tests d'emails échouent.
+>
+> ```bash
+> docker compose exec -e DJANGO_SETTINGS_MODULE=config.settings.test backend pytest
+> ```
 
 ## Structure du backend
 
@@ -203,18 +214,40 @@ Composants réutilisables aux couleurs du logo, en-tête complet (barre de conta
 du CdC § 5, « Plus », recherche, sélecteurs de langue et de devise, menu mobile), pied de
 page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-graphique
 
-> Les coordonnées (téléphone, email, WhatsApp, adresse, horaires, réseaux sociaux)
-> s'affichent dès qu'elles sont saisies dans les paramètres du site (admin, Phase 19).
+> Les coordonnées (téléphone, email, WhatsApp, adresse, horaires) sont chargées par
+> `load_agency_content` ; les liens des réseaux sociaux restent à saisir dans les
+> paramètres du site (back-office, Phase 19).
 
-## Ce qui a été validé (Phase 9)
+## Page d'accueil (Phase 10)
 
-- Frontend : TypeScript, ESLint, 15 tests Vitest ; 15 tests Playwright sur ordinateur et
-  mobile, dont un audit d'accessibilité axe (WCAG 2.2 AA) sans violation grave, le menu
-  mobile au clavier, le lien d'évitement, l'absence de défilement horizontal et le menu
-  sur une ligne dès 1280 px.
+- **Hero** : photo, slogan et sous-titre modifiables dans les paramètres du site.
+- **Moteur de recherche à onglets** (Circuits, Hôtels, Visa, Activités, Transport) : les
+  champs portent les noms des filtres de l'API et sont transmis dans l'URL des pages de
+  résultats (Phases 11 à 16). Un pays de visa connu ouvre directement sa page
+  (`/visa/france`).
+- **Sections** : services, destinations mises en avant, prochains départs, offres, visas
+  avec les tarifs des formalités et de l'assurance voyage, présentation de l'agence,
+  « Pourquoi nous choisir », résidences, événements, avis, bandeau de contact. Une section
+  sans contenu publié (ou dont l'API ne répond pas) est masquée.
+- **Tarifs des services** (`ServicePrice`) : nouvelle table traduite FR/EN, exposée dans
+  `/api/v1/services/` ; elle sera modifiable dans le back-office (Phase 19).
+- **Contenu réel de l'agence** (`python manage.py load_agency_content`, idempotent,
+  `--force` pour remplacer les photos) : repris de l'ancien site impact-voyage.com.
+  Les véhicules, incomplets, restent non publiés ; les textes marqués « À COMPLÉTER » et les
+  descriptions de Chine, Abidjan, Grand-Lahou et Mondoukou sont à relire par l'agence.
+- **Photos Django** : servies au navigateur par le relais `/media/*` de Next.js (plus besoin
+  de `NEXT_PUBLIC_MEDIA_URL`) ; en production, Nginx les servira directement.
+
+## Ce qui a été validé (Phase 10)
+
+- Backend : `manage.py check`, aucune migration manquante, 118 tests pytest dont le
+  chargement idempotent du contenu de l'agence.
+- Frontend : TypeScript, ESLint, 15 tests Vitest ; 22 tests Playwright sur ordinateur et
+  mobile : audit axe (WCAG 2.2 AA) de l'accueil FR/EN sans violation grave, sections et
+  photos du catalogue, recherche de circuits, d'hôtels (onglets au clavier) et de visas,
+  absence de défilement horizontal.
 
 ## Prochaine étape
 
-**Phase 10 : Création de la page d'accueil** — hero immersif, moteur de recherche
-multifonction à onglets (Tours, Hôtels, Visa, Activités, Transport), destinations et
-offres mises en avant, avis clients.
+**Phase 11 : Création des destinations** — liste filtrable par continent et pays, fiche
+destination (galerie, circuits, hôtels et activités associés).

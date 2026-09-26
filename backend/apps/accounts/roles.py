@@ -30,7 +30,7 @@ RESOURCES = {
     "events": ["events.event", "events.eventimage"],
     "media": ["media.mediaalbum", "media.mediaitem"],
     "offers": ["offers.offer"],
-    "services": ["services.service"],
+    "services": ["services.service", "services.serviceprice"],
     "visas": ["visas.visaservice"],
     "transport": ["transport.transportservice"],
     "blog": ["blog.blogpost"],

@@ -10,9 +10,10 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 # Variables publiques figées au build (incluses dans le code navigateur : aucun secret).
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
-ARG NEXT_PUBLIC_MEDIA_URL=http://localhost:8000
+# Adresse interne du backend : sert aussi au relais /media/*, figé au build.
+ARG API_URL=http://backend:8000/api/v1
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
-    NEXT_PUBLIC_MEDIA_URL=$NEXT_PUBLIC_MEDIA_URL
+    API_URL=$API_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

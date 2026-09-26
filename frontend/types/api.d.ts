@@ -2551,6 +2551,18 @@ export interface components {
             icon?: string;
             /** Prestation pré-cochée dans le devis */
             quote_service_type?: components["schemas"]["RequestedServiceEnum"] | components["schemas"]["BlankEnum"];
+            readonly prices: components["schemas"]["ServicePrice"][];
+        };
+        ServicePrice: {
+            readonly id: number;
+            /** Libellé */
+            label: string;
+            readonly price: components["schemas"]["Money"] | null;
+            /**
+             * Unité
+             * @description Ex. « par personne »
+             */
+            unit?: string;
         };
         SiteSettings: {
             /** Nom de l'agence */

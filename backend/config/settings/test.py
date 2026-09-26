@@ -12,6 +12,12 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",  # rapide pour les tests
 ]
 
+# Fichiers uploadés gardés en mémoire pendant les tests (rien n'est écrit sur disque).
+STORAGES = {
+    **STORAGES,  # noqa: F405
+    "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+}
+
 # Tests indépendants de Redis (cache et compteurs du rate limiting).
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 

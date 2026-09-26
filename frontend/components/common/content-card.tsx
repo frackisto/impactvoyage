@@ -2,6 +2,7 @@ import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 import { Link } from "@/i18n/navigation";
+import { mediaSrc } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 type ContentCardProps = {
@@ -41,6 +42,7 @@ export function ContentCard({
   priority,
   className,
 }: ContentCardProps) {
+  const src = mediaSrc(image);
   return (
     <article
       className={cn(
@@ -51,9 +53,9 @@ export function ContentCard({
       )}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-ocean-50">
-        {image ? (
+        {src ? (
           <Image
-            src={image}
+            src={src}
             alt={imageAlt}
             fill
             priority={priority}
