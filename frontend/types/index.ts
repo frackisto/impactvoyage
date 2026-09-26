@@ -21,6 +21,8 @@ export type OfferList = Schemas["OfferList"];
 export type Review = Schemas["Review"];
 export type ResidenceList = Schemas["ResidenceList"];
 export type Category = Schemas["Category"];
+export type RatingSummary = Schemas["RatingSummary"];
+export type TourDeparture = Schemas["TourDeparture"];
 
 export type Paginated<T> = {
   count: number;

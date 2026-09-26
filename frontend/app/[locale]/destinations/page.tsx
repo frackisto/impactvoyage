@@ -9,6 +9,7 @@ import { DestinationCard } from "@/components/destinations/destination-card";
 import { DestinationFilters, type FilterValues } from "@/components/destinations/destination-filters";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { pageParam, param, type SearchParams } from "@/lib/search-params";
 import { alternates } from "@/lib/seo";
 import {
   allDestinations,
@@ -20,22 +21,15 @@ import type { DestinationList, Paginated } from "@/types";
 
 const PAGE_SIZE = 12;
 
-type SearchParams = Record<string, string | string[] | undefined>;
-
 /** Filtres lus dans l'URL ; une valeur invalide est ignorée plutôt que de provoquer une erreur. */
 function parseFilters(params: SearchParams) {
-  const one = (key: string) => {
-    const value = params[key];
-    return (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
-  };
-  const continent = one("continent")?.toUpperCase();
-  const country = one("country")?.toUpperCase();
-  const page = Number(one("page") ?? 1);
+  const continent = param(params, "continent")?.toUpperCase();
+  const country = param(params, "country")?.toUpperCase();
   return {
     continent: CONTINENTS.includes(continent as Continent) ? (continent as Continent) : undefined,
     country: country && /^[A-Z]{2}$/.test(country) ? country : undefined,
-    search: one("search")?.slice(0, 100),
-    page: Number.isInteger(page) && page > 1 ? page : 1,
+    search: param(params, "search")?.slice(0, 100),
+    page: pageParam(params),
   };
 }
 

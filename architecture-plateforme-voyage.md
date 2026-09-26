@@ -842,8 +842,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 9 | Création du design system | ✅ |
 | 10 | Création de la page d'accueil | ✅ |
 | 11 | Création des destinations | ✅ |
-| 12 | Création des circuits | ⏭ prochaine étape |
-| 13 | Création des hôtels et résidences | |
+| 12 | Création des circuits | ✅ |
+| 13 | Création des hôtels et résidences | ⏭ prochaine étape |
 | 14 | Création des véhicules | |
 | 15 | Création des activités et événements | |
 | 16 | Création du moteur de recherche | |

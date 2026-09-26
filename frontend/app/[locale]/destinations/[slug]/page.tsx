@@ -11,11 +11,12 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Container } from "@/components/common/container";
+import { ImmersiveHero } from "@/components/common/immersive-hero";
 import { Section, SectionHeader } from "@/components/common/page-section";
 import { Price } from "@/components/common/price";
 import { SocialIcon } from "@/components/common/social-icons";
 import { DestinationCard } from "@/components/destinations/destination-card";
-import { DestinationHero } from "@/components/destinations/destination-hero";
+
 import { DestinationOffers, hasOffers } from "@/components/destinations/destination-offers";
 import { Gallery } from "@/components/media/gallery";
 import { ReviewList } from "@/components/reviews/review-list";
@@ -25,6 +26,7 @@ import { Link } from "@/i18n/navigation";
 import { countryFlag, countryName } from "@/lib/countries";
 import { mediaSrc } from "@/lib/media";
 import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import {
   allDestinations,
@@ -37,14 +39,8 @@ import type { DestinationDetail, DestinationList } from "@/types";
 
 type Props = PageProps<"/[locale]/destinations/[slug]">;
 
-/** Paragraphes séparés par une ligne vide dans l'admin. */
-function paragraphs(text: string) {
-  return text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-}
-
 function summary(destination: DestinationDetail) {
-  const text = destination.short_description || destination.description;
-  return text.length > 160 ? `${text.slice(0, 157).trimEnd()}…` : text;
+  return excerpt(destination.short_description || destination.description);
 }
 
 /** Trois autres destinations, du même continent d'abord. */
@@ -134,7 +130,23 @@ export default async function DestinationPage({ params }: Props) {
         }}
       />
 
-      <DestinationHero destination={destination} country={`${countryFlag(destination.country_code)} ${country}`} continent={continent} breadcrumbs={breadcrumbs} />
+      <ImmersiveHero
+        image={destination.cover_image}
+        imageAlt={destination.cover_alt || destination.name}
+        breadcrumbs={breadcrumbs}
+        badge={
+          <>
+            <MapPinIcon aria-hidden="true" className="size-4 text-sunset-300" />
+            {[destination.city !== destination.name && destination.city, `${countryFlag(destination.country_code)} ${country}`]
+              .filter(Boolean)
+              .join(", ")}{" "}
+            · {continent}
+          </>
+        }
+        title={destination.name}
+        subtitle={destination.short_description}
+        rating={destination.rating}
+      />
 
       <Container className="grid gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14">
         <div className="flex flex-col gap-10">

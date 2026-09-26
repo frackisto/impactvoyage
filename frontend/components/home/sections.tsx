@@ -1,7 +1,6 @@
 import {
   CalendarDaysIcon,
   CheckCircle2Icon,
-  ClockIcon,
   GlobeIcon,
   HeadsetIcon,
   HeartHandshakeIcon,
@@ -22,11 +21,11 @@ import { ContentCard } from "@/components/common/content-card";
 import { OfferBadge, type OfferBadgeCode } from "@/components/common/offer-badge";
 import { Section, SectionHeader } from "@/components/common/page-section";
 import { Price } from "@/components/common/price";
-import { Rating } from "@/components/common/rating";
 import { SectionHeading } from "@/components/common/section-heading";
 import { ServiceIcon } from "@/components/common/service-icon";
 import { SocialIcon } from "@/components/common/social-icons";
 import { ReviewList } from "@/components/reviews/review-list";
+import { TourCard } from "@/components/tours/tour-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryFlag, countryName } from "@/lib/countries";
@@ -96,36 +95,13 @@ export async function DestinationsSection({ destinations }: { destinations: Dest
 
 export async function ToursSection({ tours }: { tours: TourList[] }) {
   if (!tours.length) return null;
-  const [t, tSearch, locale] = await Promise.all([getTranslations("Home"), getTranslations("Search"), getLocale()]);
+  const t = await getTranslations("Home");
   return (
     <Section>
       <SectionHeader eyebrow={t("toursEyebrow")} title={t("toursTitle")} href="/circuits/nationaux" linkLabel={t("allTours")} />
       <div className={grid}>
         {tours.map((tour) => (
-          <ContentCard
-            key={tour.id}
-            href={`/circuits/${tour.slug}`}
-            title={tour.title}
-            eyebrow={tour.destination.name}
-            description={tour.short_description}
-            image={tour.cover_image}
-            imageAlt={tour.cover_alt || tour.title}
-            meta={
-              <>
-                <span className="inline-flex items-center gap-1">
-                  <ClockIcon aria-hidden="true" className="size-4" /> {tSearch("days", { count: tour.duration_days })}
-                </span>
-                {tour.next_departure && (
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarDaysIcon aria-hidden="true" className="size-4" />
-                    {formatDate(tour.next_departure, locale, { day: "numeric", month: "short" })}
-                  </span>
-                )}
-                {tour.rating_count > 0 && <Rating value={tour.rating_avg} count={tour.rating_count} />}
-              </>
-            }
-            footer={<Price value={tour.price} from unit="person" />}
-          />
+          <TourCard key={tour.id} tour={tour} />
         ))}
       </div>
     </Section>

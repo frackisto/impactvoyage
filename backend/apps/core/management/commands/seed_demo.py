@@ -1,0 +1,138 @@
+"""
+Données de démonstration (architecture § 14) : circuits nationaux et
+internationaux avec programme, départs et avis. Fictives mais cohérentes.
+
+    python manage.py seed_demo          # charge le contenu de l'agence puis la démo
+    python manage.py seed_demo --reset  # supprime les données de démonstration
+
+Idempotent. Refusé si DEMO_DATA_ALLOWED est faux (production).
+Les phases suivantes ajouteront hôtels, véhicules, activités, offres et comptes.
+"""
+from datetime import timedelta
+from pathlib import Path
+
+from django.conf import settings
+from django.core.files import File
+from django.core.management import call_command
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+from django.utils import timezone
+
+from apps.core import demo_content as demo
+from apps.core.models import Category
+from apps.destinations.models import Destination
+from apps.reviews.models import Review
+from apps.tours.models import Tour, TourDay, TourDeparture, TourImage
+
+FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "agency"
+
+
+def translated(field, values):
+    """("titre FR", "titre EN") → {"field": FR, "field_fr": FR, "field_en": EN}."""
+    fr, en = values
+    return {field: fr, f"{field}_fr": fr, f"{field}_en": en}
+
+
+class Command(BaseCommand):
+    help = "Charge (ou supprime avec --reset) les données de démonstration. Interdit en production."
+
+    def add_arguments(self, parser):
+        parser.add_argument("--reset", action="store_true", help="Supprime les données de démonstration.")
+
+    def handle(self, *args, reset=False, **options):
+        if not getattr(settings, "DEMO_DATA_ALLOWED", False):
+            raise CommandError("Données de démonstration interdites ici (DEMO_DATA_ALLOWED = False).")
+        if reset:
+            count = self.reset()
+            self.stdout.write(self.style.SUCCESS(f"Démonstration supprimée : {count} circuits."))
+            return
+        # Destinations, thèmes et photos viennent du contenu réel de l'agence.
+        call_command("load_agency_content", verbosity=0)
+        with transaction.atomic():
+            tours = self.tours()
+            reviews = self.reviews()
+        self.stdout.write(self.style.SUCCESS(
+            f"Démonstration chargée : {tours} circuits, {reviews} avis."
+        ))
+
+    @transaction.atomic
+    def reset(self):
+        slugs = [item["slug"] for item in demo.TOURS]
+        count = Tour.objects.filter(slug__in=slugs).count()
+        # Les avis et les départs sont supprimés avec les circuits (CASCADE).
+        Tour.objects.filter(slug__in=slugs).delete()
+        return count
+
+    def tours(self):
+        today = timezone.localdate()
+        themes = {c.slug: c for c in Category.objects.filter(kind=Category.Kind.TOUR_THEME)}
+        for item in demo.TOURS:
+            tour, _ = Tour.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    **translated("title", item["title"]),
+                    **translated("short_description", item["short"]),
+                    **translated("description", item["description"]),
+                    **translated("departure_points", item["departure_points"]),
+                    **translated("transport_info", item["transport"]),
+                    **translated("accommodation_info", item["accommodation"]),
+                    **translated("inclusions", item["inclusions"]),
+                    **translated("exclusions", item["exclusions"]),
+                    **translated("conditions", item["conditions"]),
+                    **translated("cover_alt", item["title"]),
+                    "destination": Destination.objects.get(slug=item["destination"]),
+                    "scope": item["scope"],
+                    "theme": themes.get(item["theme"]),
+                    "is_custom": item.get("is_custom", False),
+                    "duration_days": item["duration"],
+                    "min_travelers": item["min"],
+                    "max_travelers": item["max"],
+                    "base_price": demo.price(item["price"]),
+                    "is_featured": item["featured"],
+                    "is_published": True,
+                },
+            )
+            tour.days.all().delete()
+            TourDay.objects.bulk_create([
+                TourDay(
+                    tour=tour, day_number=number,
+                    **translated("title", (title_fr, title_en)),
+                    **translated("description", (desc_fr, desc_en)),
+                )
+                for number, (title_fr, title_en, desc_fr, desc_en) in enumerate(item["days"], start=1)
+            ])
+            for weeks, capacity, reserved, override in item["departures"]:
+                start = today + timedelta(weeks=weeks)
+                TourDeparture.objects.update_or_create(
+                    tour=tour, start_date=start,
+                    defaults={
+                        "end_date": start + timedelta(days=item["duration"] - 1),
+                        "capacity": capacity, "seats_reserved": reserved,
+                        "price_override": demo.price(override),
+                    },
+                )
+            self.photos(tour, item)
+        return len(demo.TOURS)
+
+    def photos(self, tour, item):
+        if item["cover"] and not tour.cover_image:
+            with open(FIXTURES / item["cover"], "rb") as handle:
+                tour.cover_image.save(item["cover"], File(handle), save=True)
+        if tour.images.exists():
+            return
+        for order, filename in enumerate(item["gallery"]):
+            image = TourImage(tour=tour, order=order, **translated("alt_text", item["title"]))
+            with open(FIXTURES / filename, "rb") as handle:
+                image.image.save(filename, File(handle), save=False)
+            image.save()
+
+    def reviews(self):
+        for slug, author, rating, comment in demo.TOUR_REVIEWS:
+            Review.objects.update_or_create(
+                tour=Tour.objects.get(slug=slug), author_name=author,
+                defaults={
+                    "author_email": demo.DEMO_EMAIL, "rating": rating, "comment": comment,
+                    "status": Review.Status.APPROUVE,
+                },
+            )
+        return len(demo.TOUR_REVIEWS)

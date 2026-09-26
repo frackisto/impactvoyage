@@ -8,6 +8,8 @@ SIMPLE_JWT = {**SIMPLE_JWT, "SIGNING_KEY": "tests-jwt-" + "y" * 40}  # noqa: F40
 
 DATABASES["default"]["NAME"] = "test_voyage_db"  # noqa: F405
 
+DEMO_DATA_ALLOWED = True
+
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",  # rapide pour les tests
 ]

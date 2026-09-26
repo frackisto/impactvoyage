@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 11
+# Plateforme Web Agence de Voyage — Phase 12
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -21,7 +21,14 @@ docker compose up --build
 # 3. Charger le contenu réel de l'agence (coordonnées, services et tarifs,
 #    destinations, visas, studio meublé, événements, photos)
 docker compose exec backend python manage.py load_agency_content
+
+# 4. (Développement uniquement) Ajouter les données de démonstration :
+#    circuits avec programme, départs et avis — fictifs, interdits en production
+docker compose exec backend python manage.py seed_demo
+# ... et pour les retirer : python manage.py seed_demo --reset
 ```
+
+> Les tests Playwright s'appuient sur ces deux commandes.
 
 Services démarrés :
 - `frontend` → http://localhost:3000 (site Next.js, voir [frontend/README.md](frontend/README.md))
@@ -261,17 +268,39 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
 > le contenu n'existe pas. C'est le comportement documenté de Next.js, sans effet sur
 > l'indexation.
 
-## Ce qui a été validé (Phase 11)
+## Circuits (Phase 12)
 
-- Backend : `manage.py check`, aucune migration manquante, 121 tests pytest dont les
-  filtres par continent et par pays, les offres publiées et la note d'une destination.
-- Frontend : TypeScript, ESLint, 18 tests Vitest ; 37 tests Playwright sur ordinateur et
-  mobile : audit axe (WCAG 2.2 AA) de l'accueil, de la liste et d'une fiche sans violation
-  grave, filtres dans l'URL, état vide, encadré pratique et JSON-LD, visionneuse au
-  clavier, page introuvable, version anglaise, absence de défilement horizontal.
+- **Listes** `/circuits/nationaux` et `/circuits/internationaux` : filtres par destination,
+  type de circuit, dates de départ, durée, nombre de voyageurs et budget (seules les
+  destinations et les types réellement proposés sont listés), tri par prochain départ,
+  prix ou durée. Les paramètres sont ceux de l'API : le moteur de recherche de l'accueil
+  y mène directement. Filtres repliables sur mobile.
+- **Fiche** `/circuits/{slug}` : en-tête immersif (durée, type, sur mesure), description et
+  informations clés (départ, groupe, transport, hébergement), programme jour par jour,
+  inclus / non inclus, conditions, galerie, activités incluses, avis, circuits proches.
+  L'encadré « Réserver ce circuit » liste les départs ouverts avec les places restantes
+  (« Plus que 3 places ! ») et les prix spécifiques ; chaque départ ouvre une demande de
+  devis préremplie (`/devis?tour=…&departure=…`, formulaire en Phase 17). Sur mobile, une
+  barre fixe garde le prix et l'accès aux dates visibles.
+- **SEO** : JSON-LD `TouristTrip` (programme, un `Offer` par départ, note) et
+  `BreadcrumbList` ; seules les listes sans filtre sont indexées.
+- **Données de démonstration** : `seed_demo` (voir « Démarrage ») crée 6 circuits fictifs
+  (3 nationaux, 3 internationaux dont un sur mesure), leurs programmes, départs et avis.
+- **Traductions** : un test vérifie que chaque message FR/EN est valide (syntaxe ICU) et que
+  les deux langues ont les mêmes clés.
+
+## Ce qui a été validé (Phase 12)
+
+- Backend : `manage.py check`, aucune migration manquante, 123 tests pytest dont le
+  chargement idempotent de la démonstration, son retrait et son refus en production.
+- Frontend : TypeScript, ESLint, 21 tests Vitest ; 52 tests Playwright sur ordinateur et
+  mobile : audit axe (WCAG 2.2 AA) de 7 pages sans violation grave, portée, filtres et tri
+  dans l'URL, moteur de recherche de l'accueil, programme, départs, places restantes,
+  circuit sur mesure, JSON-LD, barre de réservation mobile, absence de défilement
+  horizontal.
 
 ## Prochaine étape
 
-**Phase 12 : Création des circuits** — circuits nationaux et internationaux, filtres
-(destination, dates, durée, budget, thème), fiche circuit (programme jour par jour,
-départs et places restantes, inclus/non inclus).
+**Phase 13 : Création des hôtels et résidences** — liste des hébergements filtrable
+(destination, dates, voyageurs, catégorie, budget), fiche hôtel (chambres, équipements,
+disponibilités) et fiche résidence meublée.

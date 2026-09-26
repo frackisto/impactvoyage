@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ContentCard } from "@/components/common/content-card";
 import { Section, SectionHeader } from "@/components/common/page-section";
 import { Price } from "@/components/common/price";
+import { TourCard } from "@/components/tours/tour-card";
 import { intlLocale } from "@/lib/format";
 import type { DestinationDetail } from "@/types";
 
@@ -26,20 +27,7 @@ export async function DestinationOffers({ destination }: { destination: Destinat
           <SectionHeader id="destination-tours" eyebrow={t("bookEyebrow")} title={t("toursTitle")} />
           <div className={grid}>
             {tours.map((tour) => (
-              <ContentCard
-                key={tour.id}
-                href={`/circuits/${tour.slug}`}
-                title={tour.title}
-                description={tour.short_description}
-                image={tour.cover_image}
-                imageAlt={tour.cover_alt || tour.title}
-                meta={
-                  <span className="inline-flex items-center gap-1">
-                    <ClockIcon aria-hidden="true" className="size-4" /> {tSearch("days", { count: tour.duration_days })}
-                  </span>
-                }
-                footer={<Price value={tour.price} from unit="person" />}
-              />
+              <TourCard key={tour.id} tour={tour} showDestination={false} />
             ))}
           </div>
         </Section>

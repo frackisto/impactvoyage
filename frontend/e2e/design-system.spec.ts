@@ -1,16 +1,25 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const PAGES = ["/", "/en", "/charte-graphique", "/destinations", "/destinations/dubai"];
+const PAGES = [
+  "/",
+  "/en",
+  "/charte-graphique",
+  "/destinations",
+  "/destinations/dubai",
+  "/circuits/nationaux",
+  "/circuits/dubai-ville-des-records",
+];
 
 test.describe("design system", () => {
   for (const path of PAGES) {
     test(`accessibilité WCAG 2.2 AA : ${path}`, async ({ page }, testInfo) => {
       await page.goto(path);
-      await page.screenshot({
-        path: testInfo.outputPath(`${path.replace(/\W/g, "_") || "home"}.png`),
-        fullPage: true,
-      });
+      // Trace visuelle seulement : Chrome refuse parfois une capture pleine page en
+      // émulation mobile sous charge, ce qui ne doit pas faire échouer l'audit.
+      await page
+        .screenshot({ path: testInfo.outputPath(`${path.replace(/\W/g, "_") || "home"}.png`), fullPage: true })
+        .catch(() => undefined);
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
         .analyze();

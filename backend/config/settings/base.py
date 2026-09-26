@@ -153,6 +153,9 @@ EXCHANGE_RATES_API_URL = env(
 BOOKING_HOLD_MINUTES = 30  # réservation directe en attente de paiement
 QUOTE_BOOKING_HOLD_HOURS = 48  # réservation issue d'un devis accepté
 
+# Données fictives (python manage.py seed_demo) : autorisées en dev et en tests seulement.
+DEMO_DATA_ALLOWED = False
+
 # --- Fichiers statiques / médias ---
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
