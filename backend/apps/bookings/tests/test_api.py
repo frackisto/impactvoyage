@@ -116,6 +116,7 @@ class QuoteApiTests(ApiTestCase):
         token = str(QuoteRequest.objects.get(reference=reference).access_token)
         seen = self.client.get(f"{API}/quotes/{reference}/", {"token": token})
         self.assertTrue(seen.data["can_answer"])
+        self.assertEqual(seen.data["destination_label"], "Zanzibar")  # destination libre
         self.assertEqual(seen.data["proposal_amount"]["amount"], "1850000.00")
 
         accepted = self.client.post(f"{API}/quotes/{reference}/accept/", {"token": token})

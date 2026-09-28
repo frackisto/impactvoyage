@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 16
+# Plateforme Web Agence de Voyage — Phase 17
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -391,26 +391,60 @@ pris tel quel et permettait de contourner les limites.
   sans résultat. Jamais indexée.
 - **SEO** : JSON-LD `WebSite` + `SearchAction` sur l'accueil (zone de recherche dans Google).
 
-## Ce qui a été validé (Phase 16)
+## Système de devis (Phase 17)
 
-- Backend : `manage.py check`, aucune migration manquante, 141 tests pytest dont la
-  recherche (fautes et accents, tous les mots requis, contenus non publiés exclus, filtres
-  par type et destination, paramètres invalides).
-- Frontend : TypeScript, ESLint, 32 tests Vitest ; 144 tests Playwright sur ordinateur et
-  mobile, stables sur deux passages : audit axe (WCAG 2.2 AA) de 17 pages sans violation
-  grave, page de résultats et onglets, faute de frappe, aucun résultat, recherche
-  instantanée au clavier, JSON-LD.
+- **Demande** `/devis` : projet (destination du catalogue ou saisie libre, dates, adultes,
+  enfants, type de voyage, prestations souhaitées, hébergement, transport, budget,
+  précisions) puis coordonnées (téléphone, WhatsApp, pays de résidence) et consentement.
+  Contrôles immédiats dans le navigateur, puis erreurs de Django affichées sous les champs
+  concernés ; message dédié si la limite de 5 demandes par heure est atteinte. Champ piège
+  à robots (*honeypot*) ; Turnstile viendra en Phase 23.
+- **Préremplissage** depuis les fiches : circuit et départ (`?tour=…&departure=…`), hôtel
+  et chambre (`?hotel=…&room=…&start=…&end=…&travelers=…&rooms=…`), résidence, véhicule et
+  période, activité (`?activity=…&date=…&participants=…`), destination, ou prestation
+  (`?service=VISA`). Un encadré rappelle l'objet d'origine (photo, dates, voyageurs). Un
+  paramètre inconnu ou un contenu introuvable est ignoré ; seule la page sans paramètre
+  est indexée.
+- **Suivi client sans compte** `/devis/{reference}?token=…` : lien envoyé dans l'email de
+  confirmation, puis avec la proposition. Étapes (reçue, en cours, proposition envoyée,
+  acceptée ou déclinée), proposition de l'agence (montant, message, validité),
+  récapitulatif. Le client **accepte** (réservation `PENDING` créée, bloquée 48 h) ou
+  **décline** avec un motif facultatif, après confirmation. Proposition expirée ou lien
+  invalide : message dédié. Jamais indexée.
+- **Réponse de l'agence** : par l'API en attendant le backoffice (Phase 19) —
+  `POST /quotes/{reference}/assign/`, `send-proposal/` (email avec le lien de suivi) et
+  `status/`, réservés à l'équipe (voir Swagger).
+- **Démonstration** : `seed_demo` ajoute deux devis à lien fixe, rétablis à chaque
+  chargement :
+  - `/devis/DV-DEMO-000001?token=7e57d3a0-0000-4000-8000-000000000001` (proposition envoyée) ;
+  - `/devis/DV-DEMO-000002?token=7e57d3a0-0000-4000-8000-000000000002` (en cours d'étude).
+- **Correctif** : relancer `seed_demo` un autre jour ajoutait de nouveaux départs de
+  circuit (dates relatives) au lieu de remplacer les précédents ; les anciens départs sans
+  réservation sont désormais supprimés.
+
+## Ce qui a été validé (Phase 17)
+
+- Backend : `manage.py check`, aucune migration manquante, 142 tests pytest dont le
+  parcours complet du devis (création, lien de suivi dans l'email, proposition, acceptation,
+  jeton invalide, double réponse refusée) et la démonstration rechargée un autre jour.
+- Frontend : TypeScript, ESLint, 32 tests Vitest ; 166 tests Playwright sur ordinateur et
+  mobile, stables sur deux passages : audit axe (WCAG 2.2 AA) de 20 pages sans violation
+  grave, préremplissage (circuit, hôtel et dates), erreurs du navigateur et de Django,
+  envoi, suivi en français et en anglais, acceptation, lien invalide.
+- Parcours réel via le relais Next.js sur l'application Docker : création, erreurs de
+  validation, piège à robots, acceptation (réservation `PENDING`), seconde acceptation
+  refusée.
 
 ## Pages encore manquantes
 
 Ces pages sont liées depuis le menu, le pied de page ou les fiches mais n'existent pas
-encore (« Page introuvable ») : `/devis` (Phase 17), connexion et inscription, et des
-rubriques **absentes du plan de développement** — services, offres, visas (`/visa/france`),
-transport, médiathèque, à propos, contact, blog et pages légales (mentions, confidentialité,
+encore (« Page introuvable ») : connexion et inscription, et des rubriques **absentes du
+plan de développement** — services, offres, visas (`/visa/france`), transport,
+médiathèque, à propos, contact, blog et pages légales (mentions, confidentialité,
 conditions générales).
 
 ## Prochaine étape
 
-**Phase 17 : Création du système de devis** — formulaire de demande de devis (prérempli
-depuis les fiches : circuit, départ, hôtel, chambre, résidence, véhicule, activité, dates),
-suivi et réponse de l'agence, acceptation par le client.
+**Phase 18 : Création des réservations** — demande de réservation en ligne depuis les
+fiches (départ de circuit, véhicule, activité, hébergement), confirmation ou refus par
+l'agence, suivi par le client.

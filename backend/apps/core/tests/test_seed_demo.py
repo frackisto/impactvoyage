@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest import mock
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -10,6 +11,8 @@ from apps.activities.models import Activity
 from apps.bookings.models import Booking
 from apps.bookings.selectors import activity_places_left, vehicle_is_available
 from apps.events.models import Event
+from apps.inquiries.models import QuoteRequest
+from apps.inquiries.services import accept_quote, get_quote_for_client
 from apps.reviews.models import Review
 from apps.tours.models import Tour
 from apps.tours.selectors import open_departures
@@ -47,7 +50,7 @@ class SeedDemoTests(TestCase):
         vitara = Vehicle.objects.get(slug="demo-suzuki-vitara")
         start = timezone.localdate() + timedelta(days=6)
         self.assertFalse(vehicle_is_available(vitara, start, start + timedelta(days=1)))
-        self.assertEqual(Booking.objects.count(), 2)  # recréées, pas dupliquées
+        self.assertEqual(Booking.objects.count(), 2)  # recréées, pas dupliquées (hors devis)
 
         # Activités : 18 inscrits sur 20 dans 10 jours ; 3 activités incluses dans le circuit Dubaï.
         self.assertEqual(Activity.objects.count(), 6)
@@ -58,16 +61,34 @@ class SeedDemoTests(TestCase):
         self.assertEqual(Event.objects.filter(is_published=True).count(), 3)
         self.assertEqual(Event.objects.get(slug="voyage-de-groupe-dubai-2026").media.count(), 2)
 
+        # Devis fictifs : consultables et acceptables par leur lien, recréés sans doublon.
+        self.assertEqual(QuoteRequest.objects.count(), 2)
+        quote = get_quote_for_client("DV-DEMO-000001", "7e57d3a0-0000-4000-8000-000000000001")
+        self.assertEqual(quote.status, "DEVIS_ENVOYE")
+        accept_quote("DV-DEMO-000001", "7e57d3a0-0000-4000-8000-000000000001")
+        call_command("seed_demo", verbosity=0)  # la démonstration revient à son état initial
+        self.assertEqual(QuoteRequest.objects.get(reference="DV-DEMO-000001").status, "DEVIS_ENVOYE")
+
         call_command("seed_demo", reset=True, verbosity=0)
         self.assertFalse(Tour.objects.exists())
         self.assertFalse(Hotel.objects.exists())
         self.assertFalse(Review.objects.exists())
         self.assertFalse(Booking.objects.exists())
+        self.assertFalse(QuoteRequest.all_objects.exists())
         # Le contenu réel de l'agence n'est pas touché.
         self.assertEqual(Residence.objects.count(), 1)
         self.assertEqual(Vehicle.objects.count(), 4)
         self.assertFalse(Activity.objects.exists())
         self.assertEqual(Event.objects.count(), 2)  # les deux événements réels de l'agence
+
+    def test_reload_another_day_replaces_departures(self):
+        last_week = timezone.localdate() - timedelta(days=7)
+        with mock.patch("django.utils.timezone.localdate", return_value=last_week):
+            call_command("seed_demo", verbosity=0)
+        call_command("seed_demo", verbosity=0)
+        dubai = Tour.objects.get(slug="dubai-ville-des-records")
+        self.assertEqual(dubai.departures.count(), 3)
+        self.assertFalse(dubai.departures.filter(start_date__lt=timezone.localdate()).exists())
 
     @override_settings(DEMO_DATA_ALLOWED=False)
     def test_refused_in_production(self):

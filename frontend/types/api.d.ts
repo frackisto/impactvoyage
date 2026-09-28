@@ -2317,6 +2317,8 @@ export interface components {
             last_name: string;
             /** Destination souhaitée */
             destination_text?: string;
+            /** @description Destination du catalogue, sinon celle saisie librement. */
+            readonly destination_label: string;
             /**
              * Date de départ
              * Format: date

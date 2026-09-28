@@ -47,6 +47,9 @@ class QuoteFlowTests(TestCase):
             list(Notification.objects.values_list("recipient", flat=True)), [self.commercial.pk]
         )
         self.assertEqual(len(mail.outbox), 2)
+        # Le client reçoit le lien de suivi de sa demande.
+        confirmation = next(m for m in mail.outbox if m.to == [quote.email])
+        self.assertIn(f"/devis/{quote.reference}?token={quote.access_token}", confirmation.body)
 
     def test_full_flow_until_client_acceptance(self):
         quote = services.assign_quote(self._create(), self.commercial)

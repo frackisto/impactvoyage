@@ -85,6 +85,7 @@ def create_quote_request(*, activities=(), **data):
         f"Votre demande de devis {quote.reference}",
         f"Bonjour {quote.first_name},\n\nNous avons bien reçu votre demande de devis "
         f"(référence {quote.reference}). Un conseiller vous répondra rapidement.\n\n"
+        f"Suivez votre demande ici : {client_quote_url(quote)}\n\n"
         "L'équipe Impact Voyage",
     )
     return quote

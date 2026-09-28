@@ -98,15 +98,20 @@ class QuoteClientSerializer(serializers.ModelSerializer):
     booking_reference = serializers.CharField(
         source="booking.reference", read_only=True, default=None
     )
+    destination_label = serializers.SerializerMethodField()
 
     class Meta:
         model = QuoteRequest
         fields = [
             "reference", "status", "status_label", "first_name", "last_name",
-            "destination_text", "date_departure", "date_return", "adults", "children",
-            "services_requested", "proposal_amount", "proposal_message",
+            "destination_text", "destination_label", "date_departure", "date_return", "adults",
+            "children", "services_requested", "proposal_amount", "proposal_message",
             "proposal_valid_until", "can_answer", "booking_reference", "created_at",
         ]
+
+    def get_destination_label(self, obj) -> str:
+        """Destination du catalogue, sinon celle saisie librement."""
+        return obj.destination.name if obj.destination else obj.destination_text
 
     def get_can_answer(self, obj) -> bool:
         return obj.status == QuoteRequest.Status.DEVIS_ENVOYE and (

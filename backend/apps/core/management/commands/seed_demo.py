@@ -10,6 +10,7 @@ illustrer les disponibilités. Fictives mais cohérentes.
 Idempotent. Refusé si DEMO_DATA_ALLOWED est faux (production).
 Les phases suivantes ajouteront offres et comptes.
 """
+import uuid
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from apps.core import demo_content as demo
 from apps.core.models import Category
 from apps.destinations.models import Destination
 from apps.events.models import Event, EventImage
+from apps.inquiries.models import QuoteRequest
 from apps.reviews.models import Review
 from apps.tours.models import Tour, TourDay, TourDeparture, TourImage
 from apps.vehicles.models import Vehicle, VehicleImage
@@ -66,6 +68,7 @@ class Command(BaseCommand):
             counts["activités"] = self.activities()
             counts["événements"] = self.events()
             self.bookings()
+            counts["devis"] = self.quotes()
             counts["avis"] = self.reviews()
         self.stdout.write(self.style.SUCCESS(
             "Démonstration chargée : " + ", ".join(f"{n} {label}" for label, n in counts.items()) + "."
@@ -75,8 +78,9 @@ class Command(BaseCommand):
     def reset(self):
         """Supprime les contenus de démonstration (avis, départs, chambres : en cascade)."""
         # Réservations fictives d'abord : leurs lignes protègent les offres (PROTECT).
-        Booking.objects.filter(contact_email=demo.DEMO_EMAIL).delete()
-        counts = {}
+        # QuerySet.delete() supprime réellement, y compris les objets à suppression logique.
+        Booking.all_objects.filter(contact_email=demo.DEMO_EMAIL).delete()
+        counts = {"devis": QuoteRequest.all_objects.filter(email=demo.DEMO_EMAIL).delete()[0]}
         for label, model, items in [
             ("circuits", Tour, demo.TOURS), ("hôtels", Hotel, demo.HOTELS),
             ("résidences", Residence, demo.RESIDENCES), ("véhicules", Vehicle, demo.VEHICLES),
@@ -90,6 +94,30 @@ class Command(BaseCommand):
             activities__isnull=True,
         ).delete()
         return counts
+
+    def quotes(self):
+        """Demandes de devis fictives, recréées à chaque chargement (référence et jeton fixes)."""
+        QuoteRequest.all_objects.filter(email=demo.DEMO_EMAIL).delete()
+        today = timezone.localdate()
+        for item in demo.QUOTES:
+            departure = today + timedelta(days=item["departure_in_days"])
+            proposal = item["proposal"] or {}
+            QuoteRequest.objects.create(
+                reference=item["reference"], access_token=uuid.UUID(item["token"]),
+                first_name=item["first_name"], last_name=item["last_name"],
+                email=demo.DEMO_EMAIL, phone=item["phone"], country_code="CI",
+                destination=Destination.objects.get(slug=item["destination"]),
+                source_tour=Tour.objects.filter(slug=item["tour"]).first() if item["tour"] else None,
+                date_departure=departure, date_return=departure + timedelta(days=item["nights"]),
+                adults=item["adults"], children=item["children"],
+                services_requested=item["services"], comments=item["comments"],
+                status=item["status"], consent_at=timezone.now(),
+                proposal_amount=demo.price(proposal.get("amount")),
+                proposal_message=proposal.get("message", ""),
+                proposal_sent_at=timezone.now() if proposal else None,
+                proposal_valid_until=today + timedelta(days=proposal["valid_in_days"]) if proposal else None,
+            )
+        return len(demo.QUOTES)
 
     def activities(self):
         categories = {}
@@ -169,7 +197,7 @@ class Command(BaseCommand):
 
     def bookings(self):
         """Réservations confirmées fictives, recréées à chaque chargement (dates relatives)."""
-        Booking.objects.filter(contact_email=demo.DEMO_EMAIL).delete()
+        Booking.all_objects.filter(contact_email=demo.DEMO_EMAIL).delete()
         today = timezone.localdate()
         for slug, in_days, days in demo.VEHICLE_BOOKINGS:
             vehicle = Vehicle.objects.get(slug=slug)
@@ -236,6 +264,10 @@ class Command(BaseCommand):
                 )
                 for number, (title_fr, title_en, desc_fr, desc_en) in enumerate(item["days"], start=1)
             ])
+            # Dates relatives : un chargement un autre jour remplace les départs précédents
+            # (sauf ceux qu'une réservation protège) au lieu de s'y ajouter.
+            starts = [today + timedelta(weeks=weeks) for weeks, *_ in item["departures"]]
+            tour.departures.exclude(start_date__in=starts).filter(booking_items__isnull=True).delete()
             for weeks, capacity, reserved, override in item["departures"]:
                 start = today + timedelta(weeks=weeks)
                 TourDeparture.objects.update_or_create(

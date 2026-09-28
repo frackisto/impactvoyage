@@ -615,6 +615,42 @@ EVENTS = [
 # Réservation confirmée fictive (calendrier de disponibilité) : (véhicule, dans N jours, durée).
 VEHICLE_BOOKINGS = [("demo-suzuki-vitara", 5, 4)]
 
+# Demandes de devis fictives, avec référence et jeton fixes : la page de suivi
+# /devis/{reference}?token=… est ainsi consultable (et testée) après chaque chargement.
+QUOTES = [
+    {
+        "reference": "DV-DEMO-000001",
+        "token": "7e57d3a0-0000-4000-8000-000000000001",
+        "status": "DEVIS_ENVOYE",
+        "first_name": "Awa", "last_name": "Koné", "phone": "+2250700000001",
+        "destination": "dubai", "tour": "dubai-ville-des-records",
+        "departure_in_days": 42, "nights": 5, "adults": 2, "children": 1,
+        "services": ["CIRCUIT", "VOL", "VISA"],
+        "comments": "Voyage en famille, première fois à Dubaï.",
+        "proposal": {
+            "amount": "2350000",
+            "message": (
+                "Bonjour Awa,\n\nVoici notre proposition pour votre séjour en famille à Dubaï : "
+                "vols aller-retour depuis Abidjan, visas, 5 nuits en hôtel 4 étoiles avec "
+                "petit-déjeuner, safari dans le désert et montée à la Burj Khalifa.\n\n"
+                "Le tarif enfant est appliqué pour votre fils."
+            ),
+            "valid_in_days": 14,
+        },
+    },
+    {
+        "reference": "DV-DEMO-000002",
+        "token": "7e57d3a0-0000-4000-8000-000000000002",
+        "status": "EN_COURS",
+        "first_name": "Serge", "last_name": "Traoré", "phone": "+2250700000002",
+        "destination": "chine", "tour": None,
+        "departure_in_days": 90, "nights": 10, "adults": 4, "children": 0,
+        "services": ["VOL", "HEBERGEMENT", "VISA"],
+        "comments": "Voyage d'affaires à Canton pour la foire.",
+        "proposal": None,
+    },
+]
+
 HOTEL_REVIEWS = [
     ("marina-view-dubai", "Fatou B.", 5, "Chambre impeccable et vue magnifique sur la marina."),
     ("hotel-lagune-plateau", "Jean-Marc A.", 4, "Très bien situé pour mes rendez-vous au Plateau."),
