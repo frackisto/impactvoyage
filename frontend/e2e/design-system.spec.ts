@@ -22,6 +22,21 @@ const PAGES = [
   "/devis",
   "/devis?hotel=hotel-lagune-plateau&start=2027-03-01&end=2027-03-04&travelers=2",
   "/devis/DV-DEMO-000001?token=7e57d3a0-0000-4000-8000-000000000001",
+  "/services",
+  "/offres",
+  "/offres/week-end-mondoukou-prix-doux",
+  "/visa",
+  "/visa/france",
+  "/transport",
+  "/mediatheque",
+  "/mediatheque/dubai-en-images",
+  "/blog",
+  "/blog/valise-pour-dubai",
+  "/a-propos",
+  "/contact",
+  "/mentions-legales",
+  "/confidentialite",
+  "/conditions-generales",
 ];
 
 test.describe("design system", () => {

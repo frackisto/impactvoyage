@@ -8,14 +8,19 @@ from django.utils import timezone, translation
 
 from apps.accommodations.models import Hotel, Residence
 from apps.activities.models import Activity
+from apps.blog.models import BlogPost
 from apps.bookings.models import Booking
 from apps.bookings.selectors import activity_places_left, vehicle_is_available
+from apps.core.models import Tag
 from apps.events.models import Event
 from apps.inquiries.models import QuoteRequest
 from apps.inquiries.services import accept_quote, get_quote_for_client
+from apps.media.models import MediaAlbum
+from apps.offers.models import Offer
 from apps.reviews.models import Review
 from apps.tours.models import Tour
 from apps.tours.selectors import open_departures
+from apps.transport.models import TransportService
 from apps.vehicles.models import Vehicle
 
 
@@ -69,7 +74,20 @@ class SeedDemoTests(TestCase):
         call_command("seed_demo", verbosity=0)  # la démonstration revient à son état initial
         self.assertEqual(QuoteRequest.objects.get(reference="DV-DEMO-000001").status, "DEVIS_ENVOYE")
 
+        # Offres en cours (dont une sur le week-end à Mondoukou), transports, albums, articles.
+        self.assertEqual(Offer.objects.currently_active().count(), 3)
+        self.assertEqual(Offer.objects.get(slug="week-end-mondoukou-prix-doux").tour.slug, "week-end-balneaire-mondoukou")
+        self.assertEqual(TransportService.objects.filter(is_published=True).count(), 4)
+        self.assertEqual(MediaAlbum.objects.get(slug="dubai-en-images").items.count(), 4)
+        self.assertEqual(BlogPost.objects.published().count(), 3)
+        self.assertEqual(BlogPost.objects.get(slug="valise-pour-dubai").tags.count(), 1)
+
         call_command("seed_demo", reset=True, verbosity=0)
+        self.assertFalse(Offer.objects.exists())
+        self.assertFalse(TransportService.objects.exists())
+        self.assertFalse(MediaAlbum.objects.exists())
+        self.assertFalse(BlogPost.objects.exists())
+        self.assertFalse(Tag.objects.exists())
         self.assertFalse(Tour.objects.exists())
         self.assertFalse(Hotel.objects.exists())
         self.assertFalse(Review.objects.exists())

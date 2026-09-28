@@ -17,13 +17,13 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ResidenceCard } from "@/components/accommodations/stay-cards";
 import { Container } from "@/components/common/container";
 import { ContentCard } from "@/components/common/content-card";
-import { OfferBadge, type OfferBadgeCode } from "@/components/common/offer-badge";
 import { Section, SectionHeader } from "@/components/common/page-section";
 import { Price } from "@/components/common/price";
 import { SectionHeading } from "@/components/common/section-heading";
 import { ServiceIcon } from "@/components/common/service-icon";
 import { SocialIcon } from "@/components/common/social-icons";
 import { EventCard } from "@/components/events/event-card";
+import { OfferCard } from "@/components/offers/offer-card";
 import { ReviewList } from "@/components/reviews/review-list";
 import { TourCard } from "@/components/tours/tour-card";
 import { buttonVariants } from "@/components/ui/button";
@@ -115,28 +115,7 @@ export async function OffersSection({ offers }: { offers: OfferList[] }) {
       <SectionHeader eyebrow={t("offersEyebrow")} title={t("offersTitle")} href="/offres" linkLabel={t("allOffers")} />
       <div className={grid}>
         {offers.map((offer) => (
-          <ContentCard
-            key={offer.id}
-            href={`/offres/${offer.slug}`}
-            title={offer.title}
-            description={offer.short_description}
-            image={offer.cover_image}
-            imageAlt={offer.cover_alt || offer.title}
-            badges={
-              <>
-                <OfferBadge code={offer.badge as OfferBadgeCode} />
-                {offer.discount_percent > 0 && (
-                  <span className="rounded-4xl bg-white px-2 py-0.5 text-xs font-bold text-ocean-900">−{offer.discount_percent} %</span>
-                )}
-              </>
-            }
-            footer={
-              <span className="flex flex-col">
-                <Price value={offer.initial_price} strikethrough />
-                <Price value={offer.promo_price} />
-              </span>
-            }
-          />
+          <OfferCard key={offer.id} offer={offer} />
         ))}
       </div>
     </Section>
@@ -212,7 +191,7 @@ export async function VisaSection({ visas, services }: { visas: VisaService[]; s
   );
 }
 
-const PILLARS: { key: string; icon: LucideIcon }[] = [
+export const PILLARS: { key: string; icon: LucideIcon }[] = [
   { key: "pillar1", icon: MedalIcon },
   { key: "pillar2", icon: HeartHandshakeIcon },
   { key: "pillar3", icon: GlobeIcon },

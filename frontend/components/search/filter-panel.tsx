@@ -19,6 +19,7 @@ export type FilterField =
   | { type: "select"; name: string; label: string; anyLabel: string; options: Option[] }
   | { type: "date"; name: string; label: string }
   | { type: "number"; name: string; label: string; min?: number; max?: number; step?: number }
+  | { type: "text"; name: string; label: string; placeholder?: string }
   /** Cases à cocher : valeurs jointes par des virgules (?amenities=1,4). */
   | { type: "checkboxes"; name: string; label: string; options: Option[] };
 
@@ -129,6 +130,12 @@ export function FilterPanel({ pathname, fields, current, keep = {}, labels }: Fi
               return (
                 <Labelled key={field.name} label={field.label}>
                   {(id) => <Input id={id} name={field.name} type="date" min={today} defaultValue={value} />}
+                </Labelled>
+              );
+            case "text":
+              return (
+                <Labelled key={field.name} label={field.label}>
+                  {(id) => <Input id={id} name={field.name} maxLength={150} placeholder={field.placeholder} defaultValue={value} />}
                 </Labelled>
               );
             case "number":

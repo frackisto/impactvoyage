@@ -6,18 +6,18 @@ import { Container } from "@/components/common/container";
 import { SocialIcon } from "@/components/common/social-icons";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { LEGAL_NAV, MAIN_NAV } from "@/lib/navigation";
+import { EXTRA_NAV, LEGAL_NAV, MAIN_NAV } from "@/lib/navigation";
 import { getSiteSettings, socialLinks, whatsappUrl } from "@/services/site.service";
 
-const EXPLORE = ["destinations", "tours", "accommodations", "vehicles", "offers", "events"];
-const AGENCY = ["services", "media", "about", "contact"];
+const EXPLORE = ["destinations", "tours", "accommodations", "vehicles", "transport", "offers", "events"];
+const AGENCY = ["services", "visa", "media", "blog", "about", "contact"];
 
 /** Pied de page complet (CdC § 4, § 19) : agence, navigation, coordonnées, réseaux, mentions. */
 export async function SiteFooter() {
   const [t, settings] = await Promise.all([getTranslations(), getSiteSettings()]);
   const socials = socialLinks(settings);
   const whatsapp = whatsappUrl(settings.whatsapp);
-  const navItem = (key: string) => MAIN_NAV.find((item) => item.key === key);
+  const navItem = (key: string) => [...MAIN_NAV, ...EXTRA_NAV].find((item) => item.key === key);
 
   return (
     <footer className="bg-ocean-950 text-ocean-100">

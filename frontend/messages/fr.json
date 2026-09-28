@@ -28,7 +28,10 @@
     "main": "Menu principal",
     "more": "Plus",
     "homeLink": "Impact Voyage et Logistique — accueil",
-    "breadcrumb": "Fil d'Ariane"
+    "breadcrumb": "Fil d'Ariane",
+    "visa": "Visas",
+    "transport": "Transport",
+    "blog": "Blog"
   },
   "Home": {
     "heroTitle": "Voyagez autrement. Découvrez le monde avec nous.",
@@ -716,7 +719,8 @@
       "residence": "Résidence",
       "vehicle": "Véhicule",
       "activity": "Activité",
-      "destination": "Destination"
+      "destination": "Destination",
+      "offer": "Offre"
     },
     "period": "Du {start} au {end}",
     "roomsCount": "{count, plural, one {# chambre} other {# chambres}}",
@@ -844,5 +848,382 @@
     "adults": "{count, plural, one {# adulte} other {# adultes}}",
     "children": "{count, plural, one {# enfant} other {# enfants}}",
     "sentOn": "Demande envoyée le"
+  },
+  "Services": {
+    "title": "Nos services",
+    "metaDescription": "Billetterie, circuits, hébergement, visas, assurance, location de voitures et événementiel : toutes les prestations d'Impact Voyage à Abidjan.",
+    "intro": "De la préparation à votre retour, l'agence prend en charge chaque étape de votre voyage.",
+    "summary": "Accès rapide aux services",
+    "filters": "Filtres",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "errorTitle": "Contenu momentanément indisponible",
+    "errorText": "Réessayez dans un instant ou contactez-nous.",
+    "pricesCaption": "Tarifs : {service}",
+    "formula": "Formule",
+    "price": "Prix",
+    "onRequest": "Sur demande",
+    "askQuote": "Demander un devis",
+    "seeCatalog": "Voir l'offre",
+    "ctaTitle": "Un projet de voyage ?",
+    "ctaText": "Décrivez-le en quelques minutes : un conseiller vous répond avec une proposition personnalisée.",
+    "ctaQuote": "Demander un devis",
+    "ctaContact": "Nous contacter"
+  },
+  "Offers": {
+    "title": "Offres et promotions",
+    "metaDescription": "Promotions en cours sur les billets d'avion, circuits, séjours et packages d'Impact Voyage.",
+    "intro": "Nos meilleurs tarifs du moment, pour une durée limitée.",
+    "filters": "Filtres",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "errorTitle": "Contenu momentanément indisponible",
+    "errorText": "Réessayez dans un instant ou contactez-nous.",
+    "filtersLabel": "Filtrer les offres",
+    "typeLabel": "Type d'offre",
+    "anyType": "Toutes les offres",
+    "type": {
+      "VOYAGE": "Voyage",
+      "HOTEL": "Hôtel",
+      "CIRCUIT": "Circuit",
+      "BILLET": "Billet d'avion",
+      "LOCATION": "Location",
+      "PACKAGE": "Package"
+    },
+    "results": "{count, plural, =0 {Aucune offre} one {# offre en cours} other {# offres en cours}}",
+    "customTitle": "Rien ne vous convient ?",
+    "customText": "Nous construisons une offre adaptée à vos dates et à votre budget.",
+    "customCta": "Demander un devis",
+    "emptyTitle": "Aucune offre en cours",
+    "emptyText": "Revenez bientôt, ou demandez-nous un devis : nous trouvons le meilleur tarif pour vous.",
+    "about": "L'offre en détail",
+    "destination": "Destination",
+    "validity": "Valable",
+    "period": "Du {start} au {end}",
+    "seatsLabel": "Places disponibles",
+    "seats": "{count, plural, =0 {Complet} one {# place} other {# places}}",
+    "seeTarget": "Voir la fiche « {title} »",
+    "conditions": "Conditions",
+    "priceTitle": "Prix de l'offre",
+    "book": "Profiter de l'offre",
+    "relatedEyebrow": "Promotions",
+    "relatedTitle": "Autres offres du moment",
+    "allOffers": "Toutes les offres"
+  },
+  "Visa": {
+    "title": "Visas",
+    "metaDescription": "Formules de visa par pays : délais, frais et pièces à fournir. Impact Voyage vous accompagne dans vos démarches.",
+    "intro": "Délais, frais et pièces à fournir, pays par pays : nous vous accompagnons de la constitution du dossier au rendez-vous.",
+    "filters": "Filtres",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "errorTitle": "Contenu momentanément indisponible",
+    "errorText": "Réessayez dans un instant ou contactez-nous.",
+    "filtersLabel": "Filtrer les visas",
+    "country": "Pays de destination",
+    "anyCountry": "Tous les pays",
+    "purposeLabel": "Motif du voyage",
+    "anyPurpose": "Tous les motifs",
+    "purpose": {
+      "TOURISME": "Tourisme",
+      "AFFAIRES": "Affaires",
+      "ETUDES": "Études",
+      "FAMILLE": "Visite familiale",
+      "TRANSIT": "Transit",
+      "AUTRE": "Autre"
+    },
+    "results": "{count, plural, =0 {Aucun pays} one {# pays} other {# pays}}",
+    "helpTitle": "Besoin d'aide pour votre visa ?",
+    "helpText": "Nos conseillers vérifient votre dossier, prennent rendez-vous et suivent votre demande.",
+    "askHelp": "Être accompagné",
+    "visaFor": "Visa {country}",
+    "formulas": "{count, plural, one {# formule} other {# formules}}",
+    "onRequest": "Frais sur demande",
+    "emptyTitle": "Aucune formule pour ces critères",
+    "emptyText": "Ce pays n'est pas encore en ligne : contactez-nous, nous vous renseignons.",
+    "countryMeta": "Visa pour {country} : formules, délais, frais et pièces à fournir, avec l'accompagnement d'Impact Voyage.",
+    "countryIntro": "Formules proposées pour les ressortissants de : {nationalities}.",
+    "validity": "Validité",
+    "processing": "Délai de traitement",
+    "fees": "Frais",
+    "documents": "Pièces à fournir",
+    "disclaimer": "Informations indicatives, susceptibles d'évoluer selon les règles consulaires. La décision de délivrer le visa appartient aux autorités du pays de destination.",
+    "whatsapp": "Poser une question sur WhatsApp",
+    "newTab": "(nouvel onglet)",
+    "seeFees": "Voir nos tarifs d'accompagnement"
+  },
+  "Transport": {
+    "title": "Transport",
+    "metaDescription": "Transferts aéroport, navettes et véhicules avec chauffeur à Abidjan, en Côte d'Ivoire et à l'étranger.",
+    "intro": "Transferts aéroport, navettes et véhicules avec chauffeur, pour vos déplacements sans souci.",
+    "filters": "Filtres",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "errorTitle": "Contenu momentanément indisponible",
+    "errorText": "Réessayez dans un instant ou contactez-nous.",
+    "filtersLabel": "Filtrer les transports",
+    "typeLabel": "Type de transport",
+    "anyType": "Tous les transports",
+    "type": {
+      "TRANSFERT_AEROPORT": "Transfert aéroport",
+      "BUS": "Bus",
+      "NAVETTE": "Navette",
+      "FERRY": "Bateau / ferry",
+      "TRAIN": "Train",
+      "CHAUFFEUR": "Véhicule avec chauffeur"
+    },
+    "origin": "Départ",
+    "originPlaceholder": "Ex. : Abidjan",
+    "destination": "Arrivée",
+    "destinationPlaceholder": "Ex. : Grand-Bassam",
+    "passengers": "Passagers",
+    "results": "{count, plural, =0 {Aucun service} one {# service} other {# services}}",
+    "customTitle": "Un trajet particulier ?",
+    "customText": "Mariage, séminaire, circuit : nous organisons le transport de votre groupe.",
+    "askQuote": "Demander un devis",
+    "emptyTitle": "Aucun service pour ce trajet",
+    "emptyText": "Élargissez votre recherche ou demandez-nous un devis : nous trouvons une solution.",
+    "to": "vers",
+    "maxPassengers": "{count, plural, one {# passager max.} other {# passagers max.}}",
+    "onRequest": "Prix sur demande",
+    "request": "Réserver"
+  },
+  "Media": {
+    "title": "Médiathèque",
+    "metaDescription": "Photos et vidéos des voyages, sorties et événements organisés par Impact Voyage.",
+    "intro": "Nos voyages, sorties et événements en images.",
+    "categories": "Catégories d'albums",
+    "all": "Tous",
+    "errorTitle": "Médiathèque momentanément indisponible",
+    "errorText": "Réessayez dans un instant.",
+    "results": "{count, plural, one {# album} other {# albums}}",
+    "items": "{count, plural, one {# média} other {# médias}}",
+    "emptyTitle": "Aucun album pour le moment",
+    "emptyText": "Les photos de nos prochains voyages arrivent bientôt.",
+    "albumMeta": "Album photo « {title} » : les voyages et événements d'Impact Voyage en images.",
+    "publishedOn": "Publié le {date}",
+    "photos": "{count, plural, one {# photo} other {# photos}}",
+    "emptyAlbum": "Cet album est vide pour le moment.",
+    "videos": "Vidéos",
+    "video": "Vidéo {number}",
+    "newTab": "(nouvel onglet)",
+    "backToAlbums": "Tous les albums"
+  },
+  "Blog": {
+    "title": "Blog voyage",
+    "metaDescription": "Conseils voyage, visas, destinations et bons plans par les conseillers d'Impact Voyage.",
+    "intro": "Conseils pratiques, formalités et idées de destinations, par nos conseillers.",
+    "categories": "Catégories d'articles",
+    "all": "Tous",
+    "taggedWith": "Articles avec le mot-clé « {tag} »",
+    "allPosts": "Tous les articles",
+    "errorTitle": "Blog momentanément indisponible",
+    "errorText": "Réessayez dans un instant.",
+    "results": "{count, plural, one {# article} other {# articles}}",
+    "emptyTitle": "Aucun article pour le moment",
+    "emptyText": "Nos premiers conseils voyage arrivent bientôt.",
+    "readingTime": "{count, plural, one {# min de lecture} other {# min de lecture}}",
+    "publishedOn": "Publié le {date}",
+    "by": "Par {author}",
+    "tags": "Mots-clés",
+    "ctaTitle": "Envie de partir ?",
+    "ctaText": "Nos conseillers préparent votre voyage de A à Z : billets, visa, hébergement et activités.",
+    "ctaQuote": "Demander un devis",
+    "relatedTitle": "À lire aussi"
+  },
+  "About": {
+    "title": "À propos",
+    "metaDescription": "Impact Voyage et Logistique, agence de voyage, de tourisme et d'événementiel à Abidjan : notre histoire, notre équipe, nos engagements.",
+    "intro": "Agence de voyage, de tourisme et d'événementiel à Abidjan.",
+    "servicesEyebrow": "Nos métiers",
+    "servicesTitle": "Tout pour votre voyage, au même endroit",
+    "allServices": "Tous nos services",
+    "visitTitle": "Venez nous rencontrer",
+    "visitText": "Notre équipe vous accueille en agence, répond au téléphone et sur WhatsApp.",
+    "contactUs": "Nous contacter",
+    "askQuote": "Demander un devis"
+  },
+  "Contact": {
+    "title": "Contact",
+    "metaDescription": "Contactez Impact Voyage à Abidjan : formulaire, téléphone, WhatsApp, email, adresse et horaires de l'agence.",
+    "intro": "Une question, une réclamation, un partenariat ? Écrivez-nous, nous vous répondons rapidement.",
+    "agencyTitle": "L'agence",
+    "shortcutsTitle": "Vous préparez un voyage ?",
+    "quoteShortcut": "Demander un devis",
+    "visaShortcut": "Informations visa",
+    "address": "Adresse",
+    "seeMap": "Voir sur la carte",
+    "newTab": "(nouvel onglet)",
+    "phone": "Téléphone",
+    "email": "Adresse email",
+    "hours": "Horaires",
+    "formTitle": "Écrivez-nous",
+    "name": "Nom complet",
+    "subject": "Objet",
+    "chooseSubject": "Choisir un objet",
+    "subjects": {
+      "info": "Demande d'information",
+      "booking": "Réservation en cours",
+      "visa": "Visa et formalités",
+      "complaint": "Réclamation",
+      "partnership": "Partenariat",
+      "other": "Autre"
+    },
+    "message": "Message",
+    "privacyNote": "Vos informations servent uniquement à vous répondre.",
+    "privacyLink": "Politique de confidentialité",
+    "submit": "Envoyer le message",
+    "successTitle": "Message envoyé !",
+    "successText": "Merci, nous avons bien reçu votre message. Nous vous répondons rapidement.",
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "email": "Adresse email invalide.",
+      "phone": "Numéro de téléphone invalide.",
+      "subject": "Choisissez l'objet de votre message.",
+      "messageShort": "Votre message est trop court (10 caractères minimum).",
+      "messageLong": "Votre message est trop long (5 000 caractères maximum).",
+      "checkFields": "Certains champs sont à corriger.",
+      "tooMany": "Trop de messages envoyés. Réessayez dans une heure ou appelez-nous.",
+      "server": "L'envoi a échoué. Réessayez dans un instant ou appelez-nous."
+    }
+  },
+  "Legal": {
+    "toc": "Sommaire",
+    "updated": "Dernière mise à jour : {date}.",
+    "updatedDate": "septembre 2026",
+    "otherDocuments": "Autres documents",
+    "notice": {
+      "title": "Mentions légales",
+      "metaDescription": "Mentions légales du site : éditeur, hébergement, propriété intellectuelle et responsabilité.",
+      "intro": "Informations sur l'éditeur du site et les conditions de son utilisation.",
+      "sections": {
+        "s1": {
+          "title": "Éditeur du site",
+          "body": "Le site est édité par {agency}, agence de voyage, de tourisme et d'événementiel.\n\n- Adresse : {address}\n- Téléphone : {phone}\n- Email : {email}\n- Forme juridique et capital : [à compléter]\n- RCCM : [à compléter]\n- Compte contribuable : [à compléter]"
+        },
+        "s2": {
+          "title": "Directeur de la publication",
+          "body": "[à compléter : nom et fonction du responsable de la publication]"
+        },
+        "s3": {
+          "title": "Hébergement",
+          "body": "[à compléter : nom, adresse et téléphone de l'hébergeur du site]"
+        },
+        "s4": {
+          "title": "Propriété intellectuelle",
+          "body": "Les textes, photos, logos et éléments graphiques du site appartiennent à {agency} ou à ses partenaires. Toute reproduction, même partielle, sans autorisation écrite préalable est interdite."
+        },
+        "s5": {
+          "title": "Informations publiées",
+          "body": "Les prix, disponibilités et formalités sont donnés à titre indicatif et peuvent évoluer. Seuls font foi le devis ou la confirmation de réservation adressés par l'agence. Les montants affichés dans une autre devise que le franc CFA (FCFA) sont convertis à titre indicatif."
+        },
+        "s6": {
+          "title": "Liens externes",
+          "body": "Le site peut renvoyer vers des sites tiers (réseaux sociaux, plateformes vidéo, cartes). L'agence n'est pas responsable de leur contenu ni de leurs pratiques en matière de données personnelles."
+        },
+        "s7": {
+          "title": "Contact",
+          "body": "Pour toute question sur le site : {email} ou {phone}."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "metaDescription": "Données personnelles collectées sur le site, finalités, destinataires, durée de conservation et vos droits.",
+      "intro": "Comment nous utilisons et protégeons les informations que vous nous confiez.",
+      "sections": {
+        "s1": {
+          "title": "Responsable du traitement",
+          "body": "Les données collectées sur le site sont traitées par {agency}, {address}. Pour toute question : {email}.\n\nLe traitement respecte la loi ivoirienne n° 2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel."
+        },
+        "s2": {
+          "title": "Données collectées",
+          "body": "- Demande de devis : nom, prénom, email, téléphone, WhatsApp, pays de résidence et détails du projet (destination, dates, voyageurs, budget, préférences).\n- Formulaire de contact : nom, email, téléphone et message.\n- Réservation : coordonnées du voyageur et prestations réservées.\n\nNous ne collectons que les informations nécessaires au traitement de votre demande."
+        },
+        "s3": {
+          "title": "Finalités",
+          "body": "Vos données servent à répondre à vos demandes, préparer et suivre votre voyage (devis, réservation, visa), vous recontacter à ce sujet et respecter nos obligations légales et comptables. Elles ne sont ni vendues ni utilisées à des fins publicitaires sans votre accord."
+        },
+        "s4": {
+          "title": "Destinataires",
+          "body": "Seuls les membres de l'équipe de l'agence qui traitent votre dossier y ont accès. Certaines données sont transmises, lorsque c'est nécessaire, aux prestataires de votre voyage (compagnies aériennes, hôtels, loueurs, assureurs) et aux autorités consulaires pour une demande de visa."
+        },
+        "s5": {
+          "title": "Durée de conservation",
+          "body": "Les données sont conservées le temps de traiter votre demande et de réaliser votre voyage, puis pendant les durées prévues par la loi, notamment pour les pièces comptables. Une demande restée sans suite est supprimée au terme d'un délai de [à compléter]."
+        },
+        "s6": {
+          "title": "Cookies",
+          "body": "Le site utilise uniquement des cookies nécessaires à son fonctionnement :\n\n- la langue choisie ;\n- la devise d'affichage des prix ;\n- la session de connexion à votre compte, le cas échéant.\n\nAucun cookie publicitaire ni de mesure d'audience n'est déposé."
+        },
+        "s7": {
+          "title": "Sécurité",
+          "body": "Les échanges avec le site sont chiffrés (HTTPS), l'accès aux données est réservé aux personnes habilitées et les formulaires sont protégés contre les envois automatisés."
+        },
+        "s8": {
+          "title": "Vos droits",
+          "body": "Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, et vous opposer à leur traitement, en écrivant à {email}. Vous pouvez également saisir l'Autorité de Régulation des Télécommunications/TIC de Côte d'Ivoire (ARTCI), autorité de protection des données personnelles."
+        }
+      }
+    },
+    "terms": {
+      "title": "Conditions générales",
+      "metaDescription": "Conditions générales de vente : devis, réservation, prix, paiement, modification, annulation et formalités.",
+      "intro": "Conditions applicables aux prestations proposées par l'agence sur le site et par ses conseillers.",
+      "sections": {
+        "s1": {
+          "title": "Objet",
+          "body": "Les présentes conditions régissent la vente des prestations de {agency} : billets d'avion, circuits, hébergements, location de véhicules, transferts, activités, accompagnement pour les visas et événements. Toute réservation implique leur acceptation."
+        },
+        "s2": {
+          "title": "Devis",
+          "body": "Les demandes de devis sont gratuites et sans engagement. La proposition de l'agence précise les prestations, le prix total et sa date de validité ; passé cette date, les tarifs et disponibilités doivent être confirmés à nouveau."
+        },
+        "s3": {
+          "title": "Réservation",
+          "body": "Le client accepte la proposition en ligne, depuis le lien reçu par email, ou auprès d'un conseiller. La réservation est ferme après confirmation écrite de l'agence et versement de l'acompte indiqué dans la proposition. Les prestations sont soumises à la disponibilité des prestataires."
+        },
+        "s4": {
+          "title": "Prix",
+          "body": "Les prix sont exprimés en francs CFA (FCFA), seule devise contractuelle ; les montants affichés en euro, dollar ou livre sont indicatifs. Sauf mention contraire, ils sont par personne et comprennent uniquement les prestations décrites. Le prix peut être révisé avant le départ en cas de variation des taxes ou du coût du transport, dans les conditions prévues par la proposition."
+        },
+        "s5": {
+          "title": "Paiement",
+          "body": "L'acompte et le solde sont réglés selon l'échéancier de la proposition, en agence ou par les moyens de paiement indiqués par le conseiller. Le défaut de paiement du solde à l'échéance peut entraîner l'annulation de la réservation, aux conditions de l'article « Annulation par le client »."
+        },
+        "s6": {
+          "title": "Modification par le client",
+          "body": "Toute demande de modification (dates, voyageurs, prestations) est étudiée selon les disponibilités. Les frais facturés par les prestataires (compagnies aériennes, hôtels) et les éventuels frais de dossier de l'agence restent à la charge du client."
+        },
+        "s7": {
+          "title": "Annulation par le client",
+          "body": "L'annulation doit être notifiée par écrit. Les frais d'annulation dépendent des conditions des prestataires et de la date d'annulation ; ils sont précisés dans la proposition. Les billets non remboursables et les frais de visa ne sont pas remboursés."
+        },
+        "s8": {
+          "title": "Annulation par l'agence",
+          "body": "L'agence peut annuler un circuit ou un voyage de groupe si le nombre minimum de participants n'est pas atteint ou en cas de force majeure. Le client est alors remboursé des sommes versées, ou se voit proposer une prestation équivalente."
+        },
+        "s9": {
+          "title": "Formalités",
+          "body": "Chaque voyageur doit détenir un passeport valide et les visas, vaccins et documents exigés par les pays visités. L'agence informe et accompagne le client dans ses démarches, mais la délivrance d'un visa relève de la seule décision des autorités consulaires : un refus ne peut lui être imputé."
+        },
+        "s10": {
+          "title": "Assurance",
+          "body": "Une assurance voyage (assistance, rapatriement, annulation) est vivement recommandée et peut être souscrite auprès de l'agence."
+        },
+        "s11": {
+          "title": "Responsabilité",
+          "body": "L'agence est responsable de la bonne exécution des prestations réservées auprès d'elle. Sa responsabilité ne peut être engagée en cas de faute du client, de fait imprévisible d'un tiers ou de force majeure (intempéries, grèves, décisions des autorités)."
+        },
+        "s12": {
+          "title": "Réclamations",
+          "body": "Toute réclamation est à adresser par écrit à {email}, si possible dans les 30 jours suivant le retour."
+        },
+        "s13": {
+          "title": "Droit applicable",
+          "body": "Les présentes conditions sont soumises au droit ivoirien. À défaut d'accord amiable, les tribunaux d'Abidjan sont compétents."
+        }
+      }
+    }
   }
 }

@@ -1,14 +1,15 @@
 """
 Données de démonstration (architecture § 14) : circuits nationaux et
 internationaux (programme, départs), hôtels (chambres, équipements), résidence,
-véhicules, activités, événements et avis, avec des réservations confirmées pour
+véhicules, activités, événements, devis, offres, transports, albums de la
+médiathèque, articles de blog et avis, avec des réservations confirmées pour
 illustrer les disponibilités. Fictives mais cohérentes.
 
     python manage.py seed_demo          # charge le contenu de l'agence puis la démo
     python manage.py seed_demo --reset  # supprime les données de démonstration
 
 Idempotent. Refusé si DEMO_DATA_ALLOWED est faux (production).
-Les phases suivantes ajouteront offres et comptes.
+Les phases suivantes ajouteront les comptes.
 """
 import uuid
 from datetime import date, timedelta
@@ -23,14 +24,18 @@ from django.utils import timezone
 
 from apps.accommodations.models import Amenity, Hotel, HotelImage, Residence, Room
 from apps.activities.models import Activity, ActivityImage
+from apps.blog.models import BlogPost
 from apps.bookings.models import Booking, BookingItem
 from apps.core import demo_content as demo
-from apps.core.models import Category
+from apps.core.models import Category, Tag
 from apps.destinations.models import Destination
 from apps.events.models import Event, EventImage
 from apps.inquiries.models import QuoteRequest
+from apps.media.models import MediaAlbum, MediaItem
+from apps.offers.models import Offer
 from apps.reviews.models import Review
 from apps.tours.models import Tour, TourDay, TourDeparture, TourImage
+from apps.transport.models import TransportService
 from apps.vehicles.models import Vehicle, VehicleImage
 
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "agency"
@@ -69,6 +74,10 @@ class Command(BaseCommand):
             counts["événements"] = self.events()
             self.bookings()
             counts["devis"] = self.quotes()
+            counts["offres"] = self.offers()
+            counts["transports"] = self.transports()
+            counts["albums"] = self.albums()
+            counts["articles"] = self.posts()
             counts["avis"] = self.reviews()
         self.stdout.write(self.style.SUCCESS(
             "Démonstration chargée : " + ", ".join(f"{n} {label}" for label, n in counts.items()) + "."
@@ -81,7 +90,10 @@ class Command(BaseCommand):
         # QuerySet.delete() supprime réellement, y compris les objets à suppression logique.
         Booking.all_objects.filter(contact_email=demo.DEMO_EMAIL).delete()
         counts = {"devis": QuoteRequest.all_objects.filter(email=demo.DEMO_EMAIL).delete()[0]}
+        # Offres en premier : celles qui ciblent une fiche disparaîtraient avec elle (CASCADE).
         for label, model, items in [
+            ("offres", Offer, demo.OFFERS), ("transports", TransportService, demo.TRANSPORTS),
+            ("albums", MediaAlbum, demo.ALBUMS), ("articles", BlogPost, demo.BLOG_POSTS),
             ("circuits", Tour, demo.TOURS), ("hôtels", Hotel, demo.HOTELS),
             ("résidences", Residence, demo.RESIDENCES), ("véhicules", Vehicle, demo.VEHICLES),
             ("activités", Activity, demo.ACTIVITIES), ("événements", Event, demo.EVENTS),
@@ -93,7 +105,127 @@ class Command(BaseCommand):
             kind=Category.Kind.ACTIVITY, slug__in=[slug for slug, _, _ in demo.ACTIVITY_CATEGORIES],
             activities__isnull=True,
         ).delete()
+        Category.objects.filter(
+            kind=Category.Kind.MEDIA, slug__in=[slug for slug, _, _ in demo.MEDIA_CATEGORIES],
+            media_albums__isnull=True,
+        ).delete()
+        Category.objects.filter(
+            kind=Category.Kind.BLOG, slug__in=[slug for slug, _, _ in demo.BLOG_CATEGORIES],
+            blog_posts__isnull=True,
+        ).delete()
+        Tag.objects.filter(
+            slug__in=[slug for post in demo.BLOG_POSTS for slug, _, _ in post["tags"]],
+            blog_posts__isnull=True,
+        ).delete()
         return counts
+
+    def categories(self, kind, rows):
+        return {
+            slug: Category.objects.update_or_create(
+                kind=kind, slug=slug, defaults={"name_fr": fr, "name_en": en, "order": order},
+            )[0]
+            for order, (slug, fr, en) in enumerate(rows)
+        }
+
+    def cover(self, obj, field, filename):
+        """Photo depuis les fixtures, seulement si absente."""
+        if filename and not getattr(obj, field):
+            with open(FIXTURES / filename, "rb") as handle:
+                getattr(obj, field).save(filename, File(handle), save=True)
+
+    def offers(self):
+        """Offres en cours (dates relatives au jour du chargement)."""
+        today = timezone.localdate()
+        targets = {"tour": Tour, "hotel": Hotel, "residence": Residence, "vehicle": Vehicle, "activity": Activity}
+        for item in demo.OFFERS:
+            target = {}
+            if item["target"]:
+                field, slug = item["target"]
+                target = {field: targets[field].objects.get(slug=slug)}
+            offer, _ = Offer.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    **translated("title", item["title"]),
+                    **translated("short_description", item["short"]),
+                    **translated("description", item["description"]),
+                    **translated("conditions", item["conditions"]),
+                    **translated("cover_alt", item["title"]),
+                    "offer_type": item["type"], "badge": item["badge"],
+                    "initial_price": demo.price(item["initial"]), "promo_price": demo.price(item["promo"]),
+                    "seats_available": item["seats"],
+                    "start_date": today - timedelta(days=item["started_days_ago"]),
+                    "end_date": today + timedelta(days=item["ends_in_days"]),
+                    "destination": Destination.objects.get(slug=item["destination"]),
+                    "is_active": True, **target,
+                },
+            )
+            self.cover(offer, "cover_image", item["cover"])
+        return len(demo.OFFERS)
+
+    def transports(self):
+        for item in demo.TRANSPORTS:
+            service, _ = TransportService.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    **translated("title", item["title"]),
+                    **translated("description", item["description"]),
+                    **translated("schedule_info", item["schedule"]),
+                    **translated("cover_alt", item["title"]),
+                    "transport_type": item["type"], "origin": item["origin"],
+                    "destination": item["destination"], "max_passengers": item["passengers"],
+                    "price_from": demo.price(item["price"]), "is_published": True,
+                },
+            )
+            self.cover(service, "cover_image", item["cover"])
+        return len(demo.TRANSPORTS)
+
+    def albums(self):
+        categories = self.categories(Category.Kind.MEDIA, demo.MEDIA_CATEGORIES)
+        today = timezone.localdate()
+        for item in demo.ALBUMS:
+            album, _ = MediaAlbum.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    **translated("title", item["title"]),
+                    **translated("description", item["description"]),
+                    "category": categories[item["category"]],
+                    "tour": Tour.objects.get(slug=item["tour"]) if item["tour"] else None,
+                    "published_at": today - timedelta(days=item["published_days_ago"]),
+                    "is_published": True,
+                },
+            )
+            self.cover(album, "cover", item["photos"][0])
+            if not album.items.exists():
+                for order, filename in enumerate(item["photos"]):
+                    photo = MediaItem(album=album, type=MediaItem.Type.PHOTO, order=order,
+                                      **translated("alt_text", item["title"]))
+                    with open(FIXTURES / filename, "rb") as handle:
+                        photo.image.save(filename, File(handle), save=False)
+                    photo.save()
+        return len(demo.ALBUMS)
+
+    def posts(self):
+        categories = self.categories(Category.Kind.BLOG, demo.BLOG_CATEGORIES)
+        now = timezone.now()
+        for item in demo.BLOG_POSTS:
+            post, _ = BlogPost.objects.update_or_create(
+                slug=item["slug"],
+                defaults={
+                    **translated("title", item["title"]),
+                    **translated("excerpt", item["excerpt"]),
+                    **translated("content", item["content"]),
+                    **translated("cover_alt", item["title"]),
+                    "category": categories[item["category"]],
+                    "status": BlogPost.Status.PUBLIE,
+                    "published_at": now - timedelta(days=item["published_days_ago"]),
+                },
+            )
+            post.tags.set([
+                Tag.objects.update_or_create(slug=slug, defaults={"name_fr": fr, "name_en": en})[0]
+                for slug, fr, en in item["tags"]
+            ])
+            self.cover(post, "cover_image", item["cover"])
+        return len(demo.BLOG_POSTS)
 
     def quotes(self):
         """Demandes de devis fictives, recréées à chaque chargement (référence et jeton fixes)."""

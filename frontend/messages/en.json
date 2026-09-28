@@ -28,7 +28,10 @@
     "main": "Main menu",
     "more": "More",
     "homeLink": "Impact Voyage et Logistique — home",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "visa": "Visas",
+    "transport": "Transport",
+    "blog": "Blog"
   },
   "Home": {
     "heroTitle": "Travel differently. Discover the world with us.",
@@ -716,7 +719,8 @@
       "residence": "Residence",
       "vehicle": "Vehicle",
       "activity": "Activity",
-      "destination": "Destination"
+      "destination": "Destination",
+      "offer": "Offer"
     },
     "period": "From {start} to {end}",
     "roomsCount": "{count, plural, one {# room} other {# rooms}}",
@@ -844,5 +848,382 @@
     "adults": "{count, plural, one {# adult} other {# adults}}",
     "children": "{count, plural, one {# child} other {# children}}",
     "sentOn": "Request sent on"
+  },
+  "Services": {
+    "title": "Our services",
+    "metaDescription": "Flights, tours, accommodation, visas, insurance, car rental and events: all Impact Voyage services in Abidjan.",
+    "intro": "From preparation to your return, the agency takes care of every step of your trip.",
+    "summary": "Quick access to services",
+    "filters": "Filters",
+    "apply": "Apply",
+    "reset": "Reset",
+    "errorTitle": "Content temporarily unavailable",
+    "errorText": "Try again in a moment or contact us.",
+    "pricesCaption": "Prices: {service}",
+    "formula": "Option",
+    "price": "Price",
+    "onRequest": "On request",
+    "askQuote": "Request a quote",
+    "seeCatalog": "See the offer",
+    "ctaTitle": "Planning a trip?",
+    "ctaText": "Describe it in a few minutes: an advisor will reply with a personalised proposal.",
+    "ctaQuote": "Request a quote",
+    "ctaContact": "Contact us"
+  },
+  "Offers": {
+    "title": "Offers and deals",
+    "metaDescription": "Current deals on flights, tours, stays and packages from Impact Voyage.",
+    "intro": "Our best prices right now, for a limited time.",
+    "filters": "Filters",
+    "apply": "Apply",
+    "reset": "Reset",
+    "errorTitle": "Content temporarily unavailable",
+    "errorText": "Try again in a moment or contact us.",
+    "filtersLabel": "Filter offers",
+    "typeLabel": "Offer type",
+    "anyType": "All offers",
+    "type": {
+      "VOYAGE": "Trip",
+      "HOTEL": "Hotel",
+      "CIRCUIT": "Tour",
+      "BILLET": "Flight ticket",
+      "LOCATION": "Rental",
+      "PACKAGE": "Package"
+    },
+    "results": "{count, plural, =0 {No offers} one {# current offer} other {# current offers}}",
+    "customTitle": "Nothing suits you?",
+    "customText": "We build an offer tailored to your dates and budget.",
+    "customCta": "Request a quote",
+    "emptyTitle": "No current offers",
+    "emptyText": "Come back soon, or request a quote: we will find the best price for you.",
+    "about": "Offer details",
+    "destination": "Destination",
+    "validity": "Valid",
+    "period": "From {start} to {end}",
+    "seatsLabel": "Seats available",
+    "seats": "{count, plural, =0 {Sold out} one {# seat} other {# seats}}",
+    "seeTarget": "See “{title}”",
+    "conditions": "Conditions",
+    "priceTitle": "Offer price",
+    "book": "Get this offer",
+    "relatedEyebrow": "Deals",
+    "relatedTitle": "Other current offers",
+    "allOffers": "All offers"
+  },
+  "Visa": {
+    "title": "Visas",
+    "metaDescription": "Visa options by country: processing times, fees and required documents. Impact Voyage assists you with your application.",
+    "intro": "Processing times, fees and required documents, country by country: we assist you from preparing your file to the appointment.",
+    "filters": "Filters",
+    "apply": "Apply",
+    "reset": "Reset",
+    "errorTitle": "Content temporarily unavailable",
+    "errorText": "Try again in a moment or contact us.",
+    "filtersLabel": "Filter visas",
+    "country": "Destination country",
+    "anyCountry": "All countries",
+    "purposeLabel": "Purpose of travel",
+    "anyPurpose": "All purposes",
+    "purpose": {
+      "TOURISME": "Tourism",
+      "AFFAIRES": "Business",
+      "ETUDES": "Studies",
+      "FAMILLE": "Family visit",
+      "TRANSIT": "Transit",
+      "AUTRE": "Other"
+    },
+    "results": "{count, plural, =0 {No countries} one {# country} other {# countries}}",
+    "helpTitle": "Need help with your visa?",
+    "helpText": "Our advisors check your file, book your appointment and follow up your application.",
+    "askHelp": "Get assistance",
+    "visaFor": "Visa for {country}",
+    "formulas": "{count, plural, one {# option} other {# options}}",
+    "onRequest": "Fees on request",
+    "emptyTitle": "No options match these criteria",
+    "emptyText": "This country is not online yet: contact us and we will advise you.",
+    "countryMeta": "Visa for {country}: options, processing times, fees and required documents, with Impact Voyage's assistance.",
+    "countryIntro": "Options for nationals of: {nationalities}.",
+    "validity": "Validity",
+    "processing": "Processing time",
+    "fees": "Fees",
+    "documents": "Required documents",
+    "disclaimer": "Indicative information, subject to change according to consular rules. The decision to issue the visa rests with the authorities of the destination country.",
+    "whatsapp": "Ask a question on WhatsApp",
+    "newTab": "(new tab)",
+    "seeFees": "See our assistance fees"
+  },
+  "Transport": {
+    "title": "Transport",
+    "metaDescription": "Airport transfers, shuttles and vehicles with driver in Abidjan, Côte d'Ivoire and abroad.",
+    "intro": "Airport transfers, shuttles and vehicles with driver, for hassle-free travel.",
+    "filters": "Filters",
+    "apply": "Apply",
+    "reset": "Reset",
+    "errorTitle": "Content temporarily unavailable",
+    "errorText": "Try again in a moment or contact us.",
+    "filtersLabel": "Filter transport",
+    "typeLabel": "Transport type",
+    "anyType": "All transport",
+    "type": {
+      "TRANSFERT_AEROPORT": "Airport transfer",
+      "BUS": "Bus",
+      "NAVETTE": "Shuttle",
+      "FERRY": "Boat / ferry",
+      "TRAIN": "Train",
+      "CHAUFFEUR": "Vehicle with driver"
+    },
+    "origin": "From",
+    "originPlaceholder": "E.g. Abidjan",
+    "destination": "To",
+    "destinationPlaceholder": "E.g. Grand-Bassam",
+    "passengers": "Passengers",
+    "results": "{count, plural, =0 {No services} one {# service} other {# services}}",
+    "customTitle": "A special journey?",
+    "customText": "Wedding, seminar, tour: we organise transport for your group.",
+    "askQuote": "Request a quote",
+    "emptyTitle": "No services for this route",
+    "emptyText": "Broaden your search or request a quote: we will find a solution.",
+    "to": "to",
+    "maxPassengers": "{count, plural, one {# passenger max.} other {# passengers max.}}",
+    "onRequest": "Price on request",
+    "request": "Book"
+  },
+  "Media": {
+    "title": "Media library",
+    "metaDescription": "Photos and videos of trips, outings and events organised by Impact Voyage.",
+    "intro": "Our trips, outings and events in pictures.",
+    "categories": "Album categories",
+    "all": "All",
+    "errorTitle": "Media library temporarily unavailable",
+    "errorText": "Try again in a moment.",
+    "results": "{count, plural, one {# album} other {# albums}}",
+    "items": "{count, plural, one {# item} other {# items}}",
+    "emptyTitle": "No albums yet",
+    "emptyText": "Photos from our next trips are coming soon.",
+    "albumMeta": "Photo album “{title}”: Impact Voyage trips and events in pictures.",
+    "publishedOn": "Published on {date}",
+    "photos": "{count, plural, one {# photo} other {# photos}}",
+    "emptyAlbum": "This album is empty for now.",
+    "videos": "Videos",
+    "video": "Video {number}",
+    "newTab": "(new tab)",
+    "backToAlbums": "All albums"
+  },
+  "Blog": {
+    "title": "Travel blog",
+    "metaDescription": "Travel tips, visas, destinations and deals from Impact Voyage advisors.",
+    "intro": "Practical tips, formalities and destination ideas from our advisors.",
+    "categories": "Post categories",
+    "all": "All",
+    "taggedWith": "Posts tagged “{tag}”",
+    "allPosts": "All posts",
+    "errorTitle": "Blog temporarily unavailable",
+    "errorText": "Try again in a moment.",
+    "results": "{count, plural, one {# post} other {# posts}}",
+    "emptyTitle": "No posts yet",
+    "emptyText": "Our first travel tips are coming soon.",
+    "readingTime": "{count, plural, one {# min read} other {# min read}}",
+    "publishedOn": "Published on {date}",
+    "by": "By {author}",
+    "tags": "Tags",
+    "ctaTitle": "Ready to go?",
+    "ctaText": "Our advisors plan your trip from A to Z: tickets, visa, accommodation and activities.",
+    "ctaQuote": "Request a quote",
+    "relatedTitle": "Read also"
+  },
+  "About": {
+    "title": "About us",
+    "metaDescription": "Impact Voyage et Logistique, travel, tourism and events agency in Abidjan: our story, our team, our commitments.",
+    "intro": "Travel, tourism and events agency in Abidjan.",
+    "servicesEyebrow": "What we do",
+    "servicesTitle": "Everything for your trip, in one place",
+    "allServices": "All our services",
+    "visitTitle": "Come and meet us",
+    "visitText": "Our team welcomes you at the agency and answers by phone and on WhatsApp.",
+    "contactUs": "Contact us",
+    "askQuote": "Request a quote"
+  },
+  "Contact": {
+    "title": "Contact",
+    "metaDescription": "Contact Impact Voyage in Abidjan: form, phone, WhatsApp, email, address and opening hours.",
+    "intro": "A question, a complaint, a partnership? Write to us and we will reply shortly.",
+    "agencyTitle": "The agency",
+    "shortcutsTitle": "Planning a trip?",
+    "quoteShortcut": "Request a quote",
+    "visaShortcut": "Visa information",
+    "address": "Address",
+    "seeMap": "See on the map",
+    "newTab": "(new tab)",
+    "phone": "Phone",
+    "email": "Email address",
+    "hours": "Opening hours",
+    "formTitle": "Write to us",
+    "name": "Full name",
+    "subject": "Subject",
+    "chooseSubject": "Choose a subject",
+    "subjects": {
+      "info": "Information request",
+      "booking": "Current booking",
+      "visa": "Visa and formalities",
+      "complaint": "Complaint",
+      "partnership": "Partnership",
+      "other": "Other"
+    },
+    "message": "Message",
+    "privacyNote": "Your information is only used to reply to you.",
+    "privacyLink": "Privacy policy",
+    "submit": "Send message",
+    "successTitle": "Message sent!",
+    "successText": "Thank you, we have received your message. We will reply shortly.",
+    "errors": {
+      "required": "This field is required.",
+      "email": "Invalid email address.",
+      "phone": "Invalid phone number.",
+      "subject": "Choose the subject of your message.",
+      "messageShort": "Your message is too short (at least 10 characters).",
+      "messageLong": "Your message is too long (5,000 characters maximum).",
+      "checkFields": "Some fields need correcting.",
+      "tooMany": "Too many messages sent. Try again in an hour or call us.",
+      "server": "Sending failed. Try again in a moment or call us."
+    }
+  },
+  "Legal": {
+    "toc": "Contents",
+    "updated": "Last updated: {date}.",
+    "updatedDate": "September 2026",
+    "otherDocuments": "Other documents",
+    "notice": {
+      "title": "Legal notice",
+      "metaDescription": "Legal notice for the website: publisher, hosting, intellectual property and liability.",
+      "intro": "Information about the website publisher and the terms of use.",
+      "sections": {
+        "s1": {
+          "title": "Publisher",
+          "body": "This website is published by {agency}, a travel, tourism and events agency.\n\n- Address: {address}\n- Phone: {phone}\n- Email: {email}\n- Legal form and share capital: [to be completed]\n- Trade register (RCCM): [to be completed]\n- Taxpayer number: [to be completed]"
+        },
+        "s2": {
+          "title": "Publication director",
+          "body": "[to be completed: name and position of the person responsible for publication]"
+        },
+        "s3": {
+          "title": "Hosting",
+          "body": "[to be completed: name, address and phone number of the website host]"
+        },
+        "s4": {
+          "title": "Intellectual property",
+          "body": "The texts, photos, logos and graphics on this website belong to {agency} or its partners. Any reproduction, even partial, without prior written permission is prohibited."
+        },
+        "s5": {
+          "title": "Published information",
+          "body": "Prices, availability and formalities are given for information and may change. Only the quote or booking confirmation sent by the agency is binding. Amounts shown in a currency other than the CFA franc (FCFA) are converted for information only."
+        },
+        "s6": {
+          "title": "External links",
+          "body": "The website may link to third-party sites (social networks, video platforms, maps). The agency is not responsible for their content or their personal data practices."
+        },
+        "s7": {
+          "title": "Contact",
+          "body": "For any question about the website: {email} or {phone}."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "metaDescription": "Personal data collected on the website, purposes, recipients, retention period and your rights.",
+      "intro": "How we use and protect the information you entrust to us.",
+      "sections": {
+        "s1": {
+          "title": "Data controller",
+          "body": "Data collected on this website is processed by {agency}, {address}. For any question: {email}.\n\nProcessing complies with Ivorian Law No. 2013-450 of 19 June 2013 on the protection of personal data."
+        },
+        "s2": {
+          "title": "Data collected",
+          "body": "- Quote request: first and last name, email, phone, WhatsApp, country of residence and trip details (destination, dates, travellers, budget, preferences).\n- Contact form: name, email, phone and message.\n- Booking: traveller details and booked services.\n\nWe only collect the information needed to handle your request."
+        },
+        "s3": {
+          "title": "Purposes",
+          "body": "Your data is used to answer your requests, prepare and follow up your trip (quote, booking, visa), contact you about it and meet our legal and accounting obligations. It is neither sold nor used for advertising without your consent."
+        },
+        "s4": {
+          "title": "Recipients",
+          "body": "Only the agency team members handling your file have access to it. Some data is shared, when necessary, with your trip's service providers (airlines, hotels, rental companies, insurers) and with consular authorities for a visa application."
+        },
+        "s5": {
+          "title": "Retention period",
+          "body": "Data is kept for as long as needed to handle your request and carry out your trip, then for the periods required by law, notably for accounting records. A request with no follow-up is deleted after [to be completed]."
+        },
+        "s6": {
+          "title": "Cookies",
+          "body": "The website only uses cookies required for it to work:\n\n- the chosen language;\n- the currency used to display prices;\n- your account login session, if any.\n\nNo advertising or audience measurement cookies are used."
+        },
+        "s7": {
+          "title": "Security",
+          "body": "Exchanges with the website are encrypted (HTTPS), access to data is restricted to authorised people and forms are protected against automated submissions."
+        },
+        "s8": {
+          "title": "Your rights",
+          "body": "You may request access to your data, its correction or deletion, and object to its processing, by writing to {email}. You may also contact the Côte d'Ivoire Telecommunications/ICT Regulatory Authority (ARTCI), the personal data protection authority."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms and conditions",
+      "metaDescription": "Terms and conditions of sale: quotes, booking, prices, payment, changes, cancellation and formalities.",
+      "intro": "Terms applicable to the services offered by the agency on the website and by its advisors.",
+      "sections": {
+        "s1": {
+          "title": "Purpose",
+          "body": "These terms govern the sale of services by {agency}: flight tickets, tours, accommodation, vehicle rental, transfers, activities, visa assistance and events. Any booking implies their acceptance."
+        },
+        "s2": {
+          "title": "Quotes",
+          "body": "Quote requests are free and without obligation. The agency's proposal states the services, the total price and its validity date; after that date, prices and availability must be confirmed again."
+        },
+        "s3": {
+          "title": "Booking",
+          "body": "The client accepts the proposal online, from the link received by email, or with an advisor. The booking is final after written confirmation by the agency and payment of the deposit stated in the proposal. Services are subject to the availability of providers."
+        },
+        "s4": {
+          "title": "Prices",
+          "body": "Prices are given in CFA francs (FCFA), the only contractual currency; amounts shown in euros, dollars or pounds are for information. Unless stated otherwise, they are per person and only include the services described. The price may be revised before departure if taxes or transport costs change, under the conditions set out in the proposal."
+        },
+        "s5": {
+          "title": "Payment",
+          "body": "The deposit and balance are paid according to the schedule in the proposal, at the agency or by the payment methods given by the advisor. Failure to pay the balance on time may lead to cancellation of the booking, under the conditions of the “Cancellation by the client” section."
+        },
+        "s6": {
+          "title": "Changes by the client",
+          "body": "Any change request (dates, travellers, services) is considered subject to availability. Fees charged by providers (airlines, hotels) and any agency handling fees are payable by the client."
+        },
+        "s7": {
+          "title": "Cancellation by the client",
+          "body": "Cancellation must be notified in writing. Cancellation fees depend on the providers' conditions and the cancellation date; they are stated in the proposal. Non-refundable tickets and visa fees are not refunded."
+        },
+        "s8": {
+          "title": "Cancellation by the agency",
+          "body": "The agency may cancel a tour or group trip if the minimum number of participants is not reached or in case of force majeure. The client is then refunded the amounts paid, or offered an equivalent service."
+        },
+        "s9": {
+          "title": "Formalities",
+          "body": "Each traveller must hold a valid passport and the visas, vaccinations and documents required by the countries visited. The agency informs and assists the client, but the issuing of a visa is solely the decision of the consular authorities: a refusal cannot be attributed to the agency."
+        },
+        "s10": {
+          "title": "Insurance",
+          "body": "Travel insurance (assistance, repatriation, cancellation) is strongly recommended and can be taken out through the agency."
+        },
+        "s11": {
+          "title": "Liability",
+          "body": "The agency is responsible for the proper performance of the services booked with it. It cannot be held liable in case of fault by the client, unforeseeable act of a third party or force majeure (bad weather, strikes, decisions by the authorities)."
+        },
+        "s12": {
+          "title": "Complaints",
+          "body": "Any complaint should be sent in writing to {email}, if possible within 30 days of your return."
+        },
+        "s13": {
+          "title": "Governing law",
+          "body": "These terms are governed by Ivorian law. Failing an amicable settlement, the courts of Abidjan have jurisdiction."
+        }
+      }
+    }
   }
 }

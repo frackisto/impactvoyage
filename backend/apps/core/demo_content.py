@@ -651,6 +651,298 @@ QUOTES = [
     },
 ]
 
+# Offres promotionnelles : en cours depuis N jours, pour M jours encore (dates relatives).
+# Une seule cible une fiche (son prix affiché devient le prix promotionnel).
+OFFERS = [
+    {
+        "slug": "billet-abidjan-dubai-aller-retour", "type": "BILLET", "destination": "dubai",
+        "title": ("Billet Abidjan – Dubaï aller-retour", "Abidjan – Dubai return ticket"),
+        "short": ("Vol aller-retour en classe économique, bagage en soute inclus.",
+                  "Return economy flight, checked baggage included."),
+        "description": (
+            "Profitez d'un tarif négocié sur les vols Abidjan – Dubaï, avec escale, pour des "
+            "départs dans les deux prochains mois.\n\n"
+            "L'agence s'occupe aussi de votre visa et de votre hébergement si vous le souhaitez.",
+            "Enjoy a negotiated fare on Abidjan – Dubai flights, with a stopover, for departures "
+            "within the next two months.\n\n"
+            "The agency can also handle your visa and accommodation if you wish.",
+        ),
+        "conditions": (
+            "Tarif par adulte, taxes comprises, selon disponibilité. Billet non remboursable, "
+            "modifiable avec frais.",
+            "Price per adult, taxes included, subject to availability. Non-refundable ticket, "
+            "changes allowed for a fee.",
+        ),
+        "initial": "650000", "promo": "520000", "badge": "PROMOTION", "seats": 9,
+        "started_days_ago": 5, "ends_in_days": 40, "target": None, "cover": "dubai-burj-al-arab.jpg",
+    },
+    {
+        "slug": "pack-dubai-en-famille", "type": "PACKAGE", "destination": "dubai",
+        "title": ("Pack Dubaï en famille", "Dubai family package"),
+        "short": ("Vols, visas, 5 nuits d'hôtel et deux activités pour 2 adultes et 2 enfants.",
+                  "Flights, visas, 5 hotel nights and two activities for 2 adults and 2 children."),
+        "description": (
+            "Un séjour clés en main pour découvrir Dubaï en famille : vols aller-retour depuis "
+            "Abidjan, visas, 5 nuits en hôtel 4 étoiles avec petit-déjeuner, safari dans le désert "
+            "et montée à la Burj Khalifa.",
+            "A turnkey stay to discover Dubai with your family: return flights from Abidjan, "
+            "visas, 5 nights in a 4-star hotel with breakfast, desert safari and a trip up the "
+            "Burj Khalifa.",
+        ),
+        "conditions": (
+            "Prix total pour 2 adultes et 2 enfants de moins de 12 ans. Acompte de 50 % à la "
+            "réservation.",
+            "Total price for 2 adults and 2 children under 12. 50% deposit when booking.",
+        ),
+        "initial": "2950000", "promo": "2490000", "badge": "POPULAIRE", "seats": None,
+        "started_days_ago": 10, "ends_in_days": 60, "target": None, "cover": "dubai-mall.jpg",
+    },
+    {
+        "slug": "week-end-mondoukou-prix-doux", "type": "CIRCUIT", "destination": "mondoukou",
+        "title": ("Week-end à Mondoukou à prix doux", "Mondoukou weekend at a sweet price"),
+        "short": ("Le week-end balnéaire à Mondoukou, à tarif réduit sur le prochain départ.",
+                  "The Mondoukou beach weekend, discounted on the next departure."),
+        "description": (
+            "Deux jours de plage et de détente à Mondoukou, près de Grand-Bassam, avec transport "
+            "depuis Abidjan et hébergement en bord de mer.",
+            "Two days of beach and relaxation in Mondoukou, near Grand-Bassam, with transport "
+            "from Abidjan and seaside accommodation.",
+        ),
+        "conditions": ("Tarif par personne, dans la limite des places disponibles.",
+                       "Price per person, subject to available seats."),
+        "initial": "35000", "promo": "29000", "badge": "NOUVEAU", "seats": 4,
+        "started_days_ago": 2, "ends_in_days": 20, "target": ("tour", "week-end-balneaire-mondoukou"),
+        "cover": "mondoukou.jpg",
+    },
+]
+
+TRANSPORTS = [
+    {
+        "slug": "transfert-aeroport-abidjan", "type": "TRANSFERT_AEROPORT",
+        "title": ("Transfert aéroport d'Abidjan", "Abidjan airport transfer"),
+        "description": (
+            "Accueil à l'aéroport Félix-Houphouët-Boigny avec pancarte à votre nom et transfert "
+            "vers votre hôtel ou votre domicile, dans toutes les communes d'Abidjan.",
+            "Meet and greet at Félix-Houphouët-Boigny airport with a name sign and transfer to "
+            "your hotel or home, anywhere in Abidjan.",
+        ),
+        "origin": "Aéroport d'Abidjan (FHB)", "destination": "Abidjan (toutes communes)",
+        "passengers": 4, "price": "25000",
+        "schedule": ("Tous les jours, à toute heure, selon votre vol.",
+                     "Every day, at any time, according to your flight."),
+        "cover": "suzuki-grand-vitara.jpg",
+    },
+    {
+        "slug": "navette-abidjan-grand-bassam", "type": "NAVETTE",
+        "title": ("Navette Abidjan – Grand-Bassam", "Abidjan – Grand-Bassam shuttle"),
+        "description": (
+            "Navette privée en monospace pour rejoindre Grand-Bassam et ses plages depuis "
+            "Abidjan, aller simple ou aller-retour dans la journée.",
+            "Private minivan shuttle from Abidjan to Grand-Bassam and its beaches, one way or "
+            "return on the same day.",
+        ),
+        "origin": "Abidjan", "destination": "Grand-Bassam",
+        "passengers": 7, "price": "30000",
+        "schedule": ("Départs à la demande, de 6 h à 20 h.", "Departures on request, from 6 am to 8 pm."),
+        "cover": "suzuki-ertiga.jpg",
+    },
+    {
+        "slug": "minibus-avec-chauffeur", "type": "CHAUFFEUR",
+        "title": ("Minibus avec chauffeur", "Minibus with driver"),
+        "description": (
+            "Minibus de 15 places avec chauffeur pour vos groupes, séminaires et mariages, à la "
+            "journée, partout en Côte d'Ivoire.",
+            "15-seat minibus with driver for your groups, seminars and weddings, by the day, "
+            "anywhere in Côte d'Ivoire.",
+        ),
+        "origin": "Abidjan", "destination": "Toute la Côte d'Ivoire",
+        "passengers": 15, "price": "120000",
+        "schedule": ("Prix par jour, carburant en sus hors d'Abidjan.",
+                     "Price per day, fuel extra outside Abidjan."),
+        "cover": None,
+    },
+    {
+        "slug": "transfert-aeroport-dubai", "type": "TRANSFERT_AEROPORT",
+        "title": ("Transfert aéroport de Dubaï", "Dubai airport transfer"),
+        "description": (
+            "Transfert privé entre l'aéroport international de Dubaï et votre hôtel, à l'arrivée "
+            "comme au départ.",
+            "Private transfer between Dubai International Airport and your hotel, on arrival and "
+            "departure.",
+        ),
+        "origin": "Aéroport de Dubaï (DXB)", "destination": "Hôtels de Dubaï",
+        "passengers": 4, "price": "45000",
+        "schedule": ("Tous les jours, selon votre vol.", "Every day, according to your flight."),
+        "cover": "hero-dubai-marina.jpg",
+    },
+]
+
+MEDIA_CATEGORIES = [("voyages", "Voyages", "Trips"), ("agence", "L'agence", "The agency")]
+
+# Albums : photos des fixtures ; published : il y a N jours.
+ALBUMS = [
+    {
+        "slug": "sortie-grand-lahou", "category": "voyages", "tour": "escapade-lagunaire-grand-lahou",
+        "title": ("Sortie à Grand-Lahou", "Trip to Grand-Lahou"),
+        "description": ("Notre groupe entre lagune et océan, le temps d'un week-end.",
+                        "Our group between lagoon and ocean, for a weekend."),
+        "photos": ["grand-lahou-groupe.jpg", "grand-lahou-visite.jpg", "grand-lahou-nuit.jpg"],
+        "published_days_ago": 20,
+    },
+    {
+        "slug": "dubai-en-images", "category": "voyages", "tour": "dubai-ville-des-records",
+        "title": ("Dubaï en images", "Dubai in pictures"),
+        "description": ("Burj Khalifa, Burj Al Arab, la marina et le Dubai Mall.",
+                        "Burj Khalifa, Burj Al Arab, the marina and the Dubai Mall."),
+        "photos": ["dubai-burj-khalifa.jpg", "dubai-burj-al-arab.jpg", "hero-dubai-marina.jpg", "dubai-mall.jpg"],
+        "published_days_ago": 45,
+    },
+    {
+        "slug": "equipe-et-partenaires", "category": "agence", "tour": None,
+        "title": ("L'équipe et nos partenaires", "Our team and partners"),
+        "description": ("Les visages de l'agence et de ceux qui voyagent avec nous.",
+                        "The faces of the agency and those who travel with us."),
+        "photos": ["equipe-impact-voyage.jpg", "partenaire-masavi.jpg"],
+        "published_days_ago": 90,
+    },
+]
+
+BLOG_CATEGORIES = [
+    ("visa", "Visa", "Visa"),
+    ("conseils-voyage", "Conseils voyage", "Travel tips"),
+    ("destinations", "Destinations", "Destinations"),
+]
+
+# Contenu en texte : paragraphes séparés par une ligne vide, « ## » pour un intertitre,
+# « - » pour une liste. Tags : (slug, FR, EN).
+BLOG_POSTS = [
+    {
+        "slug": "preparer-sa-demande-de-visa", "category": "visa",
+        "tags": [("visa", "Visa", "Visa"), ("formalites", "Formalités", "Formalities")],
+        "title": ("Préparer sa demande de visa : les étapes clés", "Preparing your visa application: key steps"),
+        "excerpt": (
+            "Délais, passeport, justificatifs : ce qu'il faut vérifier avant de déposer une "
+            "demande de visa, pour voyager sans mauvaise surprise.",
+            "Processing times, passport, supporting documents: what to check before applying "
+            "for a visa, to travel without bad surprises.",
+        ),
+        "content": (
+            "Une demande de visa se prépare plusieurs semaines avant le départ. Voici les points "
+            "à vérifier pour mettre toutes les chances de votre côté.\n\n"
+            "## Anticiper les délais\n\n"
+            "Les délais de traitement varient selon le pays et la période : comptez large, surtout "
+            "avant les vacances scolaires et les fêtes. Évitez d'acheter un billet non remboursable "
+            "avant d'avoir obtenu votre visa.\n\n"
+            "## Vérifier son passeport\n\n"
+            "- Sa date d'expiration : beaucoup de pays exigent une validité de plusieurs mois après "
+            "le retour.\n"
+            "- Les pages vierges disponibles pour le visa et les tampons.\n"
+            "- Son état : un passeport abîmé peut être refusé.\n\n"
+            "## Réunir les justificatifs\n\n"
+            "Réservation d'hébergement, billet d'avion, relevés bancaires, attestation de travail, "
+            "assurance voyage : la liste dépend du pays et du motif du voyage. Un dossier complet "
+            "et cohérent est la meilleure garantie.\n\n"
+            "Nos conseillers vérifient votre dossier avant le dépôt et vous accompagnent jusqu'à "
+            "l'obtention du visa.",
+            "A visa application should be prepared several weeks before departure. Here is what "
+            "to check to give yourself the best chance.\n\n"
+            "## Plan for processing times\n\n"
+            "Processing times vary by country and season: allow plenty of time, especially before "
+            "school holidays and festive seasons. Avoid buying a non-refundable ticket before your "
+            "visa is granted.\n\n"
+            "## Check your passport\n\n"
+            "- Its expiry date: many countries require it to be valid for several months after "
+            "your return.\n"
+            "- The blank pages available for the visa and stamps.\n"
+            "- Its condition: a damaged passport may be refused.\n\n"
+            "## Gather supporting documents\n\n"
+            "Accommodation booking, flight ticket, bank statements, employment certificate, travel "
+            "insurance: the list depends on the country and purpose of travel. A complete and "
+            "consistent file is the best guarantee.\n\n"
+            "Our advisors check your file before submission and support you until the visa is "
+            "granted.",
+        ),
+        "cover": None, "published_days_ago": 3,
+    },
+    {
+        "slug": "valise-pour-dubai", "category": "conseils-voyage",
+        "tags": [("dubai", "Dubaï", "Dubai")],
+        "title": ("Que mettre dans sa valise pour Dubaï ?", "What to pack for Dubai?"),
+        "excerpt": (
+            "Chaleur, climatisation, tenues pour les lieux culturels : notre liste pour une valise "
+            "adaptée à un séjour à Dubaï.",
+            "Heat, air conditioning, outfits for cultural sites: our list for a suitcase suited "
+            "to a stay in Dubai.",
+        ),
+        "content": (
+            "Dubaï est chaude une grande partie de l'année, mais on y passe aussi beaucoup de "
+            "temps dans des lieux climatisés. Quelques conseils pour une valise bien pensée.\n\n"
+            "## Les indispensables\n\n"
+            "- Des vêtements légers et amples, en coton ou en lin.\n"
+            "- Une petite veste ou un foulard pour les centres commerciaux et les restaurants "
+            "climatisés.\n"
+            "- Lunettes de soleil, chapeau et crème solaire.\n"
+            "- Un adaptateur de prise : les prises sont à trois broches, de type britannique.\n\n"
+            "## Pour les visites culturelles\n\n"
+            "Pour visiter une mosquée ou certains lieux traditionnels, prévoyez une tenue couvrant "
+            "les épaules et les genoux ; un foulard est demandé aux femmes dans les mosquées.\n\n"
+            "## Pour le désert\n\n"
+            "Pour un safari, des chaussures fermées et un vêtement chaud pour la soirée : les "
+            "nuits peuvent être fraîches en hiver.",
+            "Dubai is hot for much of the year, but you also spend a lot of time in "
+            "air-conditioned places. A few tips for a well-packed suitcase.\n\n"
+            "## The essentials\n\n"
+            "- Light, loose clothes in cotton or linen.\n"
+            "- A light jacket or scarf for air-conditioned malls and restaurants.\n"
+            "- Sunglasses, a hat and sunscreen.\n"
+            "- A plug adapter: sockets are three-pin, British type.\n\n"
+            "## For cultural visits\n\n"
+            "To visit a mosque or some traditional sites, bring an outfit covering shoulders and "
+            "knees; women are asked to wear a headscarf in mosques.\n\n"
+            "## For the desert\n\n"
+            "For a safari, closed shoes and something warm for the evening: nights can be cool "
+            "in winter.",
+        ),
+        "cover": "dubai-burj-khalifa.jpg", "published_days_ago": 12,
+    },
+    {
+        "slug": "week-end-a-grand-bassam", "category": "destinations",
+        "tags": [("cote-d-ivoire", "Côte d'Ivoire", "Côte d'Ivoire")],
+        "title": ("Un week-end à Grand-Bassam : nos incontournables", "A weekend in Grand-Bassam: our must-sees"),
+        "excerpt": (
+            "À une heure d'Abidjan, Grand-Bassam mêle patrimoine colonial, artisanat et plages. "
+            "Nos idées pour en profiter le temps d'un week-end.",
+            "An hour from Abidjan, Grand-Bassam combines colonial heritage, crafts and beaches. "
+            "Our ideas to enjoy it over a weekend.",
+        ),
+        "content": (
+            "Ancienne capitale de la Côte d'Ivoire, Grand-Bassam est l'escapade idéale depuis "
+            "Abidjan.\n\n"
+            "## Le quartier France\n\n"
+            "Son centre historique, inscrit au patrimoine mondial de l'UNESCO, se découvre à pied : "
+            "maisons coloniales, ancien palais du gouverneur et front de lagune.\n\n"
+            "## Le musée national du Costume\n\n"
+            "Installé dans l'ancien palais du gouverneur, il présente les tenues et les parures des "
+            "différents peuples du pays.\n\n"
+            "## Les plages\n\n"
+            "Entre Grand-Bassam et Mondoukou, les maquis de plage servent poisson braisé et "
+            "attiéké face à l'océan. Attention aux courants : baignez-vous uniquement dans les "
+            "zones surveillées.",
+            "Côte d'Ivoire's former capital, Grand-Bassam is the ideal getaway from Abidjan.\n\n"
+            "## The Quartier France\n\n"
+            "Its historic centre, a UNESCO World Heritage site, is best explored on foot: colonial "
+            "houses, the former governor's palace and the lagoon front.\n\n"
+            "## The National Costume Museum\n\n"
+            "Housed in the former governor's palace, it displays the clothing and ornaments of the "
+            "country's different peoples.\n\n"
+            "## The beaches\n\n"
+            "Between Grand-Bassam and Mondoukou, beach restaurants serve grilled fish and attiéké "
+            "facing the ocean. Beware of currents: only swim in supervised areas.",
+        ),
+        "cover": "mondoukou.jpg", "published_days_ago": 30,
+    },
+]
+
 HOTEL_REVIEWS = [
     ("marina-view-dubai", "Fatou B.", 5, "Chambre impeccable et vue magnifique sur la marina."),
     ("hotel-lagune-plateau", "Jean-Marc A.", 4, "Très bien situé pour mes rendez-vous au Plateau."),

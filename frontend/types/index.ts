@@ -39,6 +39,12 @@ export type MediaAsset = Schemas["MediaAsset"];
 export type SearchResponse = Schemas["SearchResponse"];
 export type SearchResult = Schemas["SearchResult"];
 export type QuoteClient = Schemas["QuoteClient"];
+export type OfferDetail = Schemas["OfferDetail"];
+export type TransportService = Schemas["TransportService"];
+export type AlbumList = Schemas["AlbumList"];
+export type AlbumDetail = Schemas["AlbumDetail"];
+export type BlogPostList = Schemas["BlogPostList"];
+export type BlogPostDetail = Schemas["BlogPostDetail"];
 
 export type Paginated<T> = {
   count: number;

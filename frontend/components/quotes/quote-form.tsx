@@ -142,6 +142,7 @@ export function QuoteForm({ destinations, initial }: QuoteFormProps) {
       currency: "XOF",
       services_requested: values.services_requested as Service[],
       source_tour: initial.source_tour ?? null,
+      source_offer: initial.source_offer ?? null,
       activities: initial.activities ?? [],
     };
     try {

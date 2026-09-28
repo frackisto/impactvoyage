@@ -8,6 +8,7 @@ import type { QuoteClient, Schemas } from "@/types";
 
 import { getActivity } from "./activities.service";
 import { getHotel, getResidence } from "./accommodations.service";
+import { getOffer } from "./agency.service";
 import { getDestination } from "./destinations.service";
 import { getTour } from "./tours.service";
 import { getVehicle } from "./vehicles.service";
@@ -19,9 +20,17 @@ export const REQUESTED_SERVICES: RequestedService[] = [
   "VOL", "HEBERGEMENT", "CIRCUIT", "VISA", "ASSURANCE", "TRANSPORT", "LOCATION_VEHICULE", "ACTIVITES", "EVENEMENT", "CONSEIL",
 ];
 
+/** Prestation cochée d'office pour une offre, selon son type (aucune pour un voyage ou un package). */
+const OFFER_SERVICES: Partial<Record<Schemas["OfferTypeEnum"], RequestedService>> = {
+  CIRCUIT: "CIRCUIT",
+  HOTEL: "HEBERGEMENT",
+  BILLET: "VOL",
+  LOCATION: "LOCATION_VEHICULE",
+};
+
 /** Objet d'origine de la demande (fiche d'où vient le visiteur), affiché en résumé. */
 export type QuoteContext = {
-  kind: "tour" | "hotel" | "residence" | "vehicle" | "activity" | "destination";
+  kind: "offer" | "tour" | "hotel" | "residence" | "vehicle" | "activity" | "destination";
   title: string;
   href: string;
   image?: string | null;
@@ -41,8 +50,8 @@ const slug = (params: SearchParams, key: string) => {
 
 /**
  * Préremplissage du formulaire à partir du lien de la fiche d'origine (CdC § 18) :
- * circuit et départ, hôtel et chambre, résidence, véhicule, activité, destination
- * ou prestation. Un paramètre inconnu ou un contenu introuvable est ignoré.
+ * offre, circuit et départ, hôtel et chambre, résidence, véhicule, activité,
+ * destination ou prestation. Un paramètre inconnu ou un contenu introuvable est ignoré.
  */
 export async function quotePrefill(params: SearchParams): Promise<{ values: QuoteValues; context: QuoteContext | null }> {
   const stay = parseStay(params);
@@ -59,6 +68,22 @@ export async function quotePrefill(params: SearchParams): Promise<{ values: Quot
   const addService = (code: RequestedService) => {
     if (!values.services_requested?.includes(code)) values.services_requested = [...(values.services_requested ?? []), code];
   };
+
+  const offerSlug = slug(params, "offer");
+  if (offerSlug) {
+    const offer = await getOffer(offerSlug);
+    if (offer) {
+      const service = OFFER_SERVICES[offer.offer_type];
+      if (service) addService(service);
+      values.source_offer = offer.slug;
+      values.destination = offer.destination?.slug;
+      if (offer.target?.type === "tour") values.source_tour = offer.target.slug;
+      return {
+        values,
+        context: { kind: "offer", title: offer.title, href: `/offres/${offer.slug}`, image: offer.cover_image },
+      };
+    }
+  }
 
   const tourSlug = slug(params, "tour");
   if (tourSlug) {
@@ -145,6 +170,10 @@ export async function quotePrefill(params: SearchParams): Promise<{ values: Quot
     }
   }
 
+  // Sans fiche d'origine (prestation seule) : date de départ et voyageurs éventuels.
+  values.date_departure = stay.start ?? dateParam(params, "start");
+  values.date_return = stay.end;
+  if (stay.travelers) values.adults = stay.travelers;
   return { values, context: null };
 }
 

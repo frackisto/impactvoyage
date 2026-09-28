@@ -435,13 +435,53 @@ pris tel quel et permettait de contourner les limites.
   validation, piège à robots, acceptation (réservation `PENDING`), seconde acceptation
   refusée.
 
+## Rubriques hors plan de développement
+
+Pages liées depuis le menu, le pied de page, le moteur de recherche ou les fiches, mais
+absentes des phases du plan. Toutes s'appuient sur les API existantes.
+
+- **Services** `/services` : les prestations de l'agence (ordre de l'administration),
+  tarifs éventuels, lien vers le devis prérempli (`quote_service_type`) et vers la rubrique
+  du catalogue ; sommaire par ancres (`/services#visa-et-formalites`).
+- **Offres** `/offres` (filtre par type) et `/offres/{slug}` : prix barré, réduction,
+  validité, places (« Dernières places » dès 5 places), conditions, lien vers la fiche
+  visée, JSON-LD `Offer`. « Profiter de l'offre » ouvre `/devis?offer=…` : l'offre est
+  enregistrée dans la demande (`source_offer`) et la prestation correspondante cochée.
+  La carte d'offre est partagée avec l'accueil.
+- **Visas** `/visa` (filtres pays et motif, cible de l'onglet Visa de l'accueil) et
+  `/visa/{pays}` : formules, validité, délai, frais, pièces à fournir, avertissement sur la
+  décision consulaire.
+- **Transport** `/transport` : transferts, navettes, véhicules avec chauffeur, filtrés par
+  type, départ, arrivée (texte libre) et passagers — cible de l'onglet Transport de
+  l'accueil, dont la date et le nombre de voyageurs passent dans le devis. `FilterPanel`
+  accepte désormais des champs texte.
+- **Médiathèque** `/mediatheque` (catégories) et `/mediatheque/{slug}` : galerie avec
+  visionneuse, liens vidéo, JSON-LD `ImageGallery`.
+- **Blog** `/blog` (catégories, mots-clés) et `/blog/{slug}` : article, temps de lecture,
+  mots-clés, articles liés, JSON-LD `BlogPosting`. Le contenu est du **texte structuré**
+  (paragraphes séparés par une ligne vide, `## ` intertitre, `- ` liste), affiché sans
+  interpréter de HTML ; un éditeur riche (HTML nettoyé par `nh3`) pourra venir avec le
+  backoffice.
+- **À propos** `/a-propos` : texte « À propos » de l'administration, équipe, engagements,
+  services, coordonnées ; **Contact** `/contact` : formulaire (`POST /contact/`, objet au
+  choix, piège à robots, limite de débit), coordonnées, horaires, lien carte, JSON-LD
+  `TravelAgency`.
+- **Pages légales** `/mentions-legales`, `/confidentialite`, `/conditions-generales` :
+  sommaire, sections traduites (espace `Legal`), coordonnées reprises des paramètres du
+  site. **À faire valider par un juriste** ; les informations inconnues sont marquées
+  `[à compléter]` (RCCM, capital, compte contribuable, directeur de la publication,
+  hébergeur, durée de conservation des demandes sans suite).
+- **Pied de page** : liens ajoutés vers Visas, Transport et Blog.
+- **Démonstration** : `seed_demo` ajoute 3 offres en cours (dont une sur le week-end à
+  Mondoukou), 4 services de transport, 3 albums photo et 3 articles de blog.
+
+Validé : 142 tests pytest ; TypeScript, ESLint, 34 tests Vitest ; 248 tests Playwright
+sur ordinateur et mobile, stables sur deux passages, dont l'audit axe (WCAG 2.2 AA) de
+35 pages.
+
 ## Pages encore manquantes
 
-Ces pages sont liées depuis le menu, le pied de page ou les fiches mais n'existent pas
-encore (« Page introuvable ») : connexion et inscription, et des rubriques **absentes du
-plan de développement** — services, offres, visas (`/visa/france`), transport,
-médiathèque, à propos, contact, blog et pages légales (mentions, confidentialité,
-conditions générales).
+Connexion et inscription (liées depuis l'en-tête), prévues avec les comptes clients.
 
 ## Prochaine étape
 

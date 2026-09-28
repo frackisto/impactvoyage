@@ -25,6 +25,13 @@ export const MAIN_NAV: NavItem[] = [
   { key: "contact", href: "/contact", secondary: true },
 ];
 
+/** Rubriques hors menu principal, proposées dans le pied de page. */
+export const EXTRA_NAV: NavItem[] = [
+  { key: "visa", href: "/visa" },
+  { key: "transport", href: "/transport" },
+  { key: "blog", href: "/blog" },
+];
+
 export const LEGAL_NAV: NavItem[] = [
   { key: "legalNotice", href: "/mentions-legales" },
   { key: "privacy", href: "/confidentialite" },
