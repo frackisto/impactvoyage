@@ -50,9 +50,9 @@ test.describe("fiche circuit", () => {
     await expect(program).toHaveCount(6);
 
     const booking = page.getByRole("complementary", { name: "Réserver ce circuit" });
-    const choices = booking.getByRole("link", { name: /Choisir le départ du/ });
+    const choices = booking.getByRole("link", { name: /Réserver le départ du/ });
     await expect(choices).toHaveCount(3);
-    await expect(choices.first()).toHaveAttribute("href", /\/devis\?tour=dubai-ville-des-records&departure=\d+$/);
+    await expect(choices.first()).toHaveAttribute("href", /\/reservation\?tour=dubai-ville-des-records&departure=\d+$/);
     await expect(booking.getByRole("link", { name: "Demander un devis" })).toHaveAttribute(
       "href",
       "/devis?tour=dubai-ville-des-records",

@@ -98,6 +98,10 @@ class QuoteClientSerializer(serializers.ModelSerializer):
     booking_reference = serializers.CharField(
         source="booking.reference", read_only=True, default=None
     )
+    # Le titulaire du lien du devis suit aussi la réservation qui en est issue.
+    booking_token = serializers.UUIDField(
+        source="booking.access_token", read_only=True, default=None, allow_null=True
+    )
     destination_label = serializers.SerializerMethodField()
 
     class Meta:
@@ -106,7 +110,8 @@ class QuoteClientSerializer(serializers.ModelSerializer):
             "reference", "status", "status_label", "first_name", "last_name",
             "destination_text", "destination_label", "date_departure", "date_return", "adults",
             "children", "services_requested", "proposal_amount", "proposal_message",
-            "proposal_valid_until", "can_answer", "booking_reference", "created_at",
+            "proposal_valid_until", "can_answer", "booking_reference", "booking_token",
+            "created_at",
         ]
 
     def get_destination_label(self, obj) -> str:

@@ -49,7 +49,11 @@ test.describe("activités", () => {
     const status = page.getByRole("status");
     await expect(status).toContainText("2 places restantes");
     await expect(status).toContainText("Total pour 2 participants");
-    await expect(status.getByRole("link", { name: "Demander la réservation" })).toHaveAttribute(
+    await expect(status.getByRole("link", { name: "Réserver" })).toHaveAttribute(
+      "href",
+      `/reservation?activity=visite-guidee-grand-bassam&date=${DAY}&participants=2`,
+    );
+    await expect(status.getByRole("link", { name: "Demander un devis" })).toHaveAttribute(
       "href",
       `/devis?activity=visite-guidee-grand-bassam&date=${DAY}&participants=2`,
     );

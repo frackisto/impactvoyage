@@ -285,15 +285,17 @@ export interface paths {
         };
         /**
          * @description Réservations (architecture § 3.8).
-         *     Public : POST /bookings/ (demande). Client connecté : ses réservations,
-         *     annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
+         *     Public : POST /bookings/ (demande) ; suivi et annulation avant confirmation
+         *     avec le jeton reçu par email. Client connecté : ses réservations.
+         *     Équipe : toutes, confirmation, refus, annulation.
          */
         get: operations["bookings_list"];
         put?: never;
         /**
          * @description Réservations (architecture § 3.8).
-         *     Public : POST /bookings/ (demande). Client connecté : ses réservations,
-         *     annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
+         *     Public : POST /bookings/ (demande) ; suivi et annulation avant confirmation
+         *     avec le jeton reçu par email. Client connecté : ses réservations.
+         *     Équipe : toutes, confirmation, refus, annulation.
          */
         post: operations["bookings_create"];
         delete?: never;
@@ -309,11 +311,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description Réservations (architecture § 3.8).
-         *     Public : POST /bookings/ (demande). Client connecté : ses réservations,
-         *     annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
-         */
+        /** @description Client : avec le jeton reçu par email, sans compte. Sinon : ses réservations ou toutes (équipe). */
         get: operations["bookings_retrieve"];
         put?: never;
         post?: never;
@@ -332,11 +330,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description Réservations (architecture § 3.8).
-         *     Public : POST /bookings/ (demande). Client connecté : ses réservations,
-         *     annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
-         */
+        /** @description Client (jeton ou compte) : avant confirmation seulement. Équipe : à tout moment. */
         post: operations["bookings_cancel_create"];
         delete?: never;
         options?: never;
@@ -355,8 +349,9 @@ export interface paths {
         put?: never;
         /**
          * @description Réservations (architecture § 3.8).
-         *     Public : POST /bookings/ (demande). Client connecté : ses réservations,
-         *     annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
+         *     Public : POST /bookings/ (demande) ; suivi et annulation avant confirmation
+         *     avec le jeton reçu par email. Client connecté : ses réservations.
+         *     Équipe : toutes, confirmation, refus, annulation.
          */
         post: operations["bookings_confirm_create"];
         delete?: never;
@@ -376,8 +371,9 @@ export interface paths {
         put?: never;
         /**
          * @description Réservations (architecture § 3.8).
-         *     Public : POST /bookings/ (demande). Client connecté : ses réservations,
-         *     annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
+         *     Public : POST /bookings/ (demande) ; suivi et annulation avant confirmation
+         *     avec le jeton reçu par email. Client connecté : ses réservations.
+         *     Équipe : toutes, confirmation, refus, annulation.
          */
         post: operations["bookings_reject_create"];
         delete?: never;
@@ -1416,7 +1412,7 @@ export interface components {
             /** Temps de lecture (min) */
             readonly reading_time: number;
         };
-        /** @description Réservation vue par le client (espace client, page de confirmation). */
+        /** @description Réservation vue par le client (espace client, lien de suivi). */
         Booking: {
             /** Référence */
             readonly reference: string | null;
@@ -1441,15 +1437,58 @@ export interface components {
             expires_at?: string | null;
             readonly total_amount: components["schemas"]["Money"] | null;
             readonly items: components["schemas"]["BookingItem"][];
+            readonly quote_reference: string | null;
+            /** @description Le client peut encore annuler lui-même (avant confirmation). */
+            readonly can_cancel: boolean;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        /** @description Annulation : le client sans compte joint le jeton de son lien de suivi. */
+        BookingCancelRequest: {
+            reason?: string;
+            token?: string;
+        };
+        /** @description Réponse à la demande : le jeton ouvre la page de suivi (/reservation/<reference>?token=). */
+        BookingCreated: {
+            /** Référence */
+            readonly reference: string | null;
+            /** Statut */
+            status?: components["schemas"]["BookingStatusEnum"];
+            readonly status_label: string;
+            /** Nom du contact */
+            contact_name: string;
+            /**
+             * Email du contact
+             * Format: email
+             */
+            contact_email: string;
+            /** Téléphone du contact */
+            contact_phone: string;
+            /** Commentaires du client */
+            customer_comments?: string;
+            /**
+             * Expire le
+             * Format: date-time
+             */
+            expires_at?: string | null;
+            readonly total_amount: components["schemas"]["Money"] | null;
+            readonly items: components["schemas"]["BookingItem"][];
+            readonly quote_reference: string | null;
+            /** @description Le client peut encore annuler lui-même (avant confirmation). */
+            readonly can_cancel: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: uuid */
+            readonly access_token: string;
         };
         /** @description Confirmation / refus / annulation : motif ou notes internes facultatifs. */
         BookingDecisionRequest: {
             reason?: string;
         };
         BookingItem: {
-            readonly kind: string;
+            readonly kind: components["schemas"]["BookingKindEnum"];
+            /** @description Slug de la fiche publique : circuit du départ, hôtel de la chambre, sinon l'offre. */
+            readonly target_slug: string;
             /** Libellé */
             label: string;
             /**
@@ -1471,17 +1510,8 @@ export interface components {
             /** Lieu de restitution */
             dropoff_location?: string;
         };
-        /**
-         * @description * `tour_departure` - tour_departure
-         *     * `room` - room
-         *     * `residence` - residence
-         *     * `vehicle` - vehicle
-         *     * `activity` - activity
-         * @enum {string}
-         */
-        BookingItemRequestKindEnum: "tour_departure" | "room" | "residence" | "vehicle" | "activity";
         BookingItemRequestRequest: {
-            kind: components["schemas"]["BookingItemRequestKindEnum"];
+            kind: components["schemas"]["BookingKindEnum"];
             object_id: number;
             /** Format: date */
             start_date?: string | null;
@@ -1492,6 +1522,15 @@ export interface components {
             pickup_location?: string;
             dropoff_location?: string;
         };
+        /**
+         * @description * `tour_departure` - tour_departure
+         *     * `room` - room
+         *     * `residence` - residence
+         *     * `vehicle` - vehicle
+         *     * `activity` - activity
+         * @enum {string}
+         */
+        BookingKindEnum: "tour_departure" | "room" | "residence" | "vehicle" | "activity";
         /**
          * @description * `INSTANT` - Réservation directe
          *     * `ON_REQUEST` - Sur demande
@@ -1511,6 +1550,7 @@ export interface components {
             contact_phone: string;
             customer_comments?: string;
             items: components["schemas"]["BookingItemRequestRequest"][];
+            consent: boolean;
         };
         /**
          * @description * `REQUESTED` - Demande reçue
@@ -2345,6 +2385,8 @@ export interface components {
             proposal_valid_until?: string | null;
             readonly can_answer: boolean;
             readonly booking_reference: string;
+            /** Format: uuid */
+            readonly booking_token: string | null;
             /** Format: date-time */
             readonly created_at: string;
         };
@@ -3605,14 +3647,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Booking"];
+                    "application/json": components["schemas"]["BookingCreated"];
                 };
             };
         };
     };
     bookings_retrieve: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Jeton du lien de suivi */
+                token?: string;
+            };
             header?: never;
             path: {
                 reference: string;
@@ -3642,9 +3687,9 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["BookingDecisionRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["BookingDecisionRequest"];
-                "multipart/form-data": components["schemas"]["BookingDecisionRequest"];
+                "application/json": components["schemas"]["BookingCancelRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BookingCancelRequest"];
+                "multipart/form-data": components["schemas"]["BookingCancelRequest"];
             };
         };
         responses: {

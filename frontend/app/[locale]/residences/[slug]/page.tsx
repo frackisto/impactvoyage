@@ -79,7 +79,9 @@ export default async function ResidencePage({ params, searchParams }: Props) {
   ];
   const price = residence.promo_price ?? residence.price_per_night;
   const whatsapp = whatsappUrl(settings.whatsapp);
-  const quoteHref = pageHref("/devis", { residence: residence.slug, ...stayQuery({ start: stay.start, end: stay.end }) }, 1);
+  const periodQuery = { residence: residence.slug, ...stayQuery({ start: stay.start, end: stay.end }) };
+  const quoteHref = pageHref("/devis", periodQuery, 1);
+  const bookHref = pageHref("/reservation", periodQuery, 1);
   const image = mediaSrc(residence.cover_image);
   const services = lines(residence.services);
 
@@ -185,6 +187,7 @@ export default async function ResidencePage({ params, searchParams }: Props) {
                 end={stay.end}
                 unitPrice={price}
                 unit="night"
+                bookHref={bookHref}
                 requestHref={quoteHref}
               />
             )}
@@ -225,10 +228,10 @@ export default async function ResidencePage({ params, searchParams }: Props) {
               </p>
             )}
             <div className="flex flex-col gap-2">
-              <a href="#disponibilites" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
+              <a href="#disponibilites" className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
                 {t("seeAvailability")}
               </a>
-              <Link href={quoteHref} className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
+              <Link href={quoteHref} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
                 {t("quote")}
               </Link>
               {whatsapp && (

@@ -1,8 +1,8 @@
 from django.utils.translation import get_language
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.response import Response
 
 from apps.core.api import WriteThrottleMixin, has_perm
@@ -10,32 +10,39 @@ from apps.core.api import WriteThrottleMixin, has_perm
 from . import selectors, services
 from .models import Booking
 from .serializers import (
+    BookingCreatedSerializer,
     BookingDecisionSerializer,
     BookingRequestSerializer,
     BookingSerializer,
     BookingStaffSerializer,
 )
 
-# Le client peut annuler lui-même tant que la réservation n'est pas confirmée ;
-# ensuite, l'annulation passe par l'agence (CdC § 11 « changements et annulations »).
-CUSTOMER_CANCELLABLE = {Booking.Status.REQUESTED, Booking.Status.PENDING}
 VIEW_ALL = "bookings.view_booking"
 CanChangeBookings = has_perm("bookings.change_booking")
+
+
+class BookingCancelSerializer(BookingDecisionSerializer):
+    """Annulation : le client sans compte joint le jeton de son lien de suivi."""
+
+    token = serializers.CharField(required=False)
 
 
 class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
     """
     Réservations (architecture § 3.8).
-    Public : POST /bookings/ (demande). Client connecté : ses réservations,
-    annulation avant confirmation. Équipe : toutes, confirmation, refus, annulation.
+    Public : POST /bookings/ (demande) ; suivi et annulation avant confirmation
+    avec le jeton reçu par email. Client connecté : ses réservations.
+    Équipe : toutes, confirmation, refus, annulation.
     """
 
     lookup_field = "reference"
     write_throttle_scope = "bookings"
+    throttled_actions = ("create", "cancel")
     serializer_class = BookingSerializer
 
     def get_permissions(self):
-        if self.action == "create":
+        if self.action in ("create", "retrieve", "cancel"):
+            # retrieve et cancel : jeton du lien de suivi, sinon authentification (voir _require_user).
             return [permissions.AllowAny()]
         if self.action in ("confirm", "reject"):
             return [CanChangeBookings()]
@@ -45,6 +52,10 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
         """Équipe habilitée à voir toutes les réservations (commercial, gestionnaire, admin)."""
         user = self.request.user
         return user.is_authenticated and user.has_perm(VIEW_ALL)
+
+    def _require_user(self):
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated()
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):  # génération du schéma OpenAPI
@@ -56,7 +67,7 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
     def get_serializer_class(self):
         return BookingStaffSerializer if self._is_staff() else BookingSerializer
 
-    @extend_schema(request=BookingRequestSerializer, responses={201: BookingSerializer})
+    @extend_schema(request=BookingRequestSerializer, responses={201: BookingCreatedSerializer})
     def create(self, request):
         payload = BookingRequestSerializer(data=request.data)
         payload.is_valid(raise_exception=True)
@@ -66,7 +77,7 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
             language=get_language(),
         )
         return Response(
-            BookingSerializer(booking, context=self.get_serializer_context()).data,
+            BookingCreatedSerializer(booking, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -78,7 +89,13 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
         page = self.paginate_queryset(bookings)
         return self.get_paginated_response(self.get_serializer(page, many=True).data)
 
+    @extend_schema(parameters=[OpenApiParameter("token", description="Jeton du lien de suivi")])
     def retrieve(self, request, reference=None):
+        """Client : avec le jeton reçu par email, sans compte. Sinon : ses réservations ou toutes (équipe)."""
+        if token := request.query_params.get("token"):
+            booking = services.get_booking_for_client(reference, token)
+            return Response(BookingSerializer(booking, context=self.get_serializer_context()).data)
+        self._require_user()
         return Response(self.get_serializer(self.get_object()).data)
 
     @extend_schema(request=BookingDecisionSerializer)
@@ -100,21 +117,25 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
         )
         return Response(self.get_serializer(booking).data)
 
-    @extend_schema(request=BookingDecisionSerializer)
+    @extend_schema(request=BookingCancelSerializer)
     @action(detail=True, methods=["post"])
     def cancel(self, request, reference=None):
-        payload = BookingDecisionSerializer(data=request.data)
+        """
+        Client (jeton ou compte) : avant confirmation seulement. Équipe : à tout moment.
+        """
+        payload = BookingCancelSerializer(data=request.data)
         payload.is_valid(raise_exception=True)
+        reason = payload.validated_data.get("reason", "")
+        if token := payload.validated_data.get("token"):
+            booking = services.get_booking_for_client(reference, token)
+            booking = services.cancel_booking(booking, reason=reason, by_customer=True)
+            return Response(BookingSerializer(booking, context=self.get_serializer_context()).data)
+
+        self._require_user()
         booking = self.get_object()
         by_customer = not request.user.has_perm("bookings.change_booking")
         if by_customer and booking.user_id != request.user.pk:
             # Ex. un gestionnaire voit toutes les réservations mais ne peut annuler que les siennes.
             raise PermissionDenied("Vous ne pouvez annuler que vos propres réservations.")
-        if by_customer and booking.status not in CUSTOMER_CANCELLABLE:
-            raise PermissionDenied(
-                "Cette réservation est confirmée : contactez l'agence pour l'annuler."
-            )
-        booking = services.cancel_booking(
-            booking, reason=payload.validated_data.get("reason", ""), by_customer=by_customer
-        )
+        booking = services.cancel_booking(booking, reason=reason, by_customer=by_customer)
         return Response(self.get_serializer(booking).data)

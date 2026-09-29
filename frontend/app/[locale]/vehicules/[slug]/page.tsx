@@ -80,7 +80,9 @@ export default async function VehiclePage({ params, searchParams }: Props) {
   const breadcrumbs = [{ label: t("title"), href: "/vehicules" }, { label: name }];
   const price = vehicle.promo_price ?? vehicle.price_per_day;
   const whatsapp = whatsappUrl(settings.whatsapp);
-  const requestHref = pageHref("/devis", { vehicle: vehicle.slug, start: period.start, end: period.end }, 1);
+  const periodQuery = { vehicle: vehicle.slug, start: period.start, end: period.end };
+  const requestHref = pageHref("/devis", periodQuery, 1);
+  const bookHref = pageHref("/reservation", periodQuery, 1);
   const image = mediaSrc(vehicle.cover_image);
 
   const specs = [
@@ -206,6 +208,7 @@ export default async function VehiclePage({ params, searchParams }: Props) {
                 end={period.end}
                 unitPrice={price}
                 unit="day"
+                bookHref={bookHref}
                 requestHref={requestHref}
               />
             )}
@@ -228,10 +231,10 @@ export default async function VehiclePage({ params, searchParams }: Props) {
             )}
             <p className="text-sm text-muted-foreground">{t("rentalNote")}</p>
             <div className="flex flex-col gap-2">
-              <a href="#disponibilites" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
+              <a href="#disponibilites" className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
                 {t("seeAvailability")}
               </a>
-              <Link href={requestHref} className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
+              <Link href={requestHref} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
                 {t("request")}
               </Link>
               {whatsapp && (

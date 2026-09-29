@@ -71,11 +71,9 @@ export default async function ActivityPage({ params, searchParams }: Props) {
   const price = activity.promo_price ?? activity.price;
   const total = price ? multiplyMoney(price, participants) : null;
   const whatsapp = whatsappUrl(settings.whatsapp);
-  const requestHref = pageHref(
-    "/devis",
-    { activity: activity.slug, date, participants: participants > 1 ? String(participants) : undefined },
-    1,
-  );
+  const dateQuery = { activity: activity.slug, date, participants: participants > 1 ? String(participants) : undefined };
+  const requestHref = pageHref("/devis", dateQuery, 1);
+  const bookHref = pageHref("/reservation", dateQuery, 1);
   const image = mediaSrc(activity.cover_image);
   const day = date ? formatDate(`${date}T00:00:00Z`, locale, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }) : "";
 
@@ -206,9 +204,14 @@ export default async function ActivityPage({ params, searchParams }: Props) {
                     )}
                   </div>
                   {availability.available && (
-                    <Link href={requestHref} className={cn(buttonVariants({ variant: "cta" }), "shrink-0")}>
-                      {t("request")}
-                    </Link>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <Link href={bookHref} className={buttonVariants({ variant: "cta" })}>
+                        {t("book")}
+                      </Link>
+                      <Link href={requestHref} className={buttonVariants({ variant: "outline" })}>
+                        {t("request")}
+                      </Link>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -233,10 +236,10 @@ export default async function ActivityPage({ params, searchParams }: Props) {
               <Price value={activity.price} unit="person" />
             )}
             <div className="flex flex-col gap-2">
-              <a href="#disponibilites" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
+              <a href="#disponibilites" className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
                 {t("chooseDate")}
               </a>
-              <Link href={requestHref} className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
+              <Link href={requestHref} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
                 {t("request")}
               </Link>
               {whatsapp && (

@@ -331,12 +331,13 @@ QuoteRequest (devis)  (SoftDeleteModel)                   CdC § 18, § 38
 
 Booking  (TimeStampedModel, SoftDeleteModel)              CdC § 12, § 13, § 22
 ├── reference (unique, ex. IV-2026-000123) → exposée dans l'API à la place de l'id
+├── access_token (UUID secret)       → le client suit et annule sa réservation sans compte
 ├── user (FK, nullable si invité, SET_NULL)
 ├── contact_name, contact_email, contact_phone   (copie, obligatoire même pour un user)
 ├── quote (OneToOne → QuoteRequest, nullable)   → devis accepté à l'origine de la réservation
 ├── status: REQUESTED | PENDING | CONFIRMED | COMPLETED | CANCELLED | REJECTED | EXPIRED
 ├── expires_at (nullable)   → fin de blocage d'un PENDING
-├── customer_comments, internal_notes
+├── customer_comments, internal_notes, language, consent_at
 ├── total_amount, currency  (calculés par le service, jamais envoyés par le client)
 └── BookingItem (FK → Booking, CASCADE)  [1-N]
     ├── tour_departure (FK → TourDeparture, PROTECT, nullable)
@@ -507,6 +508,9 @@ frontend/
 │   │   ├── devis/
 │   │   │   ├── page.tsx                   # formulaire
 │   │   │   └── [reference]/page.tsx       # proposition + validation client (token)
+│   │   ├── reservation/
+│   │   │   ├── page.tsx                   # demande préremplie depuis une fiche
+│   │   │   └── [reference]/page.tsx       # suivi + annulation client (token)
 │   │   ├── (auth)/
 │   │   │   ├── login/page.tsx
 │   │   │   ├── register/page.tsx
@@ -618,9 +622,9 @@ Couleurs du logo *Impact Voyage et Logistique* : bleu `#1F8FC4` (palette `ocean`
 /api/v1/quotes/{reference}/accept/  decline/       # client, jeton dans le corps
 /api/v1/quotes/{reference}/send-proposal/  assign/  status/   # staff
 /api/v1/bookings/                                  # POST public : demande ; GET : les siennes / toutes (staff)
-/api/v1/bookings/{reference}/                      # lookup par référence, jamais par id
+/api/v1/bookings/{reference}/?token=              # lookup par référence, jamais par id ; client (jeton), propriétaire ou staff
 /api/v1/bookings/{reference}/confirm/  reject/     # staff
-/api/v1/bookings/{reference}/cancel/               # client (avant confirmation) ou staff
+/api/v1/bookings/{reference}/cancel/               # client (jeton ou compte, avant confirmation) ou staff
 /api/v1/contact/                                   # POST public (throttle "contact")
 /api/v1/reviews/?target_type=&target_slug=&featured=   # GET avis validés ; POST (throttle "reviews")
 /api/v1/notifications/  {id}/read/  read-all/  unread-count/   # staff
@@ -848,8 +852,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 15 | Création des activités et événements | ✅ |
 | 16 | Création du moteur de recherche | ✅ |
 | 17 | Création du système de devis | ✅ |
-| 18 | Création des réservations | ⏭ prochaine étape |
-| 19 | Création du backoffice | |
+| 18 | Création des réservations | ✅ |
+| 19 | Création du backoffice | ⏭ prochaine étape |
 | 20 | Notifications | |
 | 21 | SEO | |
 | 22 | Tests | |

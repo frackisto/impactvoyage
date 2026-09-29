@@ -1,4 +1,5 @@
 import threading
+import uuid
 from datetime import timedelta
 from decimal import Decimal
 
@@ -10,7 +11,7 @@ from django.utils import timezone
 from apps.bookings import services
 from apps.bookings.models import Booking
 from apps.bookings.services import ItemRequest
-from apps.core.exceptions import BusinessError, InvalidTransition, NotAvailable
+from apps.core.exceptions import BusinessError, InvalidToken, InvalidTransition, NotAvailable
 from apps.core.models import BookableMixin
 from apps.core.tests.helpers import (
     make_activity,
@@ -126,11 +127,33 @@ class LifecycleTests(TestCase):
 
     def test_cancellation_releases_seats_and_reopens(self):
         booking = services.confirm_booking(self._tour_request(10))
-        services.cancel_booking(booking, reason="Changement de programme", by_customer=True)
+        services.cancel_booking(booking, reason="Changement de programme")
         self.departure.refresh_from_db()
         self.assertEqual(self.departure.seats_reserved, 0)
         self.assertEqual(self.departure.status, TourDeparture.Status.OPEN)
         self.assertFalse(booking.items.get().is_blocking)
+
+    def test_customer_cancels_only_before_confirmation(self):
+        request_ = self._tour_request(2)
+        with self.captureOnCommitCallbacks(execute=True):
+            services.cancel_booking(request_, reason="Imprévu", by_customer=True)
+        request_.refresh_from_db()
+        self.assertEqual(request_.status, Booking.Status.CANCELLED)
+        self.assertTrue(any(services.client_booking_url(request_) in m.body for m in mail.outbox))
+
+        confirmed = services.confirm_booking(self._tour_request(2))
+        with self.assertRaises(InvalidTransition) as ctx:
+            services.cancel_booking(confirmed, by_customer=True)
+        self.assertEqual(ctx.exception.code, "contact_agency")
+        confirmed.refresh_from_db()
+        self.assertEqual(confirmed.status, Booking.Status.CONFIRMED)
+
+    def test_client_link_gives_access_with_the_right_token_only(self):
+        booking = self._tour_request(2)
+        self.assertEqual(services.get_booking_for_client(booking.reference, booking.access_token), booking)
+        for token in ("", "abc", uuid.uuid4()):
+            with self.assertRaises(InvalidToken):
+                services.get_booking_for_client(booking.reference, token)
 
     def test_rejection_and_forbidden_transitions(self):
         booking = services.reject_booking(self._tour_request(2), reason="Complet")

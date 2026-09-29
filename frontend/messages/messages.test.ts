@@ -18,7 +18,9 @@ const VALUES = {
   formatted: "3", index: 1, total: 3, alt: "Photo", country: "France", continent: "Europe", page: 2, year: 2026,
   rooms: 2, nights: 3, room: "Double", start: "1 nov.", end: "3 nov.", category: "SUV", seats: 5, day: "samedi 10 octobre", query: "dubai", shown: 24,
   reference: "DV-2026-000042", service: "Visa", author: "Awa", tag: "Dubaï", nationalities: "Côte d'Ivoire",
-  agency: "Impact Voyage", address: "Abidjan", email: "a@b.co", phone: "+225",
+  agency: "Impact Voyage", address: "Abidjan", email: "a@b.co", phone: "+225", place: "Aéroport",
+  // Balises des messages enrichis (t.rich).
+  terms: (chunks: string) => chunks, privacy: (chunks: string) => chunks,
 };
 
 describe("messages", () => {

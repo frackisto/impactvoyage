@@ -160,7 +160,7 @@ def _check_client_can_answer(quote):
 @transaction.atomic
 def accept_quote(reference, token):
     """Le client valide la proposition : devis ACCEPTEE et réservation PENDING créée."""
-    from apps.bookings.services import create_booking_from_quote
+    from apps.bookings.services import client_booking_url, create_booking_from_quote
 
     quote = get_quote_for_client(reference, token)
     locked = _lock_quote(quote, QStatus.ACCEPTEE)
@@ -182,6 +182,7 @@ def accept_quote(reference, token):
         f"Proposition acceptée — {booking.reference}",
         f"Bonjour {locked.first_name},\n\nMerci ! Votre réservation {booking.reference} "
         "est enregistrée. Un conseiller vous contacte pour finaliser le règlement.\n\n"
+        f"Suivre votre réservation : {client_booking_url(booking)}\n\n"
         "L'équipe Impact Voyage",
     )
     return booking

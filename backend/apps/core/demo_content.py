@@ -615,6 +615,20 @@ EVENTS = [
 # Réservation confirmée fictive (calendrier de disponibilité) : (véhicule, dans N jours, durée).
 VEHICLE_BOOKINGS = [("demo-suzuki-vitara", 5, 4)]
 
+# Demande de réservation fictive, avec référence et jeton fixes : la page de suivi
+# /reservation/{reference}?token=… est ainsi consultable (et testée) après chaque chargement.
+# Une demande ne bloque pas le stock : le calendrier de la villa reste libre.
+BOOKING_REQUESTS = [
+    {
+        "reference": "IV-DEMO-000001",
+        "token": "7e57d3a0-0000-4000-8000-000000000101",
+        "residence": "villa-familiale-grand-bassam",
+        "in_days": 20, "nights": 5,
+        "contact_name": "Mariam Diallo", "phone": "+2250700000003",
+        "comments": "Arrivée prévue en fin d'après-midi, avec deux enfants.",
+    },
+]
+
 # Demandes de devis fictives, avec référence et jeton fixes : la page de suivi
 # /devis/{reference}?token=… est ainsi consultable (et testée) après chaque chargement.
 QUOTES = [

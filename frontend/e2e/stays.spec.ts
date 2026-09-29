@@ -38,7 +38,8 @@ test.describe("hôtels", () => {
   test("le moteur de recherche de l'accueil filtre par capacité", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("tab", { name: "Hôtels" }).click();
-    const panel = page.getByRole("tabpanel");
+    // Panneau nommé : pendant le changement d'onglet, l'ancien panneau est encore présent.
+    const panel = page.getByRole("tabpanel", { name: "Hôtels" });
     await panel.getByLabel("Destination", { exact: true }).selectOption("abidjan");
     await panel.getByLabel("Voyageurs", { exact: true }).fill("3");
     await panel.getByRole("button", { name: "Rechercher" }).click();
@@ -54,10 +55,16 @@ test.describe("hôtels", () => {
     await expect(page.getByText("Capacité insuffisante pour ce nombre de voyageurs")).toHaveCount(2);
     await expect(page.getByText("Disponible : 2 chambres libres")).toBeVisible();
     await expect(page.getByText(/Total pour 3 nuits/)).toHaveCount(3);
-    await expect(page.getByRole("link", { name: "Demander la chambre « Suite familiale »" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Réserver la chambre « Suite familiale »" })).toHaveAttribute(
+      "href",
+      new RegExp(`/reservation\\?hotel=hotel-lagune-plateau&room=\\d+&start=${START}&end=${END}&travelers=3$`),
+    );
+    await expect(page.getByRole("link", { name: "Demander un devis pour la chambre « Suite familiale »" })).toHaveAttribute(
       "href",
       new RegExp(`/devis\\?hotel=hotel-lagune-plateau&room=\\d+&start=${START}&end=${END}&travelers=3$`),
     );
+    // Chambre trop petite : pas de réservation, seulement une alternative.
+    await expect(page.getByRole("link", { name: /^Réserver la chambre/ })).toHaveCount(1);
     const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? "{}");
     expect(jsonLd["@graph"][0]["@type"]).toBe("Hotel");
     expect(jsonLd["@graph"][0].starRating.ratingValue).toBe(4);
@@ -94,7 +101,11 @@ test.describe("résidences meublées", () => {
     await form.getByRole("button", { name: "Vérifier" }).click();
     const status = page.getByRole("status").filter({ hasText: "Disponible du" });
     await expect(status).toContainText("Total pour 3 nuits");
-    await expect(status.getByRole("link", { name: "Demander" })).toHaveAttribute(
+    await expect(status.getByRole("link", { name: "Réserver" })).toHaveAttribute(
+      "href",
+      `/reservation?residence=studio-meuble-yopougon-maroc&start=${START}&end=${END}`,
+    );
+    await expect(status.getByRole("link", { name: "Demander un devis" })).toHaveAttribute(
       "href",
       `/devis?residence=studio-meuble-yopougon-maroc&start=${START}&end=${END}`,
     );

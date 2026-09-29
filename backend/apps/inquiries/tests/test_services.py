@@ -66,7 +66,11 @@ class QuoteFlowTests(TestCase):
         with self.assertRaises(InvalidToken):
             services.accept_quote(quote.reference, uuid.uuid4())
 
-        booking = services.accept_quote(quote.reference, quote.access_token)
+        with self.captureOnCommitCallbacks(execute=True):
+            booking = services.accept_quote(quote.reference, quote.access_token)
+        # L'email d'acceptation donne le lien de suivi de la réservation créée.
+        link = f"/reservation/{booking.reference}?token={booking.access_token}"
+        self.assertTrue(any(link in m.body for m in mail.outbox))
         quote.refresh_from_db()
         self.assertEqual(quote.status, QuoteRequest.Status.ACCEPTEE)
         self.assertEqual(booking.status, Booking.Status.PENDING)

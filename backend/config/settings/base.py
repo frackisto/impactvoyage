@@ -228,6 +228,7 @@ SPECTACULAR_SETTINGS = {
         "DisplayCurrencyEnum": ["EUR", "USD", "GBP"],
         "RequestedServiceEnum": "apps.core.choices.RequestedService",
         "BookingStatusEnum": "apps.bookings.models.Booking.Status",
+        "BookingKindEnum": "apps.bookings.models.BOOKING_TARGETS",
         "QuoteStatusEnum": "apps.inquiries.models.QuoteRequest.Status",
         "DepartureStatusEnum": "apps.tours.models.TourDeparture.Status",
         "VehicleCategoryEnum": "apps.vehicles.models.Vehicle.Category",

@@ -47,7 +47,11 @@ test.describe("fiche véhicule", () => {
     await form.getByRole("button", { name: "Vérifier" }).click();
     const status = page.getByRole("status").filter({ hasText: "Disponible du" });
     await expect(status).toContainText("Total pour 3 jours");
-    await expect(status.getByRole("link", { name: "Demander" })).toHaveAttribute(
+    await expect(status.getByRole("link", { name: "Réserver" })).toHaveAttribute(
+      "href",
+      `/reservation?vehicle=demo-suzuki-vitara&start=${inDays(20)}&end=${inDays(23)}`,
+    );
+    await expect(status.getByRole("link", { name: "Demander un devis" })).toHaveAttribute(
       "href",
       `/devis?vehicle=demo-suzuki-vitara&start=${inDays(20)}&end=${inDays(23)}`,
     );

@@ -7,6 +7,7 @@ dans la même transaction que le changement de statut, sous verrou de ligne
 (select_for_update) : deux confirmations simultanées ne peuvent pas prendre
 la même place. La base garde le dernier mot (CheckConstraint, ExclusionConstraint).
 """
+import uuid
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -19,7 +20,7 @@ from django.utils import timezone
 
 from apps.accommodations.models import Residence, Room
 from apps.activities.models import Activity
-from apps.core.exceptions import BusinessError, InvalidTransition, NotAvailable
+from apps.core.exceptions import BusinessError, InvalidToken, InvalidTransition, NotAvailable
 from apps.core.formatting import format_amount
 from apps.core.models import BookableMixin
 from apps.notifications.emails import send_email
@@ -39,6 +40,10 @@ ALLOWED_TRANSITIONS = {
     Status.PENDING: {Status.CONFIRMED, Status.EXPIRED, Status.CANCELLED},
     Status.CONFIRMED: {Status.COMPLETED, Status.CANCELLED},
 }
+
+# Le client peut annuler lui-même tant que la réservation n'est pas confirmée ;
+# ensuite, l'annulation passe par l'agence (CdC § 11 « changements et annulations »).
+CUSTOMER_CANCELLABLE = frozenset({Status.REQUESTED, Status.PENDING})
 
 
 @dataclass(frozen=True)
@@ -287,6 +292,11 @@ def _lock(booking, new_status):
     return locked
 
 
+def client_booking_url(booking):
+    """Lien de suivi sans compte, envoyé dans chaque email au client."""
+    return f"{settings.FRONTEND_URL}/reservation/{booking.reference}?token={booking.access_token}"
+
+
 # --- Emails client (texte brut ; gabarits HTML en Phase 20) -------------------
 
 
@@ -299,6 +309,7 @@ def _email_customer(booking, subject, intro):
         f"Bonjour {booking.contact_name},\n\n{intro}\n\n"
         f"Référence : {booking.reference}\n{lines}\n"
         f"Total : {format_amount(booking.total_amount, booking.currency)}\n\n"
+        f"Suivre votre réservation : {client_booking_url(booking)}\n\n"
         "L'équipe Impact Voyage"
     )
     send_email(booking.contact_email, f"{subject} — {booking.reference}", body)
@@ -309,7 +320,7 @@ def _email_customer(booking, subject, intro):
 
 def request_booking(
     *, contact_name, contact_email, contact_phone, items, user=None,
-    customer_comments="", language="fr",
+    customer_comments="", language="fr", consent=False,
 ):
     """
     Demande de réservation publique (CdC § 12, § 13, § 38). Les offres « sur
@@ -336,6 +347,7 @@ def request_booking(
             contact_phone=contact_phone,
             customer_comments=customer_comments,
             language=language,
+            consent_at=timezone.now() if consent else None,
             status=Status.PENDING if instant else Status.REQUESTED,
             expires_at=(
                 timezone.now() + timedelta(minutes=settings.BOOKING_HOLD_MINUTES)
@@ -375,6 +387,7 @@ def create_booking_from_quote(quote):
         contact_email=quote.email,
         contact_phone=quote.phone,
         language=quote.language,
+        consent_at=quote.consent_at,
         status=Status.PENDING,
         expires_at=timezone.now() + timedelta(hours=settings.QUOTE_BOOKING_HOLD_HOURS),
         total_amount=quote.proposal_amount or Decimal("0"),
@@ -412,8 +425,16 @@ def reject_booking(booking, reason=""):
 
 @transaction.atomic
 def cancel_booking(booking, reason="", by_customer=False):
-    """Annule et libère le stock éventuellement réservé."""
+    """
+    Annule et libère le stock éventuellement réservé. Le client (by_customer)
+    ne peut annuler qu'avant confirmation ; le statut est contrôlé sous verrou.
+    """
     locked = _lock(booking, Status.CANCELLED)
+    if by_customer and locked.status not in CUSTOMER_CANCELLABLE:
+        raise InvalidTransition(
+            "Cette réservation est confirmée : contactez l'agence pour l'annuler.",
+            code="contact_agency",
+        )
     if locked.status in Booking.BLOCKING_STATUSES:
         _release_stock(locked)
     locked.status = Status.CANCELLED
@@ -430,6 +451,20 @@ def cancel_booking(booking, reason="", by_customer=False):
         )
     _email_customer(locked, "Réservation annulée", "Votre réservation a bien été annulée.")
     return locked
+
+
+def get_booking_for_client(reference, token):
+    """Réservation consultée par le client via son lien secret (sans compte)."""
+    try:
+        token = uuid.UUID(str(token))
+    except ValueError:
+        raise InvalidToken("Lien de réservation invalide ou expiré.") from None
+    booking = selectors.booking_detail_queryset().filter(
+        reference=reference, access_token=token
+    ).first()
+    if booking is None:
+        raise InvalidToken("Lien de réservation invalide ou expiré.")
+    return booking
 
 
 def expire_pending_bookings(now=None):

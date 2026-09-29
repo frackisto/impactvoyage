@@ -12,6 +12,11 @@ import type { TourDetail } from "@/types";
 /** Seuil d'affichage « Plus que N places ». */
 const FEW_SEATS = 5;
 
+/** Demande de réservation d'un départ (/reservation?tour=…&departure=…). */
+export function bookHref(tour: TourDetail, departureId: number) {
+  return `/reservation?${new URLSearchParams({ tour: tour.slug, departure: String(departureId) })}`;
+}
+
 export function quoteHref(tour: TourDetail, departureId?: number) {
   const params = new URLSearchParams({ tour: tour.slug });
   if (departureId) params.set("departure", String(departureId));
@@ -20,8 +25,8 @@ export function quoteHref(tour: TourDetail, departureId?: number) {
 
 /**
  * Encadré de réservation d'un circuit : prix par personne (et promotion),
- * départs ouverts avec les places restantes, demande de devis préremplie.
- * La réservation en ligne arrive en Phase 18.
+ * départs ouverts avec les places restantes et leur réservation en ligne,
+ * demande de devis préremplie (voyage sur mesure, groupe...).
  */
 export async function TourBookingCard({ tour, whatsapp }: { tour: TourDetail; whatsapp: string | null }) {
   const [t, locale] = await Promise.all([getTranslations("Tours"), getLocale()]);
@@ -66,9 +71,9 @@ export async function TourBookingCard({ tour, whatsapp }: { tour: TourDetail; wh
                     {specialPrice && <Price value={departure.price} compact className="ps-5.5" />}
                   </div>
                   <Link
-                    href={quoteHref(tour, departure.id)}
+                    href={bookHref(tour, departure.id)}
                     aria-label={t("chooseDeparture", { date: date(departure.start_date) })}
-                    className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
+                    className={cn(buttonVariants({ variant: "cta" }), "shrink-0")}
                   >
                     {t("choose")}
                   </Link>
@@ -82,7 +87,7 @@ export async function TourBookingCard({ tour, whatsapp }: { tour: TourDetail; wh
       )}
 
       <div className="flex flex-col gap-2">
-        <Link href={quoteHref(tour)} className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
+        <Link href={quoteHref(tour)} className={cn(buttonVariants({ variant: tour.departures.length > 0 ? "outline" : "cta", size: "lg" }), "w-full")}>
           {t("quote")}
         </Link>
         {whatsapp && (

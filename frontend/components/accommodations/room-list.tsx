@@ -12,7 +12,7 @@ import type { HotelDetail, RoomAvailability } from "@/types";
 
 /**
  * Types de chambres d'un hôtel avec leur prix par nuit. Avec des dates : chambres
- * libres, total indicatif du séjour et demande de devis préremplie.
+ * libres, total indicatif du séjour, réservation et demande de devis préremplies.
  */
 export async function RoomList({ hotel, stay, availability }: {
   hotel: HotelDetail;
@@ -29,7 +29,9 @@ export async function RoomList({ hotel, stay, availability }: {
       {hotel.rooms.map((room) => {
         const status = availability ? byRoom.get(room.id) : undefined;
         const total = count && room.price_per_night ? multiplyMoney(room.price_per_night, count * rooms) : null;
-        const href = pageHref("/devis", { hotel: hotel.slug, room: String(room.id), ...stayQuery(stay) }, 1);
+        const query = { hotel: hotel.slug, room: String(room.id), ...stayQuery(stay) };
+        const href = pageHref("/devis", query, 1);
+        const bookable = status?.available;
         return (
           <li key={room.id} className="flex flex-col gap-4 rounded-2xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-1.5">
@@ -65,10 +67,19 @@ export async function RoomList({ hotel, stay, availability }: {
                   {t("totalFor", { nights: count, rooms })} <Price value={total} compact className="inline-flex" />
                 </span>
               )}
+              {bookable && (
+                <Link
+                  href={pageHref("/reservation", query, 1)}
+                  aria-label={t("bookRoom", { room: room.name })}
+                  className={cn(buttonVariants({ variant: "cta" }), "w-full sm:w-auto")}
+                >
+                  {t("book")}
+                </Link>
+              )}
               <Link
                 href={href}
                 aria-label={t("requestRoom", { room: room.name })}
-                className={cn(buttonVariants({ variant: status && !status.available ? "outline" : "cta" }), "w-full sm:w-auto")}
+                className={cn(buttonVariants({ variant: status ? "outline" : "cta" }), "w-full sm:w-auto")}
               >
                 {status && !status.available ? t("askAlternative") : t("request")}
               </Link>

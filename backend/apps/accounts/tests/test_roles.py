@@ -68,7 +68,7 @@ class RolePermissionApiTests(ApiTestCase):
                                    end_date=timezone.localdate() + timedelta(days=32))
         self.reference = self.client.post(f"{API}/bookings/", {
             "contact_name": "Awa", "contact_email": "awa@example.com",
-            "contact_phone": "+2250700000000",
+            "contact_phone": "+2250700000000", "consent": True,
             "items": [{"kind": "tour_departure", "object_id": departure.pk, "quantity": 1}],
         }, format="json").data["reference"]
 

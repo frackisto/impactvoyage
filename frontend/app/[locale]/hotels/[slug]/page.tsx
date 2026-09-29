@@ -189,10 +189,10 @@ export default async function HotelPage({ params, searchParams }: Props) {
               </p>
             )}
             <div className="flex flex-col gap-2">
-              <a href="#disponibilites" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
+              <a href="#disponibilites" className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
                 {t("seeAvailability")}
               </a>
-              <Link href={quoteHref} className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full")}>
+              <Link href={quoteHref} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
                 {t("quote")}
               </Link>
               {whatsapp && (

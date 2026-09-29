@@ -156,7 +156,7 @@ l'appel au service (`serializer.validated_data` → `services.xxx(**data)`).
 - **Aucun prix accepté en entrée** : une demande de réservation ne contient que
   l'offre, les dates et les quantités.
 - **Données jamais exposées** : immatriculations, emails des auteurs d'avis et
-  d'articles, jeton d'accès des devis (hors lien client).
+  d'articles, jetons d'accès des devis et des réservations (hors lien client).
 - **Anti-spam** : champ piège `website` sur les formulaires publics.
 
 ## API REST (Phase 6)
@@ -170,8 +170,8 @@ Documentation interactive : http://localhost:8000/api/v1/docs/ (Swagger) et
   `/categories`, `/site-settings`, `/currencies`.
 - **Formulaires** : `POST /quotes/`, `/bookings/`, `/contact/`, `/reviews/`
   (débit limité par IP : 5 devis/h, 10 réservations/h, 5 messages/h, 3 avis/h).
-- **Parcours client** : consultation et validation d'un devis avec le jeton reçu
-  par email ; réservations du compte connecté.
+- **Parcours client** : consultation et validation d'un devis, suivi et annulation
+  d'une réservation avec le jeton reçu par email ; réservations du compte connecté.
 - **Équipe** : devis (assignation, proposition, statut), réservations
   (confirmation, refus, annulation), notifications.
 - **Paramètres** : pagination `?page=`, `?page_size=` (max 48), recherche `?search=`,
@@ -324,8 +324,7 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
   par jour ; tri par prix, places ou année. La période est transmise à la fiche.
 - **Fiche** `/vehicules/{slug}` : caractéristiques (catégorie, année, places, boîte,
   carburant, climatisation), équipements, vérification de disponibilité avec le total de la
-  location et une demande préremplie (`/devis?vehicle=…&start=…&end=…` ; la réservation en
-  ligne arrive en Phase 18), **calendrier de disponibilité** sur deux mois (jours réservés
+  location, la réservation en ligne et une demande de devis préremplies, **calendrier de disponibilité** sur deux mois (jours réservés
   barrés, annoncés aux lecteurs d'écran), galerie, véhicules proches, JSON-LD `Car` avec
   prix par jour.
 - **Résidences** : la fiche affiche aussi le calendrier ; l'encadré de disponibilité est
@@ -479,12 +478,67 @@ Validé : 142 tests pytest ; TypeScript, ESLint, 34 tests Vitest ; 248 tests Pla
 sur ordinateur et mobile, stables sur deux passages, dont l'audit axe (WCAG 2.2 AA) de
 35 pages.
 
+## Réservations en ligne (Phase 18)
+
+- **Depuis les fiches** : « Réserver » sur chaque départ de circuit, sur une chambre
+  d'hôtel libre aux dates choisies, et dans le résultat de disponibilité d'une résidence,
+  d'un véhicule ou d'une activité. « Réserver en ligne » devient l'action principale de
+  l'encadré latéral ; la demande de devis reste proposée à côté (sur mesure, groupes).
+- **Demande** `/reservation?…` (mêmes paramètres que `/devis` : `tour` + `departure`,
+  `hotel` + `room`, `residence`, `vehicle`, `activity`, `start`/`end`/`date`,
+  `travelers`/`rooms`/`participants`) : rappel de la prestation (photo, dates, nuits ou
+  jours, places restantes), nombre de voyageurs, de chambres ou de participants borné
+  par la disponibilité, lieux de prise en charge et de restitution pour un véhicule,
+  coordonnées, consentement, total estimé mis à jour pendant la saisie. Aucun prix
+  n'est envoyé : Django recalcule tout. Dates absentes, période déjà prise ou lien sans
+  prestation : message dédié avec retour à la fiche ou devis. Jamais indexée.
+- **Erreurs** : contrôles dans le navigateur, puis erreurs de Django sous les champs ;
+  prestation prise entre-temps (`not_available`), offre modifiée, limite de 10 demandes
+  par heure : message clair et retour à la fiche. Piège à robots.
+- **Suivi sans compte** `/reservation/{reference}?token=…` : ouvert juste après l'envoi
+  (« Demande envoyée ! ») et par le lien de chaque email. Étapes (demande reçue,
+  confirmée, voyage effectué, ou annulée / refusée / expirée), explication du statut,
+  prestations avec lien vers leur fiche, total, récapitulatif. **Annulation** par le
+  client, avec motif facultatif, tant que l'agence n'a pas confirmé. Lien invalide :
+  message dédié. Jamais indexée.
+- **Backend** : jeton `access_token` (UUID) et date de consentement sur `Booking`
+  (migration qui attribue un jeton distinct aux réservations existantes) ;
+  `GET /bookings/{reference}/?token=` et `POST /bookings/{reference}/cancel/` avec
+  `{"token"}` ouverts sans compte ; la création renvoie le jeton ; consentement
+  obligatoire ; `target_slug` et `can_cancel` dans la réponse. L'annulation par le
+  client est contrôlée **sous verrou** : une confirmation simultanée de l'agence
+  l'emporte (409 `contact_agency`). Le lien de suivi figure dans tous les emails au
+  client, y compris celui de l'acceptation d'un devis ; la page de suivi du devis
+  renvoie vers la réservation créée.
+- **Réponse de l'agence** : par l'API en attendant le backoffice (Phase 19) —
+  `POST /bookings/{reference}/confirm/`, `reject/` et `cancel/`, réservés à l'équipe.
+- **Démonstration** : `seed_demo` ajoute une demande à lien fixe, rétablie à chaque
+  chargement : `/reservation/IV-DEMO-000001?token=7e57d3a0-0000-4000-8000-000000000101`.
+
+## Ce qui a été validé (Phase 18)
+
+- Backend : `manage.py check`, schéma OpenAPI validé sans avertissement, aucune migration
+  manquante, 147 tests pytest dont le suivi et l'annulation par jeton (jeton faux, mal
+  formé ou d'une autre réservation refusé de la même façon), l'annulation refusée après
+  confirmation, le consentement obligatoire, le lien de suivi dans les emails (demande,
+  annulation, devis accepté) et la demande de démonstration.
+- Frontend : TypeScript, ESLint, 34 tests Vitest ; 274 tests Playwright sur ordinateur et
+  mobile, stables sur deux passages consécutifs : parcours véhicule de la fiche au suivi
+  (contenu exact de la requête, sans prix), départ de circuit (voyageurs bornés, départ
+  complet entre-temps), chambre d'hôtel, dates manquantes et période déjà réservée, suivi
+  en français et en anglais, annulation (refusée puis confirmée), lien invalide ; audit
+  axe (WCAG 2.2 AA) de 38 pages dont les 3 nouvelles.
+- Test rendu plus robuste : la recherche d'hôtels depuis l'accueil visait « le » panneau
+  d'onglet alors que l'ancien panneau est encore présent pendant le changement d'onglet
+  (échec intermittent) ; il vise désormais le panneau « Hôtels ».
+
 ## Pages encore manquantes
 
 Connexion et inscription (liées depuis l'en-tête), prévues avec les comptes clients.
+L'espace client (« mes réservations ») viendra avec elles ; l'API le permet déjà.
 
 ## Prochaine étape
 
-**Phase 18 : Création des réservations** — demande de réservation en ligne depuis les
-fiches (départ de circuit, véhicule, activité, hébergement), confirmation ou refus par
-l'agence, suivi par le client.
+**Phase 19 : Création du backoffice** — administration Django thémée (unfold) pour tous
+les contenus, traitement des devis et des réservations (confirmation, refus), tableau
+de bord et statistiques.

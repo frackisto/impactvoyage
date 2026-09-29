@@ -17,14 +17,17 @@ type PeriodAvailabilityProps = {
   /** Prix unitaire (par nuit ou par jour) pour le total indicatif. */
   unitPrice: Money | null | undefined;
   unit: "night" | "day";
+  /** Demande de réservation préremplie (/reservation?…). */
+  bookHref: string;
+  /** Demande de devis préremplie (/devis?…). */
   requestHref: string;
 };
 
 /**
  * Résultat d'une vérification de disponibilité sur une période : libre (avec le
- * total indicatif et la demande préremplie) ou déjà réservé (avec les périodes).
+ * total indicatif, la réservation et le devis préremplis) ou déjà réservé (avec les périodes).
  */
-export async function PeriodAvailability({ availability, start, end, unitPrice, unit, requestHref }: PeriodAvailabilityProps) {
+export async function PeriodAvailability({ availability, start, end, unitPrice, unit, bookHref, requestHref }: PeriodAvailabilityProps) {
   const [t, locale] = await Promise.all([getTranslations("Availability"), getLocale()]);
   const date = (value: string) => formatDate(value, locale, { day: "numeric", month: "long" });
   const count = nights(start, end);
@@ -68,9 +71,14 @@ export async function PeriodAvailability({ availability, start, end, unitPrice, 
         )}
       </div>
       {availability.available && (
-        <Link href={requestHref} className={cn(buttonVariants({ variant: "cta" }), "shrink-0")}>
-          {t("request")}
-        </Link>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Link href={bookHref} className={buttonVariants({ variant: "cta" })}>
+            {t("book")}
+          </Link>
+          <Link href={requestHref} className={buttonVariants({ variant: "outline" })}>
+            {t("request")}
+          </Link>
+        </div>
       )}
     </div>
   );

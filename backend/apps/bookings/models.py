@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import RangeBoundary, RangeOperators
@@ -32,6 +34,9 @@ class Booking(ReferenceMixin, TimeStampedModel, SoftDeleteModel):
     # Statuts qui bloquent le stock (places, véhicule) : voir BookingItem.is_blocking.
     BLOCKING_STATUSES = frozenset({Status.PENDING, Status.CONFIRMED})
 
+    # Secret du lien de suivi envoyé au client (/reservation/<reference>?token=...) :
+    # consultation et annulation sans compte. Jamais exposé dans les listes.
+    access_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -62,6 +67,7 @@ class Booking(ReferenceMixin, TimeStampedModel, SoftDeleteModel):
     )
     currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.XOF)
     language = models.CharField("langue", max_length=5, default="fr")
+    consent_at = models.DateTimeField("consentement au traitement des données", null=True, blank=True)
 
     class Meta:
         verbose_name = "réservation"

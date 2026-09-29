@@ -11,6 +11,7 @@ from apps.activities.models import Activity
 from apps.blog.models import BlogPost
 from apps.bookings.models import Booking
 from apps.bookings.selectors import activity_places_left, vehicle_is_available
+from apps.bookings.services import get_booking_for_client
 from apps.core.models import Tag
 from apps.events.models import Event
 from apps.inquiries.models import QuoteRequest
@@ -55,7 +56,11 @@ class SeedDemoTests(TestCase):
         vitara = Vehicle.objects.get(slug="demo-suzuki-vitara")
         start = timezone.localdate() + timedelta(days=6)
         self.assertFalse(vehicle_is_available(vitara, start, start + timedelta(days=1)))
-        self.assertEqual(Booking.objects.count(), 2)  # recréées, pas dupliquées (hors devis)
+        self.assertEqual(Booking.objects.count(), 3)  # recréées, pas dupliquées (hors devis)
+        # Demande de réservation fictive : suivie par son lien, elle ne bloque pas la villa.
+        demo_booking = get_booking_for_client("IV-DEMO-000001", "7e57d3a0-0000-4000-8000-000000000101")
+        self.assertEqual(demo_booking.status, "REQUESTED")
+        self.assertFalse(demo_booking.items.get().is_blocking)
 
         # Activités : 18 inscrits sur 20 dans 10 jours ; 3 activités incluses dans le circuit Dubaï.
         self.assertEqual(Activity.objects.count(), 6)

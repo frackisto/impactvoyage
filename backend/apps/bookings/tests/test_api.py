@@ -1,6 +1,8 @@
+import uuid
 from datetime import timedelta
 from decimal import Decimal
 
+from django.core import mail
 from django.utils import timezone
 
 from apps.bookings.models import Booking
@@ -16,7 +18,7 @@ def in_days(n):
 
 
 CONTACT = {"contact_name": "Awa Koné", "contact_email": "awa@example.com",
-           "contact_phone": "+2250700000000"}
+           "contact_phone": "+2250700000000", "consent": True}
 
 
 class BookingApiTests(ApiTestCase):
@@ -74,7 +76,8 @@ class BookingApiTests(ApiTestCase):
         self.client.force_authenticate(self.staff)
         self.client.post(f"{API}/bookings/{second}/confirm/")
         self.client.force_authenticate(self.client_user)
-        self.assertEqual(self.client.post(f"{API}/bookings/{second}/cancel/").status_code, 403)
+        refused = self.client.post(f"{API}/bookings/{second}/cancel/")
+        self.assertEqual((refused.status_code, refused.data["error"]["code"]), (409, "contact_agency"))
         cancelled = self.client.post(f"{API}/bookings/{reference}/cancel/", {"reason": "Imprévu"})
         self.assertEqual(cancelled.data["status"], "CANCELLED")
 
@@ -85,6 +88,63 @@ class BookingApiTests(ApiTestCase):
              "end_date": str(in_days(4)), "unit_price": "1", "line_total": "1"}
         ], "total_amount": "1"}, format="json")
         self.assertEqual(response.data["total_amount"]["amount"], "120000.00")
+
+    def test_consent_is_required(self):
+        response = self._request(consent=False)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("consent", response.data["error"]["details"])
+        self.assertFalse(Booking.objects.exists())
+        self._request()
+        self.assertIsNotNone(Booking.objects.get().consent_at)
+
+    def test_guest_tracks_and_cancels_with_the_link_token(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            created = self._request()
+        reference, token = created.data["reference"], created.data["access_token"]
+        booking = Booking.objects.get(reference=reference)
+        self.assertEqual(token, str(booking.access_token))
+        self.assertTrue(created.data["can_cancel"])
+        self.assertEqual(created.data["items"][0]["target_slug"], self.departure.tour.slug)
+        # Le lien de suivi figure dans l'email de confirmation.
+        self.assertTrue(any(f"/reservation/{reference}?token={token}" in m.body for m in mail.outbox))
+
+        tracked = self.client.get(f"{API}/bookings/{reference}/", {"token": token})
+        self.assertEqual(tracked.status_code, 200)
+        self.assertEqual(tracked.data["status"], "REQUESTED")
+        self.assertNotIn("access_token", tracked.data)
+        self.assertNotIn("internal_notes", tracked.data)
+
+        # Jeton faux, mal formé ou d'une autre réservation : même réponse, sans fuite.
+        other = self._request().data
+        for bad in ("pas-un-uuid", str(uuid.uuid4()), other["access_token"]):
+            response = self.client.get(f"{API}/bookings/{reference}/", {"token": bad})
+            self.assertEqual((response.status_code, response.data["error"]["code"]), (404, "invalid_token"))
+        self.assertEqual(
+            self.client.post(f"{API}/bookings/{reference}/cancel/", {"token": other["access_token"]}).status_code,
+            404,
+        )
+
+        cancelled = self.client.post(f"{API}/bookings/{reference}/cancel/", {"token": token, "reason": "Imprévu"})
+        self.assertEqual(cancelled.status_code, 200)
+        self.assertEqual(cancelled.data["status"], "CANCELLED")
+        self.assertFalse(cancelled.data["can_cancel"])
+        self.assertTrue(Notification.objects.filter(event=Notification.Event.BOOKING_CANCELLED).exists())
+
+    def test_guest_cannot_cancel_a_confirmed_booking(self):
+        created = self._request().data
+        self.client.force_authenticate(self.staff)
+        self.client.post(f"{API}/bookings/{created['reference']}/confirm/")
+        self.client.force_authenticate(None)
+        tracked = self.client.get(f"{API}/bookings/{created['reference']}/", {"token": created["access_token"]})
+        self.assertEqual(tracked.data["status"], "CONFIRMED")
+        self.assertFalse(tracked.data["can_cancel"])
+        response = self.client.post(
+            f"{API}/bookings/{created['reference']}/cancel/", {"token": created["access_token"]}
+        )
+        self.assertEqual((response.status_code, response.data["error"]["code"]), (409, "contact_agency"))
+        # Sans jeton ni compte : authentification requise.
+        self.assertEqual(self.client.get(f"{API}/bookings/{created['reference']}/").status_code, 401)
+        self.assertEqual(self.client.post(f"{API}/bookings/{created['reference']}/cancel/").status_code, 401)
 
 
 class QuoteApiTests(ApiTestCase):

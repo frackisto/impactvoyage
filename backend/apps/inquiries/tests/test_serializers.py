@@ -58,7 +58,7 @@ class QuoteRequestCreateTests(TestCase):
 
 class BookingRequestTests(TestCase):
     CONTACT = {"contact_name": "Awa", "contact_email": "awa@example.com",
-               "contact_phone": "+2250700000000"}
+               "contact_phone": "+2250700000000", "consent": True}
 
     def test_items_become_item_requests_and_prices_are_ignored(self):
         serializer = BookingRequestSerializer(data={**self.CONTACT, "items": [

@@ -142,9 +142,17 @@ export default async function QuoteTrackingPage({ params, searchParams }: Props)
                 <p className="rounded-2xl bg-sunset-50 p-4 text-ocean-950">{t("expired")}</p>
               ) : null}
               {quote.booking_reference && (
-                <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
-                  {t("acceptedText", { reference: quote.booking_reference })}
-                </p>
+                <div role="status" className="flex flex-col items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+                  <p>{t("acceptedText", { reference: quote.booking_reference })}</p>
+                  {quote.booking_token && (
+                    <Link
+                      href={`/reservation/${encodeURIComponent(quote.booking_reference)}?${new URLSearchParams({ token: quote.booking_token })}`}
+                      className={buttonVariants({ variant: "outline" })}
+                    >
+                      {t("trackBooking")}
+                    </Link>
+                  )}
+                </div>
               )}
             </section>
           ) : (

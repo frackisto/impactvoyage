@@ -328,7 +328,7 @@ class Command(BaseCommand):
         return len(demo.VEHICLES)
 
     def bookings(self):
-        """Réservations confirmées fictives, recréées à chaque chargement (dates relatives)."""
+        """Réservations fictives (confirmées, et une demande à lien fixe), recréées à chaque chargement."""
         Booking.all_objects.filter(contact_email=demo.DEMO_EMAIL).delete()
         today = timezone.localdate()
         for slug, in_days, days in demo.VEHICLE_BOOKINGS:
@@ -356,6 +356,22 @@ class Command(BaseCommand):
                 booking=booking, activity=activity, label=str(activity), unit_price=activity.base_price,
                 quantity=participants, line_total=total, start_date=day, end_date=day + timedelta(days=1),
                 is_blocking=True,
+            )
+        for item in demo.BOOKING_REQUESTS:
+            residence = Residence.objects.get(slug=item["residence"])
+            total = residence.base_price * item["nights"]
+            booking = Booking.objects.create(
+                reference=item["reference"], access_token=uuid.UUID(item["token"]),
+                contact_name=item["contact_name"], contact_email=demo.DEMO_EMAIL,
+                contact_phone=item["phone"], customer_comments=item["comments"],
+                status=Booking.Status.REQUESTED, total_amount=total, consent_at=timezone.now(),
+            )
+            start = today + timedelta(days=item["in_days"])
+            BookingItem.objects.create(
+                booking=booking, residence=residence,
+                label=f"{residence.name} ({item['nights']} nuit(s))",
+                unit_price=residence.base_price, line_total=total,
+                start_date=start, end_date=start + timedelta(days=item["nights"]),
             )
 
     def tours(self):
