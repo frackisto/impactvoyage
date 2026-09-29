@@ -79,7 +79,7 @@ backend/
 └── .env.example
 ```
 
-> Le CdC § 2 liste 15 apps. `core`, `offers`, `blog`, `payments`, `search` et `dashboard` sont ajoutées parce que les § 17, 21, 26, 31 et 37 en ont besoin. `dashboard` sera créée en Phase 19.
+> Le CdC § 2 liste 15 apps. `core`, `offers`, `blog`, `payments`, `search` et `dashboard` sont ajoutées parce que les § 17, 21, 26, 31 et 37 en ont besoin. `dashboard` a été créée en Phase 19 (sans modèles).
 
 ### 2.2 Découpage interne de chaque app
 
@@ -799,6 +799,13 @@ media/
   - graphiques (Chart.js) : devis par mois, réservations par mois, destinations et circuits populaires (`view_count` + réservations), chiffre d'affaires quand le paiement existera.
 - **Nombre de visiteurs** : **Umami** auto-hébergé (open source, sans cookie, compatible RGPD, stocke ses données dans PostgreSQL). Le dashboard lit son API. Django ne journalise pas lui-même les visites.
 
+Mise en œuvre (Phase 19) :
+
+- `apps/core/admin.py` porte le socle : classes de base unfold + modeltranslation (un champ par langue), aperçus d'image, publication groupée, suppression logique, et les **pages de décision** : toute action qui change un statut passe par un formulaire POST puis par le service métier ; une `BusinessError` s'affiche sur la page. Les fiches pilotées par les services (réservation, devis, message, avis) n'enregistrent que les champs modifiés, pour ne jamais écraser un statut changé entre-temps.
+- Les actions de détail ne sont proposées que si le rôle a le droit de modification **et** si le statut permet la transition (`ALLOWED_TRANSITIONS`, `QUOTE_TRANSITIONS`).
+- `apps/dashboard/` : `selectors.py` (statistiques en cache, listes « à traiter » sans cache), `navigation.py` (menu filtré par les permissions du rôle, pastilles de travail en attente), `umami.py` (lecture facultative de l'API Umami), `views.py` (contexte de `templates/admin/index.html`).
+- Comptes : les groupes Django sont retirés de l'admin (dérivés du rôle) ; seul un `SUPER_ADMIN` attribue ce rôle ou modifie un tel compte.
+
 ---
 
 ## 14. Données de démonstration et tests (CdC § 39, § 40)
@@ -853,8 +860,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 16 | Création du moteur de recherche | ✅ |
 | 17 | Création du système de devis | ✅ |
 | 18 | Création des réservations | ✅ |
-| 19 | Création du backoffice | ⏭ prochaine étape |
-| 20 | Notifications | |
+| 19 | Création du backoffice | ✅ |
+| 20 | Notifications | ⏭ prochaine étape |
 | 21 | SEO | |
 | 22 | Tests | |
 | 23 | Sécurité | |

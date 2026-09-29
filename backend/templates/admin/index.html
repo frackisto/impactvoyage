@@ -1,0 +1,98 @@
+{% extends "admin/base_site.html" %}
+{% load unfold %}
+
+{% comment %}
+Tableau de bord du backoffice (architecture § 13). Données préparées par
+apps/dashboard/views.py (dashboard_callback) et filtrées selon le rôle.
+Seules des classes présentes dans la feuille de style d'unfold sont utilisées.
+{% endcomment %}
+
+{% block title %}Tableau de bord | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col gap-8">
+        <section aria-labelledby="dashboard-indicators">
+            <h2 id="dashboard-indicators" class="sr-only">Indicateurs</h2>
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {% for card in indicators %}
+                    {% component "unfold/components/card.html" with href=card.url footer=card.footer size="md" %}
+                        {% component "unfold/components/text.html" %}{{ card.label }}{% endcomponent %}
+                        {% component "unfold/components/title.html" %}{{ card.value }}{% endcomponent %}
+                    {% endcomponent %}
+                {% endfor %}
+
+                {% component "unfold/components/card.html" with size="md" %}
+                    {% component "unfold/components/text.html" %}Visiteurs (30 jours){% endcomponent %}
+                    {% if visitors is None %}
+                        {% component "unfold/components/text.html" with class="text-subtle" %}Mesure d'audience non branchée (Umami).{% endcomponent %}
+                    {% elif visitors.unavailable %}
+                        {% component "unfold/components/text.html" with class="text-subtle" %}Umami ne répond pas pour le moment.{% endcomponent %}
+                    {% else %}
+                        {% component "unfold/components/title.html" %}{{ visitors.visitors }}{% endcomponent %}
+                        {% component "unfold/components/text.html" with class="text-subtle" %}{{ visitors.pageviews }} pages vues{% endcomponent %}
+                    {% endif %}
+                {% endcomponent %}
+            </div>
+        </section>
+
+        {% if todo or notifications %}
+            <section aria-labelledby="dashboard-todo" class="flex flex-col gap-4">
+                <h2 id="dashboard-todo" class="font-semibold text-important text-lg">À traiter</h2>
+                <div class="grid gap-4 lg:grid-cols-2">
+                    {% for block in todo %}
+                        {% capture as see_all silent %}<a href="{{ block.url }}" class="text-primary-600">Tout voir</a>{% endcapture %}
+                        {% component "unfold/components/card.html" with title=block.title action=see_all %}
+                            {% component "unfold/components/table.html" with table=block.table card_included=1 %}{% endcomponent %}
+                        {% endcomponent %}
+                    {% endfor %}
+
+                    {% capture as see_notifications silent %}<a href="{{ notifications_url }}" class="text-primary-600">Tout voir</a>{% endcapture %}
+                    {% component "unfold/components/card.html" with title="Mes notifications non lues" action=see_notifications %}
+                        {% for notification in notifications %}
+                            <div class="border-b border-base-200 flex flex-col gap-1 py-2 last:border-b-0 dark:border-base-800">
+                                <a href="{% url 'admin:notifications_notification_open_detail' notification.pk %}" class="font-semibold text-primary-600">{{ notification.title }}</a>
+                                <span class="text-subtle text-xs">{{ notification.get_event_display }} — {{ notification.created_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        {% empty %}
+                            {% component "unfold/components/text.html" with class="text-subtle" %}Aucune notification non lue.{% endcomponent %}
+                        {% endfor %}
+                    {% endcomponent %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if charts %}
+            <section aria-labelledby="dashboard-activity" class="flex flex-col gap-4">
+                <h2 id="dashboard-activity" class="font-semibold text-important text-lg">Activité des 12 derniers mois</h2>
+                <div class="grid gap-4 lg:grid-cols-2">
+                    {% for chart in charts %}
+                        {% component "unfold/components/card.html" with title=chart.title footer=chart.summary %}
+                            {% component "unfold/components/chart/bar.html" with data=chart.data options=chart.options height=240 %}{% endcomponent %}
+                        {% endcomponent %}
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if rankings %}
+            <section aria-labelledby="dashboard-popular" class="flex flex-col gap-4">
+                <h2 id="dashboard-popular" class="font-semibold text-important text-lg">Popularité</h2>
+                <div class="grid gap-4 lg:grid-cols-2">
+                    {% for ranking in rankings %}
+                        {% component "unfold/components/card.html" with title=ranking.title %}
+                            {% component "unfold/components/table.html" with table=ranking.table card_included=1 %}{% endcomponent %}
+                        {% endcomponent %}
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <p class="text-subtle text-xs">
+            Statistiques mises à jour toutes les 5 minutes (dernier calcul : {{ stats_computed_at|date:"d/m/Y H:i" }}).
+        </p>
+    </div>
+{% endblock %}

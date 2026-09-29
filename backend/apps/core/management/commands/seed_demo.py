@@ -9,7 +9,7 @@ illustrer les disponibilités. Fictives mais cohérentes.
     python manage.py seed_demo --reset  # supprime les données de démonstration
 
 Idempotent. Refusé si DEMO_DATA_ALLOWED est faux (production).
-Les phases suivantes ajouteront les comptes.
+Comptes de l'équipe : un par rôle pour essayer le backoffice (voir le README).
 """
 import uuid
 from datetime import date, timedelta
@@ -23,6 +23,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accommodations.models import Amenity, Hotel, HotelImage, Residence, Room
+from apps.accounts.models import User
 from apps.activities.models import Activity, ActivityImage
 from apps.blog.models import BlogPost
 from apps.bookings.models import Booking, BookingItem
@@ -79,6 +80,7 @@ class Command(BaseCommand):
             counts["albums"] = self.albums()
             counts["articles"] = self.posts()
             counts["avis"] = self.reviews()
+            counts["comptes de l'équipe"] = self.staff_accounts()
         self.stdout.write(self.style.SUCCESS(
             "Démonstration chargée : " + ", ".join(f"{n} {label}" for label, n in counts.items()) + "."
         ))
@@ -90,6 +92,9 @@ class Command(BaseCommand):
         # QuerySet.delete() supprime réellement, y compris les objets à suppression logique.
         Booking.all_objects.filter(contact_email=demo.DEMO_EMAIL).delete()
         counts = {"devis": QuoteRequest.all_objects.filter(email=demo.DEMO_EMAIL).delete()[0]}
+        staff = User.objects.filter(email__in=[email for email, _, _ in demo.STAFF_ACCOUNTS])
+        counts["comptes de l'équipe"] = staff.count()
+        staff.delete()
         # Offres en premier : celles qui ciblent une fiche disparaîtraient avec elle (CASCADE).
         for label, model, items in [
             ("offres", Offer, demo.OFFERS), ("transports", TransportService, demo.TRANSPORTS),
@@ -118,6 +123,18 @@ class Command(BaseCommand):
             blog_posts__isnull=True,
         ).delete()
         return counts
+
+    def staff_accounts(self):
+        """Un compte par rôle de l'équipe, mot de passe de démonstration rétabli à chaque chargement."""
+        for email, role, first_name in demo.STAFF_ACCOUNTS:
+            user, _ = User.objects.update_or_create(
+                email=email,
+                defaults={"role": role, "first_name": first_name, "last_name": "Démo",
+                          "is_active": True, "is_verified": True},
+            )
+            user.set_password(demo.DEMO_STAFF_PASSWORD)
+            user.save(update_fields=["password"])
+        return len(demo.STAFF_ACCOUNTS)
 
     def categories(self, kind, rows):
         return {

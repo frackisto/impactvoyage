@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 17
+# Plateforme Web Agence de Voyage — Phase 19
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -25,7 +25,8 @@ docker compose up --build
 docker compose exec backend python manage.py load_agency_content
 
 # 4. (Développement uniquement) Ajouter les données de démonstration :
-#    circuits, hébergements, véhicules, activités, événements, avis — fictifs, interdits en production
+#    circuits, hébergements, véhicules, activités, événements, avis, comptes de l'équipe
+#    (voir « Backoffice ») — fictifs, interdits en production
 docker compose exec backend python manage.py seed_demo
 # ... et pour les retirer : python manage.py seed_demo --reset
 ```
@@ -532,6 +533,62 @@ sur ordinateur et mobile, stables sur deux passages, dont l'audit axe (WCAG 2.2 
   d'onglet alors que l'ancien panneau est encore présent pendant le changement d'onglet
   (échec intermittent) ; il vise désormais le panneau « Hôtels ».
 
+## Backoffice (Phase 19)
+
+Administration Django thémée avec **django-unfold** : http://localhost:8000/admin/
+(connexion par email). Couleurs du site, menu en français, utilisable sur mobile.
+Le backoffice est servi par Django, pas par le site : `/admin` ouvert sur le site
+(http://localhost:3000/admin) y est redirigé (`ADMIN_URL`, lue au build du frontend).
+
+- **Comptes de démonstration** (créés par `seed_demo`, jamais en production), mot de
+  passe `Demo-Impact-2026` : `superadmin.demo@`, `admin.demo@`, `agent.demo@`,
+  `commercial.demo@` et `gestionnaire.demo@example.com`. Chacun ne voit que ce que son
+  rôle permet (menu, indicateurs, actions).
+- **Tableau de bord** : indicateurs (devis et réservations à traiter, messages non lus,
+  avis en attente, offres en cours, contenus publiés), listes « à traiter », notifications
+  non lues, devis et réservations par mois sur 12 mois, destinations et circuits
+  populaires (réservations puis vues). Statistiques en cache 5 minutes.
+  Visiteurs : lus dans **Umami** (`UMAMI_API_URL`, `UMAMI_WEBSITE_ID`,
+  `UMAMI_API_TOKEN`) ; tant qu'Umami n'est pas déployé (Phase 24), la carte l'indique.
+- **Réservations** : fiche en lecture seule (sauf notes internes) ; **Confirmer**
+  (réserve le stock), **Refuser** et **Annuler** (motif, stock libéré) passent par
+  `bookings.services`, avec une page de confirmation et l'email au client. Seules les
+  décisions permises par le statut sont proposées. Une réservation qui bloque du stock
+  ne peut pas être supprimée ; la suppression est logique.
+- **Devis** : assigner un commercial (le devis passe « En cours »), **Envoyer la
+  proposition** (montant, validité, message : email avec le lien client), refuser,
+  clôturer ; actions groupées « M'assigner », « Refuser », « Clôturer ».
+- **Messages** marqués lus à l'ouverture, puis traités ou archivés ; **avis** approuvés,
+  mis en avant sur l'accueil ou refusés (un par un ou en groupe).
+- **Catalogue et contenus** : un champ par langue (`[fr]`, `[en]`), galeries photo,
+  départs et programme jour par jour des circuits, chambres des hôtels, tarifs des
+  services, publication groupée. Les places réservées d'un départ sont en lecture seule.
+- **Administration** : utilisateurs (le rôle décide des droits ; seul un super
+  administrateur peut attribuer ce rôle ou modifier un tel compte ; les groupes Django
+  ne sont plus éditables), paramètres du site (une seule fiche), taux de change
+  (mise à jour à la demande, cache vidé), paiements en lecture.
+- **Mes notifications** : chacun voit les siennes ; « Ouvrir » les marque lues et mène
+  à la fiche.
+- Un enregistrement depuis l'admin ne réécrit que les champs modifiés : un statut
+  changé entre-temps par le client (annulation, acceptation) n'est jamais écrasé.
+- Le site reprend les modifications du catalogue en 5 minutes au plus (1 h pour les
+  paramètres du site), le temps de son cache.
+
+## Ce qui a été validé (Phase 19)
+
+- Backend : `manage.py check`, schéma OpenAPI validé sans avertissement, aucune migration
+  manquante, 203 tests pytest (56 nouveaux) : chaque écran de l'admin s'affiche avec la
+  démonstration, confirmation / refus / annulation (stock, emails, statut concurrent,
+  décisions proposées selon le statut et le rôle), proposition de devis, messages, avis,
+  garde-fou des rôles, notifications (liens externes refusés), paramètres, taux de
+  change, tableau de bord (statistiques, cache, filtrage par rôle, menu, Umami).
+- Rendu vérifié dans Chromium (ordinateur et mobile), sans erreur JavaScript.
+- **Corrections** : les groupes de rôles n'étaient plus synchronisés après `migrate` dès
+  qu'une app sans modèles (ici `dashboard`) arrivait en dernier ; une connexion ouverte
+  directement sur `/admin/login/` menait à une page 404.
+- Limite connue : unfold ne fournit pas de traduction française ; quelques libellés
+  de l'interface restent en anglais (« Type to search », « Choose file to upload »).
+
 ## Pages encore manquantes
 
 Connexion et inscription (liées depuis l'en-tête), prévues avec les comptes clients.
@@ -539,6 +596,5 @@ L'espace client (« mes réservations ») viendra avec elles ; l'API le permet d
 
 ## Prochaine étape
 
-**Phase 19 : Création du backoffice** — administration Django thémée (unfold) pour tous
-les contenus, traitement des devis et des réservations (confirmation, refus), tableau
-de bord et statistiques.
+**Phase 20 : Notifications** — gabarits d'emails HTML (client et agence), notifications
+du tableau de bord, préparation des canaux WhatsApp / SMS.

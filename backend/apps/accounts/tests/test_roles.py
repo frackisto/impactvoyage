@@ -50,6 +50,19 @@ class RoleMatrixTests(TestCase):
     def test_client_has_no_permission(self):
         self.assertEqual(make_user("CLIENT").get_all_permissions(), set())
 
+    def test_groups_are_synced_after_the_last_app_with_models_is_migrated(self):
+        """Une app sans modèles (dashboard) en fin de liste ne doit pas empêcher la synchronisation."""
+        from django.apps import apps
+
+        from apps.accounts.apps import _sync_after_migrate
+
+        group = Group.objects.get(name=group_name("AGENT"))
+        group.permissions.clear()
+        last_with_models = [c for c in apps.get_app_configs() if c.models_module is not None][-1]
+        self.assertIsNot(last_with_models, list(apps.get_app_configs())[-1])
+        _sync_after_migrate(sender=last_with_models, app_config=last_with_models)
+        self.assertTrue(group.permissions.filter(codename="change_tour").exists())
+
     def test_sync_roles_command_is_idempotent(self):
         make_user("GESTIONNAIRE")
         out = StringIO()

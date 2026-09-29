@@ -3,9 +3,11 @@ from django.db.models.signals import post_migrate, post_save
 
 
 def _sync_after_migrate(sender, app_config=None, **kwargs):
-    # post_migrate est émis pour chaque app : on attend la dernière, quand les
-    # permissions de tous les modèles existent.
-    if app_config is list(apps.get_app_configs())[-1]:
+    # post_migrate est émis pour chaque app ayant des modèles : on attend la
+    # dernière, quand les permissions de tous les modèles existent. (Une app sans
+    # modèles, comme dashboard, ne reçoit jamais le signal.)
+    with_models = [config for config in apps.get_app_configs() if config.models_module is not None]
+    if app_config is with_models[-1]:
         from .permissions_sync import sync_role_groups
 
         sync_role_groups()

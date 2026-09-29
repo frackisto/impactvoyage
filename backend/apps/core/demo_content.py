@@ -275,6 +275,18 @@ TOUR_REVIEWS = [
 
 DEMO_EMAIL = "demo@example.com"
 
+# Comptes de l'équipe pour essayer le backoffice (/admin/), un par rôle :
+# (email, rôle, prénom). Mot de passe commun et connu : démonstration seulement
+# (seed_demo est refusé en production).
+DEMO_STAFF_PASSWORD = "Demo-Impact-2026"
+STAFF_ACCOUNTS = [
+    ("superadmin.demo@example.com", "SUPER_ADMIN", "Super-admin"),
+    ("admin.demo@example.com", "ADMIN", "Admin"),
+    ("agent.demo@example.com", "AGENT", "Agent"),
+    ("commercial.demo@example.com", "COMMERCIAL", "Commercial"),
+    ("gestionnaire.demo@example.com", "GESTIONNAIRE", "Gestionnaire"),
+]
+
 # Équipements : (nom FR, nom EN, icône Lucide) — « Climatisation » et « Internet illimité »
 # existent déjà (studio de l'agence) et sont réutilisés.
 AMENITIES = [

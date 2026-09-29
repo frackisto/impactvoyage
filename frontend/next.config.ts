@@ -9,6 +9,13 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
  */
 const backendOrigin = new URL(process.env.API_URL ?? "http://localhost:8000/api/v1").origin;
 
+/**
+ * Adresse publique du backoffice Django (vue par le navigateur, contrairement à
+ * API_URL qui vaut http://backend:8000 dans Docker). /admin ouvert sur le site y
+ * est redirigé au lieu d'afficher une 404. Figée au build.
+ */
+const adminUrl = (process.env.ADMIN_URL ?? "http://localhost:8000/admin").replace(/\/+$/, "");
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -28,6 +35,12 @@ const nextConfig: NextConfig = {
   // Photos du catalogue : /media/* relayé vers Django (voir lib/media.ts).
   async rewrites() {
     return [{ source: "/media/:path*", destination: `${backendOrigin}/media/:path*` }];
+  },
+  async redirects() {
+    return [
+      { source: "/admin", destination: `${adminUrl}/`, permanent: false },
+      { source: "/admin/:path*", destination: `${adminUrl}/:path*`, permanent: false },
+    ];
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

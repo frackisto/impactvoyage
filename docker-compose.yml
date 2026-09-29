@@ -93,6 +93,8 @@ services:
       args:
         NEXT_PUBLIC_SITE_URL: http://localhost:3000
         API_URL: http://backend:8000/api/v1
+        # Adresse du backoffice vue par le navigateur (redirection de /admin).
+        ADMIN_URL: http://localhost:8000/admin
     container_name: voyage_frontend
     restart: unless-stopped
     environment:

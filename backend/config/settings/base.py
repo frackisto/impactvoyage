@@ -19,8 +19,11 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 # --- Applications ---
 DJANGO_APPS = [
-    # modeltranslation doit précéder l'admin pour patcher ses formulaires.
+    # modeltranslation doit précéder l'admin pour patcher ses formulaires ;
+    # unfold (thème du backoffice, Phase 19) aussi, pour remplacer ses gabarits.
     "modeltranslation",
+    "unfold",
+    "unfold.contrib.filters",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -60,6 +63,7 @@ LOCAL_APPS = [
     "apps.blog",
     "apps.payments",
     "apps.search",
+    "apps.dashboard",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -83,7 +87,8 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        # Gabarits du projet : ils passent avant ceux d'unfold (accueil de l'admin).
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -113,6 +118,10 @@ DATABASES = {
 
 # --- Utilisateur custom ---
 AUTH_USER_MODEL = "accounts.User"
+# Seul le backoffice utilise les sessions (l'API passe par JWT). Le formulaire de
+# connexion d'unfold n'envoie pas « next » : sans ce réglage, une connexion ouverte
+# directement sur /admin/login/ mènerait à /accounts/profile/ (404).
+LOGIN_REDIRECT_URL = "admin:index"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -313,3 +322,45 @@ AGENCY_NOTIFICATION_EMAIL = env("AGENCY_NOTIFICATION_EMAIL", default="contact@ag
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 BACKEND_URL = env("BACKEND_URL", default="http://localhost:8000")
+
+# --- Backoffice (django-unfold, architecture § 13) ---
+# Les couleurs reprennent la palette « ocean » du site (frontend/app/globals.css).
+UNFOLD = {
+    "SITE_TITLE": "Impact Voyage",
+    "SITE_HEADER": "Impact Voyage",
+    "SITE_SUBHEADER": "Backoffice de l'agence",
+    "SITE_URL": FRONTEND_URL,
+    "SITE_SYMBOL": "travel_explore",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "ENVIRONMENT": "apps.dashboard.views.environment_callback",
+    "DASHBOARD_CALLBACK": "apps.dashboard.views.dashboard_callback",
+    "COLORS": {
+        "primary": {
+            "50": "oklch(0.970 0.016 235.6)",
+            "100": "oklch(0.940 0.033 235.6)",
+            "200": "oklch(0.880 0.067 235.6)",
+            "300": "oklch(0.800 0.117 235.6)",
+            "400": "oklch(0.720 0.123 235.6)",
+            "500": "oklch(0.615 0.123 235.6)",
+            "600": "oklch(0.550 0.117 235.6)",
+            "700": "oklch(0.480 0.100 235.6)",
+            "800": "oklch(0.400 0.082 235.6)",
+            "900": "oklch(0.330 0.070 235.6)",
+            "950": "oklch(0.250 0.053 235.6)",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        # Menu filtré selon les permissions du rôle (apps/dashboard/navigation.py).
+        "navigation": "apps.dashboard.navigation.sidebar_navigation",
+    },
+}
+
+# Mesure d'audience (Umami auto-hébergé, architecture § 13) : lue par le tableau
+# de bord. Vide : la carte « Visiteurs » indique que la mesure n'est pas branchée.
+UMAMI_API_URL = env("UMAMI_API_URL", default="")
+UMAMI_WEBSITE_ID = env("UMAMI_WEBSITE_ID", default="")
+UMAMI_API_TOKEN = env("UMAMI_API_TOKEN", default="")
+DASHBOARD_CACHE_SECONDS = 300
