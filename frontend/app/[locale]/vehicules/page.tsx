@@ -12,7 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { Link } from "@/i18n/navigation";
 import { intParam, pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { parseStay } from "@/lib/stay";
 import {
   listVehicles,
@@ -59,12 +59,7 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const t = await getTranslations({ locale, namespace: "Vehicles" });
   const filters = parseFilters(query);
   const filtered = Object.values(asStrings(filters)).some(Boolean) || (filters.page ?? 1) > 1;
-  return {
-    title: t("title"),
-    description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filtered ? { index: false, follow: true } : undefined,
-  };
+  return pageMetadata({ locale, path: PATH, title: t("title"), description: t("metaDescription"), noindex: filtered });
 }
 
 /** Location de véhicules (CdC § 12). */

@@ -11,7 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format";
 import { mediaSrc } from "@/lib/media";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { allDestinations } from "@/services/destinations.service";
 import { quotePrefill, type QuoteContext } from "@/services/quotes.service";
@@ -22,13 +22,14 @@ type Props = PageProps<"/[locale]/devis">;
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   const t = await getTranslations({ locale, namespace: "Quote" });
-  return {
+  // Seule la page sans préremplissage est indexée.
+  return pageMetadata({
+    locale,
+    path: "/devis",
     title: t("title"),
     description: t("metaDescription"),
-    alternates: alternates("/devis", locale),
-    // Seule la page sans préremplissage est indexée.
-    robots: Object.keys(query).length ? { index: false, follow: true } : undefined,
-  };
+    noindex: Object.keys(query).length > 0,
+  });
 }
 
 /** Demande de devis (CdC § 18), préremplie depuis la fiche d'origine. */

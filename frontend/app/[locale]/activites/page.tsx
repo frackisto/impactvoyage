@@ -12,7 +12,7 @@ import { SortSelect } from "@/components/search/sort-select";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { dateParam, intParam, pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { ACTIVITY_SORTS, activityFacets, listActivities, type ActivityFilters } from "@/services/activities.service";
 import type { ActivityList, Paginated } from "@/types";
 
@@ -53,12 +53,7 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const t = await getTranslations({ locale, namespace: "Activities" });
   const filters = parseFilters(query);
   const filtered = Object.values(asStrings(filters)).some(Boolean) || (filters.page ?? 1) > 1;
-  return {
-    title: t("title"),
-    description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filtered ? { index: false, follow: true } : undefined,
-  };
+  return pageMetadata({ locale, path: PATH, title: t("title"), description: t("metaDescription"), noindex: filtered });
 }
 
 /** Activités et excursions (CdC § 7). */

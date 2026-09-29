@@ -14,7 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format";
 import { mediaSrc } from "@/lib/media";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { excerpt, paragraphs } from "@/lib/text";
 import { getOffer, relatedOffers } from "@/services/agency.service";
 import type { OfferDetail } from "@/types";
@@ -38,18 +38,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const offer = await getOffer(slug);
   if (!offer) notFound();
-  const image = mediaSrc(offer.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/offres/${slug}`,
     title: offer.title,
     description: summary(offer),
-    alternates: alternates(`/offres/${slug}`, locale),
-    openGraph: {
-      title: offer.title,
-      description: summary(offer),
-      url: absoluteUrl(`/offres/${slug}`, locale),
-      images: image ? [{ url: image, alt: offer.cover_alt || offer.title }] : undefined,
-    },
-  };
+    image: mediaSrc(offer.cover_image),
+    imageAlt: offer.cover_alt || offer.title,
+  });
 }
 
 /** Offre promotionnelle (CdC § 17) : prix, réduction, validité, conditions et demande. */

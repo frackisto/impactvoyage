@@ -19,7 +19,7 @@ import { formatDate, formatHours, multiplyMoney } from "@/lib/format";
 import { mediaSrc } from "@/lib/media";
 import { pageHref } from "@/lib/pagination";
 import { dateParam, intParam } from "@/lib/search-params";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { activityAvailability, getActivity, relatedActivities } from "@/services/activities.service";
@@ -36,19 +36,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const activity = await getActivity(slug);
   if (!activity) notFound();
-  const image = mediaSrc(activity.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/activites/${slug}`,
     title: activity.title,
     description: summary(activity),
-    alternates: alternates(`/activites/${slug}`, locale),
-    openGraph: {
-      type: "website",
-      title: activity.title,
-      description: summary(activity),
-      url: absoluteUrl(`/activites/${slug}`, locale),
-      images: image ? [{ url: image, alt: activity.cover_alt || activity.title }] : undefined,
-    },
-  };
+    image: mediaSrc(activity.cover_image),
+    imageAlt: activity.cover_alt || activity.title,
+  });
 }
 
 export default async function ActivityPage({ params, searchParams }: Props) {

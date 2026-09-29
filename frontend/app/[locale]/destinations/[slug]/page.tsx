@@ -25,7 +25,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryFlag, countryName } from "@/lib/countries";
 import { mediaSrc } from "@/lib/media";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import {
@@ -54,19 +54,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const destination = await getDestination(slug);
   if (!destination) notFound();
-  const image = mediaSrc(destination.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/destinations/${slug}`,
     title: destination.name,
     description: summary(destination),
-    alternates: alternates(`/destinations/${slug}`, locale),
-    openGraph: {
-      type: "website",
-      title: destination.name,
-      description: summary(destination),
-      url: absoluteUrl(`/destinations/${slug}`, locale),
-      images: image ? [{ url: image, alt: destination.cover_alt || destination.name }] : undefined,
-    },
-  };
+    image: mediaSrc(destination.cover_image),
+    imageAlt: destination.cover_alt || destination.name,
+  });
 }
 
 export default async function DestinationPage({ params }: Props) {

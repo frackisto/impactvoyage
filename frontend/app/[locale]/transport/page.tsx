@@ -15,7 +15,7 @@ import { Link } from "@/i18n/navigation";
 import { mediaSrc } from "@/lib/media";
 import { pageHref } from "@/lib/pagination";
 import { dateParam, intParam, pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { paragraphs } from "@/lib/text";
 import { listTransport, TRANSPORT_TYPES, type TransportFilters } from "@/services/agency.service";
 import type { Paginated, TransportService } from "@/types";
@@ -40,12 +40,7 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const t = await getTranslations({ locale, namespace: "Transport" });
   const { page, ...filters } = parseFilters(query);
   const filtered = Object.values(filters).some(Boolean) || (page ?? 1) > 1;
-  return {
-    title: t("title"),
-    description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filtered ? { index: false, follow: true } : undefined,
-  };
+  return pageMetadata({ locale, path: PATH, title: t("title"), description: t("metaDescription"), noindex: filtered });
 }
 
 /**

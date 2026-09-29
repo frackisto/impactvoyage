@@ -12,5 +12,8 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules", ".next", "e2e"],
+    // next-intl importe « next/navigation » sans extension : Vite doit le transformer
+    // lui-même pour résoudre ce chemin (utilisé par lib/seo.ts).
+    server: { deps: { inline: ["next-intl"] } },
   },
 });

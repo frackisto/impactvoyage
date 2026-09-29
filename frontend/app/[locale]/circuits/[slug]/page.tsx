@@ -26,7 +26,7 @@ import { buttonVariants } from "@/components/ui/button";
 
 import { countryFlag } from "@/lib/countries";
 import { mediaSrc } from "@/lib/media";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { excerpt, paragraphs } from "@/lib/text";
 import { getSiteSettings, whatsappUrl } from "@/services/site.service";
 import { getTour, relatedTours, SCOPE_PATHS, tourReviews } from "@/services/tours.service";
@@ -44,19 +44,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const tour = await getTour(slug);
   if (!tour) notFound();
-  const image = mediaSrc(tour.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/circuits/${slug}`,
     title: tour.title,
     description: summary(tour),
-    alternates: alternates(`/circuits/${slug}`, locale),
-    openGraph: {
-      type: "website",
-      title: tour.title,
-      description: summary(tour),
-      url: absoluteUrl(`/circuits/${slug}`, locale),
-      images: image ? [{ url: image, alt: tour.cover_alt || tour.title }] : undefined,
-    },
-  };
+    image: mediaSrc(tour.cover_image),
+    imageAlt: tour.cover_alt || tour.title,
+  });
 }
 
 /** Données structurées TouristTrip : programme, départs (offres) et note. */

@@ -10,7 +10,7 @@ import { breadcrumbList, JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryName } from "@/lib/countries";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { paragraphs } from "@/lib/text";
 import { visasForCountry } from "@/services/agency.service";
 import { getSiteSettings, whatsappUrl } from "@/services/site.service";
@@ -23,11 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!visas?.length) notFound();
   const t = await getTranslations({ locale, namespace: "Visa" });
   const name = countryName(visas[0].destination_country_code, locale);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/visa/${country}`,
     title: t("visaFor", { country: name }),
     description: t("countryMeta", { country: name }),
-    alternates: alternates(`/visa/${country}`, locale),
-  };
+  });
 }
 
 /** Formules de visa d'un pays (/visa/france) : délais, frais, pièces à fournir. */

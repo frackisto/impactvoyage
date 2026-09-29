@@ -10,7 +10,7 @@ import { SegmentedNav } from "@/components/common/segmented-nav";
 import { EmptyState, ErrorState } from "@/components/common/states";
 import { formatDate } from "@/lib/format";
 import { pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { categoriesOf, listAlbums } from "@/services/agency.service";
 import type { AlbumList, Category, Paginated } from "@/types";
 
@@ -26,12 +26,13 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   const t = await getTranslations({ locale, namespace: "Media" });
   const filters = parseFilters(query);
-  return {
+  return pageMetadata({
+    locale,
+    path: PATH,
     title: t("title"),
     description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filters.category || filters.page > 1 ? { index: false, follow: true } : undefined,
-  };
+    noindex: Boolean(filters.category || filters.page > 1),
+  });
 }
 
 /** Médiathèque (CdC § 16) : albums photo des voyages et événements de l'agence. */

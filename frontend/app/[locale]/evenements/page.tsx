@@ -11,7 +11,7 @@ import { FilterPanel, type FilterField } from "@/components/search/filter-panel"
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { intParam, pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { EVENT_CATEGORIES, eventFacets, listEvents, type EventFilters } from "@/services/events.service";
 import type { EventList, Paginated } from "@/types";
 
@@ -32,12 +32,7 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const t = await getTranslations({ locale, namespace: "Events" });
   const filters = parseFilters(query);
   const filtered = Boolean(filters.category || filters.year || (filters.page ?? 1) > 1);
-  return {
-    title: t("title"),
-    description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filtered ? { index: false, follow: true } : undefined,
-  };
+  return pageMetadata({ locale, path: PATH, title: t("title"), description: t("metaDescription"), noindex: filtered });
 }
 
 /** Événementiel : voyages de groupe, sorties et événements réalisés par l'agence (CdC § 15). */

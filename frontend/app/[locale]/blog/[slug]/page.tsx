@@ -14,7 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format";
 import { mediaSrc } from "@/lib/media";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { getPost, relatedPosts } from "@/services/agency.service";
 import { getSiteSettings } from "@/services/site.service";
 
@@ -24,20 +24,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const post = await getPost(slug);
   if (!post) notFound();
-  const image = mediaSrc(post.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/blog/${slug}`,
     title: post.seo_title || post.title,
     description: post.seo_description || post.excerpt,
-    alternates: alternates(`/blog/${slug}`, locale),
-    openGraph: {
-      type: "article",
-      title: post.title,
-      description: post.excerpt,
-      url: absoluteUrl(`/blog/${slug}`, locale),
-      publishedTime: post.published_at ?? undefined,
-      images: image ? [{ url: image, alt: post.cover_alt || post.title }] : undefined,
-    },
-  };
+    image: mediaSrc(post.cover_image),
+    imageAlt: post.cover_alt || post.title,
+    type: "article",
+    publishedTime: post.published_at ?? undefined,
+  });
 }
 
 /** Article du blog (CdC § 21). */

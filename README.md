@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 20
+# Plateforme Web Agence de Voyage — Phase 21
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -646,8 +646,55 @@ Connexion et inscription (liées depuis l'en-tête), prévues avec les comptes c
 L'espace client (« mes réservations ») viendra avec elles ; l'API le permet déjà. Les
 liens des emails de compte (`/verifier-email`, `/reset-password`) mèneront à ces pages.
 
+## SEO (Phase 21)
+
+- **Métadonnées de toutes les pages publiques** par `pageMetadata()` (`frontend/lib/seo.ts`) :
+  titre, description, URL canonique, variantes hreflang (fr, en, x-default), Open Graph
+  complet (nom du site, langue, URL, photo de la fiche ou image de partage par défaut
+  1200 × 630 `public/brand/og-default.jpg`) et Twitter Card. L'accueil a désormais ses
+  propres métadonnées. Les listes filtrées ou paginées restent `noindex, follow` ; les
+  pages personnelles (suivi de devis ou de réservation) et la recherche ne sont jamais
+  indexées.
+- **`/sitemap.xml`** : pages fixes, pages par continent et tous les contenus publiés
+  (destinations, circuits, hôtels, résidences, véhicules, activités, événements, offres en
+  cours, articles, albums, pays des visas), dans les deux langues, chacun avec ses
+  variantes et sa date de modification. Contenus fournis par `GET /api/v1/seo/sitemap/`.
+- **`/robots.txt`** : tout est exploré sauf l'API, l'admin, la recherche et les pages
+  personnelles ; il annonce le plan du site. En recette, `SEO_NOINDEX=true` (frontend)
+  interdit toute exploration et ajoute `noindex` à toutes les pages.
+- **Régénération à la demande** : quand un contenu public change (admin, services,
+  actions groupées), Django appelle après validation de la transaction la route
+  `POST /api/revalidate` du site (secret `FRONTEND_SHARED_SECRET`), qui invalide les
+  étiquettes de cache concernées. La page modifiée est à jour dès la visite suivante,
+  sans attendre les 5 minutes du cache. Réglage `FRONTEND_REVALIDATE_URL` (fourni par
+  docker-compose) ; vide, le site se met à jour à l'expiration de son cache.
+- Données structurées (déjà en place) : TravelAgency, WebSite + SearchAction,
+  TouristTrip, TouristDestination, Hotel, Event, Article, BreadcrumbList, AggregateRating.
+- À savoir : Next.js envoie les métadonnées dans le `<head>` aux robots qui n'exécutent
+  pas le JavaScript (WhatsApp, Facebook, Bing, LinkedIn…). Aux navigateurs et à
+  Googlebot, il les diffuse en streaming : elles peuvent arriver après le `<head>`, ce
+  que Google lit correctement.
+
+## Ce qui a été validé (Phase 21)
+
+- Backend : `manage.py check`, schéma OpenAPI validé, aucune migration manquante,
+  226 tests pytest (8 nouveaux) : contenus du plan du site (brouillons, offres expirées
+  et doublons de pays exclus), régénération (étiquettes par modèle, un appel par
+  transaction, relations plusieurs-à-plusieurs, suppression, transaction annulée,
+  désactivation, secret, nouvelle tentative), publication groupée depuis l'admin.
+- Frontend : TypeScript, ESLint, 37 tests Vitest (dont `pageMetadata`), 291 tests
+  Playwright sur ordinateur et mobile : sitemap (pages, langues, hreflang, pages
+  privées absentes), robots.txt, aperçu WhatsApp d'une fiche et de l'accueil (balises
+  dans le `<head>`), liste filtrée non indexée, route de régénération (secret,
+  étiquettes inconnues refusées).
+- Parcours réel dans Docker : un titre de circuit modifié dans Django apparaît sur le
+  site en quelques secondes (tâche Celery → `/api/revalidate` → page recalculée).
+- Corrigé au passage : les types TypeScript de l'API n'avaient pas été régénérés après
+  les nouveaux événements de notification (Phase 20) ; Vitest ne pouvait pas charger un
+  module qui importe la navigation de next-intl.
+
 ## Prochaine étape
 
-**Phase 21 : SEO** — métadonnées, hreflang et données structurées de toutes les pages,
-sitemap et robots, régénération des pages à la demande quand un contenu change dans
-l'admin (webhook Django → `revalidateTag`).
+**Phase 22 : Tests** — factory_boy à la place des constructeurs de test, couverture
+(≥ 80 % sur les services et les permissions), intégration continue (lint, types, tests,
+build).

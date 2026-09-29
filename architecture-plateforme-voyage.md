@@ -751,10 +751,11 @@ media/
 ## 9. Stratégie SEO (CdC § 27)
 
 - Metadata dynamiques par page (`generateMetadata`) : title, description, Open Graph, Twitter Cards, canonical, **hreflang** FR/EN.
-- `sitemap.xml` (un par langue) et `robots.txt` générés dynamiquement.
+- `sitemap.xml` (une entrée par langue, chacune avec ses variantes hreflang) et `robots.txt` générés dynamiquement (Phase 21 : `app/sitemap.ts`, `app/robots.ts`, contenus fournis par `GET /api/v1/seo/sitemap/`).
 - JSON-LD Schema.org via `components/seo/` : `TouristTrip`, `TouristDestination`, `Hotel`, `LocalBusiness` (alimenté par `SiteSettings`), `Organization`, `Article`, `Event`, `BreadcrumbList`, `AggregateRating` pour les avis approuvés.
 - URLs SEO-friendly : `/destinations/cote-divoire`, `/circuits/decouverte-de-la-cote-divoire`, `/hotels/abidjan`, `/visa/france`, et leurs équivalents `/en/...`.
-- Pages statiques régénérées à la demande (ISR) : un signal Django appelle un webhook Next.js (`revalidateTag`) quand un contenu est publié ou modifié.
+- Régénération à la demande (Phase 21) : un signal Django (`apps/core/revalidation.py`) appelle après validation de la transaction la route Next.js `/api/revalidate` (secret partagé), qui invalide les étiquettes de cache concernées avec `revalidateTag(tag, { expire: 0 })` ; les actions groupées de l’admin (`QuerySet.update`) l’appellent explicitement.
+- Métadonnées communes : `pageMetadata()` (`lib/seo.ts`) donne à chaque page publique titre, description, canonique, hreflang, Open Graph complet (nom du site, langue, image par défaut 1200 × 630) et Twitter Card.
 
 ---
 
@@ -864,8 +865,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 18 | Création des réservations | ✅ |
 | 19 | Création du backoffice | ✅ |
 | 20 | Notifications | ✅ |
-| 21 | SEO | ⏭ prochaine étape |
-| 22 | Tests | |
+| 21 | SEO | ✅ |
+| 22 | Tests | ⏭ prochaine étape |
 | 23 | Sécurité | |
 | 24 | Dockerisation et déploiement | |
 

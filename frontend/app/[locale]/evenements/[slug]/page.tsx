@@ -12,7 +12,7 @@ import { breadcrumbList, JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { mediaSrc } from "@/lib/media";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { excerpt, paragraphs } from "@/lib/text";
 import { getEvent, relatedEvents } from "@/services/events.service";
 import { getSiteSettings } from "@/services/site.service";
@@ -28,19 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const event = await getEvent(slug);
   if (!event) notFound();
-  const image = mediaSrc(event.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/evenements/${slug}`,
     title: event.title,
     description: summary(event),
-    alternates: alternates(`/evenements/${slug}`, locale),
-    openGraph: {
-      type: "article",
-      title: event.title,
-      description: summary(event),
-      url: absoluteUrl(`/evenements/${slug}`, locale),
-      images: image ? [{ url: image, alt: event.cover_alt || event.title }] : undefined,
-    },
-  };
+    image: mediaSrc(event.cover_image),
+    imageAlt: event.cover_alt || event.title,
+    type: "article",
+  });
 }
 
 export default async function EventPage({ params }: Props) {

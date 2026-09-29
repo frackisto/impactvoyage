@@ -10,7 +10,7 @@ import { DestinationFilters, type FilterValues } from "@/components/destinations
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import {
   allDestinations,
   CONTINENTS,
@@ -38,13 +38,14 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const t = await getTranslations({ locale, namespace: "Destinations" });
   const filters = parseFilters(query);
   const filtered = Boolean(filters.country || filters.search || filters.page > 1);
-  return {
+  // Seules la liste complète et les pages par continent sont indexées.
+  return pageMetadata({
+    locale,
+    path: filters.continent ? `/destinations?continent=${filters.continent}` : "/destinations",
     title: filters.continent ? t("metaTitleContinent", { continent: t(`continent.${filters.continent}`) }) : t("metaTitle"),
     description: t("metaDescription"),
-    // Seules la liste complète et les pages par continent sont indexées.
-    alternates: alternates(filters.continent ? `/destinations?continent=${filters.continent}` : "/destinations", locale),
-    robots: filtered ? { index: false, follow: true } : undefined,
-  };
+    noindex: filtered,
+  });
 }
 
 export default async function DestinationsPage({ params, searchParams }: PageProps<"/[locale]/destinations">) {

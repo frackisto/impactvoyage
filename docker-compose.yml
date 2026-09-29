@@ -43,6 +43,8 @@ services:
     environment:
       # Même valeur que le frontend (fichier .env racine).
       FRONTEND_SHARED_SECRET: ${FRONTEND_SHARED_SECRET:-}
+      # Régénération des pages du site quand un contenu change (réseau Docker interne).
+      FRONTEND_REVALIDATE_URL: http://frontend:3000/api/revalidate
     volumes:
       - ./backend:/app
       - static_volume:/app/staticfiles
@@ -63,6 +65,10 @@ services:
     command: celery -A config worker -l info
     env_file:
       - ./backend/.env
+    environment:
+      # Le worker envoie les emails et appelle la régénération des pages du site.
+      FRONTEND_SHARED_SECRET: ${FRONTEND_SHARED_SECRET:-}
+      FRONTEND_REVALIDATE_URL: http://frontend:3000/api/revalidate
     volumes:
       - ./backend:/app
     depends_on:

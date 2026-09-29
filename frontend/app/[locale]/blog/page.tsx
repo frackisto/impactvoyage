@@ -11,7 +11,7 @@ import { EmptyState, ErrorState } from "@/components/common/states";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { categoriesOf, getPost, listPosts } from "@/services/agency.service";
 import type { BlogPostList, Category, Paginated } from "@/types";
 
@@ -30,12 +30,13 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   const t = await getTranslations({ locale, namespace: "Blog" });
   const filters = parseFilters(query);
-  return {
+  return pageMetadata({
+    locale,
+    path: PATH,
     title: t("title"),
     description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filters.category || filters.tag || filters.page > 1 ? { index: false, follow: true } : undefined,
-  };
+    noindex: Boolean(filters.category || filters.tag || filters.page > 1),
+  });
 }
 
 /** Blog / conseils voyage (CdC § 21), filtrable par catégorie ou mot-clé. */

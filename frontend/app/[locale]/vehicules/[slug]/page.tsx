@@ -18,7 +18,7 @@ import { VehicleCard, vehicleName } from "@/components/vehicles/vehicle-card";
 import { Link } from "@/i18n/navigation";
 import { mediaSrc } from "@/lib/media";
 import { pageHref } from "@/lib/pagination";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { addDays, parseStay, today } from "@/lib/stay";
 import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -41,21 +41,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const vehicle = await getVehicle(slug);
   if (!vehicle) notFound();
   const t = await getTranslations({ locale, namespace: "Vehicles" });
-  const image = mediaSrc(vehicle.cover_image);
-  const title = t("metaTitle", { name: vehicleName(vehicle) });
-  const description = await summary(vehicle);
-  return {
-    title,
-    description,
-    alternates: alternates(`/vehicules/${slug}`, locale),
-    openGraph: {
-      type: "website",
-      title,
-      description,
-      url: absoluteUrl(`/vehicules/${slug}`, locale),
-      images: image ? [{ url: image, alt: vehicle.cover_alt || vehicleName(vehicle) }] : undefined,
-    },
-  };
+  return pageMetadata({
+    locale,
+    path: `/vehicules/${slug}`,
+    title: t("metaTitle", { name: vehicleName(vehicle) }),
+    description: await summary(vehicle),
+    image: mediaSrc(vehicle.cover_image),
+    imageAlt: vehicle.cover_alt || vehicleName(vehicle),
+  });
 }
 
 export default async function VehiclePage({ params, searchParams }: Props) {

@@ -965,6 +965,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/seo/sitemap/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Contenus publiés à inscrire au plan du site (sitemap.xml du frontend). */
+        get: operations["seo_sitemap_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/services/": {
         parameters: {
             query?: never;
@@ -1745,13 +1762,15 @@ export interface components {
         /**
          * @description * `QUOTE_CREATED` - Nouvelle demande de devis
          *     * `QUOTE_ACCEPTED` - Devis accepté par le client
+         *     * `QUOTE_DECLINED` - Devis refusé par le client
          *     * `BOOKING_REQUESTED` - Nouvelle demande de réservation
          *     * `BOOKING_CANCELLED` - Réservation annulée
+         *     * `BOOKING_EXPIRED` - Réservation expirée
          *     * `CONTACT_RECEIVED` - Nouveau message de contact
          *     * `REVIEW_SUBMITTED` - Nouvel avis à modérer
          * @enum {string}
          */
-        EventEnum: "QUOTE_CREATED" | "QUOTE_ACCEPTED" | "BOOKING_REQUESTED" | "BOOKING_CANCELLED" | "CONTACT_RECEIVED" | "REVIEW_SUBMITTED";
+        EventEnum: "QUOTE_CREATED" | "QUOTE_ACCEPTED" | "QUOTE_DECLINED" | "BOOKING_REQUESTED" | "BOOKING_CANCELLED" | "BOOKING_EXPIRED" | "CONTACT_RECEIVED" | "REVIEW_SUBMITTED";
         EventList: {
             readonly id: number;
             slug: string;
@@ -2802,6 +2821,24 @@ export interface components {
             longitude?: string | null;
             /** Contenu « À propos » */
             about_content?: string;
+        };
+        Sitemap: {
+            destinations: components["schemas"]["SitemapEntry"][];
+            tours: components["schemas"]["SitemapEntry"][];
+            hotels: components["schemas"]["SitemapEntry"][];
+            residences: components["schemas"]["SitemapEntry"][];
+            vehicles: components["schemas"]["SitemapEntry"][];
+            activities: components["schemas"]["SitemapEntry"][];
+            events: components["schemas"]["SitemapEntry"][];
+            offers: components["schemas"]["SitemapEntry"][];
+            blog: components["schemas"]["SitemapEntry"][];
+            albums: components["schemas"]["SitemapEntry"][];
+            visas: components["schemas"]["SitemapEntry"][];
+        };
+        SitemapEntry: {
+            slug: string;
+            /** Format: date-time */
+            updated_at: string;
         };
         StaffMember: {
             id: number;
@@ -4672,6 +4709,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+        };
+    };
+    seo_sitemap_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sitemap"];
                 };
             };
         };

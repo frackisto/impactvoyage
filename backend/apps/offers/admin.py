@@ -4,6 +4,7 @@ from django.utils import timezone
 from unfold.decorators import display
 
 from apps.core.admin import CoverPreviewMixin, TranslatedAdmin, amount
+from apps.core.revalidation import revalidate_model
 
 from .models import OFFER_TARGETS, Offer
 
@@ -64,8 +65,12 @@ class OfferAdmin(CoverPreviewMixin, TranslatedAdmin):
 
     @admin.action(description="Activer la sélection", permissions=["change"])
     def activate(self, request, queryset):
-        self.message_user(request, f"{queryset.update(is_active=True)} offre(s) activée(s).")
+        count = queryset.update(is_active=True)
+        revalidate_model(Offer)
+        self.message_user(request, f"{count} offre(s) activée(s).")
 
     @admin.action(description="Désactiver la sélection", permissions=["change"])
     def deactivate(self, request, queryset):
-        self.message_user(request, f"{queryset.update(is_active=False)} offre(s) désactivée(s).")
+        count = queryset.update(is_active=False)
+        revalidate_model(Offer)
+        self.message_user(request, f"{count} offre(s) désactivée(s).")

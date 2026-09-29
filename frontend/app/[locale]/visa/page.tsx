@@ -12,7 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { countryFlag, countryName } from "@/lib/countries";
 import { param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { listVisas, VISA_PURPOSES, type VisaFilters } from "@/services/agency.service";
 import type { VisaService } from "@/types";
 
@@ -31,12 +31,13 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   const t = await getTranslations({ locale, namespace: "Visa" });
   const filters = parseFilters(query);
-  return {
+  return pageMetadata({
+    locale,
+    path: PATH,
     title: t("title"),
     description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filters.destination_country_code || filters.purpose ? { index: false, follow: true } : undefined,
-  };
+    noindex: Boolean(filters.destination_country_code || filters.purpose),
+  });
 }
 
 /** Formules de visa par pays (CdC § 7 « Visa », § 11), filtrables par pays et motif. */

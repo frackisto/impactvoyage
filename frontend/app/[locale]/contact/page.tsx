@@ -9,14 +9,14 @@ import { ContactForm } from "@/components/contact/contact-form";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { getSiteSettings } from "@/services/site.service";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/contact">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Contact" });
-  return { title: t("title"), description: t("metaDescription"), alternates: alternates("/contact", locale) };
+  return pageMetadata({ locale, path: "/contact", title: t("title"), description: t("metaDescription") });
 }
 
 /** Contact (CdC § 19) : formulaire, coordonnées et horaires de l'agence. */

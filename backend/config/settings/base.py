@@ -326,6 +326,10 @@ AGENCY_NOTIFICATION_EMAIL = env("AGENCY_NOTIFICATION_EMAIL", default="contact@ag
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 BACKEND_URL = env("BACKEND_URL", default="http://localhost:8000")
+# Régénération des pages du site quand un contenu change (apps/core/revalidation.py) :
+# route /api/revalidate du serveur Next.js, vue depuis le backend. Vide : désactivée
+# (le site se met alors à jour à l'expiration de son cache, 5 minutes).
+FRONTEND_REVALIDATE_URL = env("FRONTEND_REVALIDATE_URL", default="")
 # Images des emails (emblème de l'agence) : servies par le site public.
 EMAIL_ASSETS_URL = env("EMAIL_ASSETS_URL", default=FRONTEND_URL)
 

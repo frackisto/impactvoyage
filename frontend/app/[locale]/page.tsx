@@ -1,4 +1,5 @@
-import { setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Hero } from "@/components/home/hero";
 import { SearchWidget } from "@/components/home/search-widget";
@@ -16,9 +17,15 @@ import {
   WhyUsSection,
 } from "@/components/home/sections";
 import { JsonLd } from "@/components/seo/json-ld";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { getHomeData } from "@/services/home.service";
 import { getSiteSettings } from "@/services/site.service";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+  return pageMetadata({ locale, path: "/", title: t("title"), description: t("description"), absoluteTitle: true });
+}
 
 /**
  * Accueil (CdC § 6) : hero et moteur de recherche multifonction, puis les

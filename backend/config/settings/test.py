@@ -25,3 +25,6 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"
 
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+# Pas d'appel au site Next.js pendant les tests (les tests de revalidation l'activent).
+FRONTEND_REVALIDATE_URL = ""

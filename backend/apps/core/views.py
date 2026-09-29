@@ -1,9 +1,10 @@
-from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import permissions, viewsets
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework import permissions, serializers, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import seo
 from .models import Category, ExchangeRate, SiteSettings
 from .serializers import CategorySerializer, ExchangeRateSerializer, SiteSettingsSerializer
 
@@ -25,6 +26,27 @@ class SiteSettingsView(APIView):
         return Response(
             SiteSettingsSerializer(SiteSettings.load(), context={"request": request}).data
         )
+
+
+class SitemapEntrySerializer(serializers.Serializer):
+    slug = serializers.CharField()
+    updated_at = serializers.DateTimeField()
+
+
+SITEMAP_TYPES = ("destinations", "tours", "hotels", "residences", "vehicles", "activities",
+                 "events", "offers", "blog", "albums", "visas")
+
+
+class SitemapView(APIView):
+    """Contenus publiés à inscrire au plan du site (sitemap.xml du frontend)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @extend_schema(responses=inline_serializer("Sitemap", {
+        name: SitemapEntrySerializer(many=True) for name in SITEMAP_TYPES
+    }))
+    def get(self, request):
+        return Response(seo.sitemap_entries())
 
 
 class CurrencyView(APIView):

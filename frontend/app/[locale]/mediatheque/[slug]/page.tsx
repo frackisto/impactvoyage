@@ -12,7 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format";
 import { mediaSrc } from "@/lib/media";
-import { absoluteUrl, alternates } from "@/lib/seo";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { excerpt } from "@/lib/text";
 import { getAlbum } from "@/services/agency.service";
 
@@ -23,14 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const album = await getAlbum(slug);
   if (!album) notFound();
   const t = await getTranslations({ locale, namespace: "Media" });
-  const image = mediaSrc(album.cover);
-  const description = excerpt(album.description || t("albumMeta", { title: album.title }));
-  return {
+  return pageMetadata({
+    locale,
+    path: `/mediatheque/${slug}`,
     title: album.title,
-    description,
-    alternates: alternates(`/mediatheque/${slug}`, locale),
-    openGraph: { title: album.title, description, images: image ? [{ url: image, alt: album.title }] : undefined },
-  };
+    description: excerpt(album.description || t("albumMeta", { title: album.title })),
+    image: mediaSrc(album.cover),
+  });
 }
 
 /** Album de la médiathèque : photos en galerie (visionneuse plein écran) et liens vidéo. */

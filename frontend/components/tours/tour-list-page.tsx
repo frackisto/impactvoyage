@@ -9,7 +9,7 @@ import { EmptyState, ErrorState } from "@/components/common/states";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { dateParam, intParam, pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import {
   listTours,
   SCOPE_PATHS,
@@ -68,13 +68,14 @@ export async function tourListMetadata(scope: TourScope, locale: string, query: 
   const t = await getTranslations({ locale, namespace: "Tours" });
   const filters = parseFilters(query);
   const filtered = Object.entries(asStrings(filters)).some(([, v]) => v) || (filters.page ?? 1) > 1;
-  return {
+  // Seule la liste sans filtre est indexée (évite les milliers de variantes).
+  return pageMetadata({
+    locale,
+    path: SCOPE_PATHS[scope],
     title: t(`${SCOPE_KEY[scope]}.title`),
     description: t(`${SCOPE_KEY[scope]}.metaDescription`),
-    alternates: alternates(SCOPE_PATHS[scope], locale),
-    // Seule la liste sans filtre est indexée (évite les milliers de variantes).
-    robots: filtered ? { index: false, follow: true } : undefined,
-  };
+    noindex: filtered,
+  });
 }
 
 /** Liste des circuits nationaux ou internationaux (CdC § 9, § 10). */

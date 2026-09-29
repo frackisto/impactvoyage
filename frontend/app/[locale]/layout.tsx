@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Toaster } from "@/components/ui/sonner";
 import { routing, textDirection } from "@/i18n/routing";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 import { bodyFont, displayFont, sloganFont } from "../fonts";
@@ -21,9 +22,15 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Metadata" });
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    metadataBase: new URL(SITE_URL),
     title: { default: t("title"), template: t("titleTemplate") },
     description: t("description"),
+    applicationName: SITE_NAME,
+    // Les numéros de l'agence sont déjà des liens tel: ; iOS ne doit pas prendre les prix
+    // ou les références pour des numéros de téléphone.
+    formatDetection: { telephone: false },
+    // Environnement de recette : jamais indexé (SEO_NOINDEX=true).
+    robots: process.env.SEO_NOINDEX === "true" ? { index: false, follow: false } : undefined,
   };
 }
 

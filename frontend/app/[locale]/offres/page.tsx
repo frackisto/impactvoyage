@@ -11,7 +11,7 @@ import { FilterPanel, type FilterField } from "@/components/search/filter-panel"
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { pageParam, param, type SearchParams } from "@/lib/search-params";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { listOffers, OFFER_TYPES, offerFacets, type OfferFilters } from "@/services/agency.service";
 import type { OfferList, Paginated } from "@/types";
 
@@ -30,12 +30,13 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[lo
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   const t = await getTranslations({ locale, namespace: "Offers" });
   const filters = parseFilters(query);
-  return {
+  return pageMetadata({
+    locale,
+    path: PATH,
     title: t("title"),
     description: t("metaDescription"),
-    alternates: alternates(PATH, locale),
-    robots: filters.offer_type || (filters.page ?? 1) > 1 ? { index: false, follow: true } : undefined,
-  };
+    noindex: Boolean(filters.offer_type || (filters.page ?? 1) > 1),
+  });
 }
 
 /** Offres promotionnelles en cours (CdC § 17), les plus proches de leur fin en premier. */

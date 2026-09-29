@@ -8,3 +8,6 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         from . import checks  # noqa: F401 (enregistre les vérifications de démarrage)
+        from .revalidation import connect_signals
+
+        connect_signals()  # régénération des pages du site quand un contenu change

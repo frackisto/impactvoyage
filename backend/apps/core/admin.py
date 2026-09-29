@@ -34,6 +34,7 @@ from unfold.widgets import INPUT_CLASSES, UnfoldAdminTextareaWidget
 from .exceptions import BusinessError
 from .formatting import format_amount
 from .models import Category, ExchangeRate, SiteSettings, Tag
+from .revalidation import revalidate_model
 from .services import RATES_CACHE_KEY, update_exchange_rates
 
 # --- Classes de base ----------------------------------------------------------
@@ -162,11 +163,13 @@ class PublishableAdminMixin:
     @admin.action(description="Publier la sélection", permissions=["change"])
     def publish(self, request, queryset):
         count = queryset.update(is_published=True)
+        revalidate_model(queryset.model)
         self.message_user(request, f"{count} élément(s) publié(s).", messages.SUCCESS)
 
     @admin.action(description="Dépublier la sélection", permissions=["change"])
     def unpublish(self, request, queryset):
         count = queryset.update(is_published=False)
+        revalidate_model(queryset.model)
         self.message_user(request, f"{count} élément(s) dépublié(s).", messages.SUCCESS)
 
 

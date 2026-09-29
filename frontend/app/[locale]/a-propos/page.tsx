@@ -11,7 +11,7 @@ import { PILLARS, WhyUsSection } from "@/components/home/sections";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { paragraphs } from "@/lib/text";
 import { listServices } from "@/services/agency.service";
 import { getSiteSettings } from "@/services/site.service";
@@ -19,7 +19,7 @@ import { getSiteSettings } from "@/services/site.service";
 export async function generateMetadata({ params }: PageProps<"/[locale]/a-propos">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "About" });
-  return { title: t("title"), description: t("metaDescription"), alternates: alternates("/a-propos", locale) };
+  return pageMetadata({ locale, path: "/a-propos", title: t("title"), description: t("metaDescription") });
 }
 
 /** Présentation de l'agence : texte saisi dans l'administration, équipe, engagements, coordonnées. */

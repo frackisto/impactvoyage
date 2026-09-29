@@ -21,7 +21,7 @@ import { Link } from "@/i18n/navigation";
 import { countryFlag } from "@/lib/countries";
 import { mediaSrc } from "@/lib/media";
 import { pageHref } from "@/lib/pagination";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { parseStay, stayQuery } from "@/lib/stay";
 import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -46,19 +46,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const hotel = await getHotel(slug);
   if (!hotel) notFound();
-  const image = mediaSrc(hotel.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/hotels/${slug}`,
     title: hotel.name,
     description: summary(hotel),
-    alternates: alternates(`/hotels/${slug}`, locale),
-    openGraph: {
-      type: "website",
-      title: hotel.name,
-      description: summary(hotel),
-      url: absoluteUrl(`/hotels/${slug}`, locale),
-      images: image ? [{ url: image, alt: hotel.cover_alt || hotel.name }] : undefined,
-    },
-  };
+    image: mediaSrc(hotel.cover_image),
+    imageAlt: hotel.cover_alt || hotel.name,
+  });
 }
 
 export default async function HotelPage({ params, searchParams }: Props) {

@@ -20,7 +20,7 @@ import { Link } from "@/i18n/navigation";
 import { countryFlag } from "@/lib/countries";
 import { mediaSrc } from "@/lib/media";
 import { pageHref } from "@/lib/pagination";
-import { absoluteUrl, alternates, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, SITE_URL } from "@/lib/seo";
 import { addDays, parseStay, stayQuery, today } from "@/lib/stay";
 import { excerpt, paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -40,19 +40,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const residence = await getResidence(slug);
   if (!residence) notFound();
-  const image = mediaSrc(residence.cover_image);
-  return {
+  return pageMetadata({
+    locale,
+    path: `/residences/${slug}`,
     title: residence.name,
     description: summary(residence),
-    alternates: alternates(`/residences/${slug}`, locale),
-    openGraph: {
-      type: "website",
-      title: residence.name,
-      description: summary(residence),
-      url: absoluteUrl(`/residences/${slug}`, locale),
-      images: image ? [{ url: image, alt: residence.cover_alt || residence.name }] : undefined,
-    },
-  };
+    image: mediaSrc(residence.cover_image),
+    imageAlt: residence.cover_alt || residence.name,
+  });
 }
 
 export default async function ResidencePage({ params, searchParams }: Props) {

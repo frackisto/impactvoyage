@@ -9,7 +9,7 @@ import { ServiceIcon } from "@/components/common/service-icon";
 import { ErrorState } from "@/components/common/states";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { alternates } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { paragraphs } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { listServices } from "@/services/agency.service";
@@ -28,7 +28,7 @@ const CATALOG: Record<string, string> = {
 export async function generateMetadata({ params }: PageProps<"/[locale]/services">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Services" });
-  return { title: t("title"), description: t("metaDescription"), alternates: alternates("/services", locale) };
+  return pageMetadata({ locale, path: "/services", title: t("title"), description: t("metaDescription") });
 }
 
 /** Prestations de l'agence (CdC § 11), dans l'ordre défini dans l'administration. */

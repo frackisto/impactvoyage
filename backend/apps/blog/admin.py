@@ -4,6 +4,7 @@ from django.utils import timezone
 from unfold.decorators import display
 
 from apps.core.admin import CoverPreviewMixin, TranslatedAdmin
+from apps.core.revalidation import revalidate_model
 
 from .models import BlogPost
 
@@ -63,9 +64,11 @@ class BlogPostAdmin(CoverPreviewMixin, TranslatedAdmin):
         undated = drafts.filter(published_at__isnull=True).update(
             status=BlogPost.Status.PUBLIE, published_at=now)
         dated = drafts.update(status=BlogPost.Status.PUBLIE)
+        revalidate_model(BlogPost)
         self.message_user(request, f"{undated + dated} article(s) publié(s).")
 
     @admin.action(description="Repasser en brouillon", permissions=["change"])
     def back_to_draft(self, request, queryset):
         count = queryset.update(status=BlogPost.Status.BROUILLON)
+        revalidate_model(BlogPost)
         self.message_user(request, f"{count} article(s) repassé(s) en brouillon.")
