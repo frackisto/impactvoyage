@@ -97,9 +97,29 @@ class QuoteFlowTests(TestCase):
             self._create(), amount=Decimal("100"), message="…",
             valid_until=timezone.localdate() + timedelta(days=3),
         )
-        quote = services.decline_quote(quote.reference, quote.access_token, reason="Trop cher")
+        with self.captureOnCommitCallbacks(execute=True):
+            quote = services.decline_quote(quote.reference, quote.access_token, reason="Trop cher")
         self.assertEqual(quote.status, QuoteRequest.Status.REFUSEE)
         self.assertIn("Trop cher", quote.comments)
+        # Le commercial est prévenu, avec le motif ; l'email de l'agence permet de répondre au client.
+        alert = Notification.objects.get(event=Notification.Event.QUOTE_DECLINED)
+        self.assertEqual(alert.recipient, self.commercial)
+        self.assertIn("Trop cher", alert.message)
+        agency = next(m for m in mail.outbox if m.to == ["contact@agence-voyage.com"])
+        self.assertEqual(agency.reply_to, ["awa@example.com"])
+
+    def test_emails_follow_the_client_language(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            quote = self._create(language="en")
+        confirmation = next(m for m in mail.outbox if m.to == [quote.email])
+        self.assertEqual(confirmation.subject, f"Your quote request {quote.reference}")
+        self.assertIn(f"/en/devis/{quote.reference}?token=", confirmation.body)
+        self.assertIn('lang="en"', confirmation.alternatives[0][0])
+        with self.captureOnCommitCallbacks(execute=True):
+            services.send_proposal(quote, amount=Decimal("1850000"), message="7 nights.",
+                                   valid_until=timezone.localdate() + timedelta(days=10))
+        self.assertIn("1,850,000 FCFA", mail.outbox[-1].body)
+        self.assertIn("Hello Awa,", mail.outbox[-1].body)
 
     def test_status_path_is_enforced(self):
         with self.assertRaises(InvalidTransition):
@@ -109,11 +129,19 @@ class QuoteFlowTests(TestCase):
 class ContactTests(TestCase):
     def test_contact_message_notifies_staff(self):
         admin = make_user("ADMIN")
-        contact = services.create_contact_message(
-            name="Yao", email="yao@example.com", subject="Visa", message="Bonjour…"
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            contact = services.create_contact_message(
+                name="Yao Koffi", email="yao@example.com", subject="Visa", message="Bonjour…",
+                language="en",
+            )
         self.assertEqual(contact.status, ContactMessage.Status.NOUVEAU)
         self.assertTrue(Notification.objects.filter(recipient=admin).exists())
+        # L'agence peut répondre directement ; le client reçoit un accusé de réception.
+        agency = next(m for m in mail.outbox if m.to == ["contact@agence-voyage.com"])
+        self.assertEqual(agency.reply_to, ["yao@example.com"])
+        acknowledgement = next(m for m in mail.outbox if m.to == ["yao@example.com"])
+        self.assertEqual(acknowledgement.subject, "We have received your message")
+        self.assertIn("Hello Yao,", acknowledgement.body)
         services.change_contact_status(contact, ContactMessage.Status.TRAITE)
         with self.assertRaises(InvalidTransition):
             services.change_contact_status(contact, ContactMessage.Status.NOUVEAU)

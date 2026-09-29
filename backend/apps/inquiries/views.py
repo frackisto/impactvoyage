@@ -136,7 +136,7 @@ class ContactMessageViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        services.create_contact_message(**serializer.validated_data)
+        services.create_contact_message(**serializer.validated_data, language=get_language())
         return Response(
             {"message": "Votre message a bien été envoyé. Nous vous répondons rapidement."},
             status=status.HTTP_201_CREATED,

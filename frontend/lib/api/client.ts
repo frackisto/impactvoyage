@@ -18,6 +18,14 @@ export const api = axios.create({
   headers: { Accept: "application/json" },
 });
 
+// Langue de la page (<html lang>) plutôt que celle du navigateur : Django répond et
+// écrit ses emails (confirmation de devis, de réservation…) dans la langue du site consulté.
+api.interceptors.request.use((config) => {
+  const lang = typeof document === "undefined" ? "" : document.documentElement.lang;
+  if (lang) config.headers.set("Accept-Language", lang);
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {

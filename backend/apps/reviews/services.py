@@ -28,6 +28,9 @@ def submit_review(*, author_name, author_email, rating, comment, user=None, phot
         f"{author_name} : {comment[:300]}",
         link=admin_path(review),
         related_object=review,
+        details=[("Auteur", f"{author_name}\n{author_email}"), ("Note", f"{rating}/5"),
+                 ("Sujet", str(next((v for v in target.values() if v), "L'agence"))),
+                 ("Commentaire", comment)],
     )
     return review
 

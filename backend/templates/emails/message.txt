@@ -1,0 +1,19 @@
+{% autoescape off %}{{ email.heading }}
+
+{% if email.greeting %}{{ email.greeting }}
+
+{% endif %}{% for paragraph in email.paragraphs %}{{ paragraph }}
+
+{% endfor %}{% for label, value in text_details %}- {{ label }}{{ layout.colon }} {{ value }}
+{% endfor %}{% if email.details %}
+{% endif %}{% if email.action %}{{ email.action.0 }}{{ layout.colon }} {{ email.action.1 }}
+
+{% endif %}{% if email.note %}{{ email.note }}
+
+{% endif %}{% if not email.for_agency %}{{ layout.signature }}
+
+--
+{{ agency.name }}{% if agency.address %} — {{ agency.address }}{% endif %}
+{% if agency.phone %}{{ agency.phone }}{% endif %}{% if agency.email %} · {{ agency.email }}{% endif %}{% else %}--
+{{ layout.agency_footer }}{% endif %}
+{% endautoescape %}

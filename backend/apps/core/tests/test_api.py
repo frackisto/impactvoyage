@@ -119,6 +119,15 @@ class CatalogApiTests(ApiTestCase):
     def test_catalog_is_read_only(self):
         self.assertEqual(self.client.post(f"{API}/tours/", {}).status_code, 405)
 
+    def test_contact_message_keeps_the_page_language(self):
+        from apps.inquiries.models import ContactMessage
+
+        payload = {"name": "Yao", "email": "yao@example.com", "subject": "Info",
+                   "message": "Hello, I would like some information."}
+        response = self.client.post(f"{API}/contact/", payload, HTTP_ACCEPT_LANGUAGE="en")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ContactMessage.objects.get().language, "en")
+
 
 class ThrottleTests(ApiTestCase):
     def test_contact_form_is_rate_limited(self):

@@ -717,7 +717,9 @@ update_exchange_rates        # quotidienne : taux XOF → EUR/USD/GBP (le XOF es
 flush_view_counters          # toutes les 15 min : compteurs Redis → base
 ```
 
-**Canaux de notification extensibles (CdC § 30)** : `notifications/channels/` définit une interface `send(notification)` implémentée par `EmailChannel` et `DashboardChannel` en V1. `WhatsAppChannel` et `SmsChannel` s'ajouteront plus tard sans toucher aux apps métier.
+**Canaux de notification extensibles (CdC § 30)** : `notifications/channels.py` définit une interface `send(alert)` (une `StaffAlert` : événement, titre, message, récapitulatif, lien vers l'admin, Reply-To) implémentée par `DashboardChannel` et `AgencyEmailChannel`, actifs par défaut. `WhatsAppChannel` et `SmsChannel` sont prêts (Phase 20) : on les active dans le réglage `STAFF_NOTIFICATION_CHANNELS` et on branche un prestataire dans `SHORT_MESSAGE_BACKEND` (une classe `send(channel, to, text)`), sans toucher aux apps métier.
+
+**Emails (Phase 20)** : les apps construisent un objet `Email` (titre, paragraphes, récapitulatif, bouton) dans la langue du client (`bookings/emails.py`, `inquiries/emails.py`, `accounts/emails.py`) ; `notifications/emails.py` le met en page (`templates/emails/message.{html,txt}`) et l'envoie en multipart par Celery après validation de la transaction. En développement, Mailpit capture les emails ; `manage.py preview_emails` écrit un aperçu de chacun.
 
 ---
 
@@ -861,8 +863,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 17 | Création du système de devis | ✅ |
 | 18 | Création des réservations | ✅ |
 | 19 | Création du backoffice | ✅ |
-| 20 | Notifications | ⏭ prochaine étape |
-| 21 | SEO | |
+| 20 | Notifications | ✅ |
+| 21 | SEO | ⏭ prochaine étape |
 | 22 | Tests | |
 | 23 | Sécurité | |
 | 24 | Dockerisation et déploiement | |

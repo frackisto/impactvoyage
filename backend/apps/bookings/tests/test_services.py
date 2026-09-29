@@ -172,11 +172,35 @@ class LifecycleTests(TestCase):
 
         self.assertEqual(services.expire_pending_bookings(now=timezone.now()), 0)
         later = timezone.now() + timedelta(minutes=31)
-        self.assertEqual(services.expire_pending_bookings(now=later), 1)
+        self.commercial = make_user("COMMERCIAL")
+        mail.outbox.clear()
+        with self.captureOnCommitCallbacks(execute=True):
+            self.assertEqual(services.expire_pending_bookings(now=later), 1)
         booking.refresh_from_db()
         self.departure.refresh_from_db()
         self.assertEqual(booking.status, Booking.Status.EXPIRED)
         self.assertEqual(self.departure.seats_reserved, 0)
+        # Le client et l'équipe sont prévenus.
+        self.assertTrue(Notification.objects.filter(event=Notification.Event.BOOKING_EXPIRED,
+                                                    recipient=self.commercial).exists())
+        client = next(m for m in mail.outbox if m.to == [CONTACT["contact_email"]])
+        self.assertIn("Réservation expirée", client.subject)
+
+    def test_emails_follow_the_client_language(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            booking = services.request_booking(
+                **CONTACT, language="en",
+                items=[ItemRequest("tour_departure", self.departure.pk, quantity=2)],
+            )
+        client = next(m for m in mail.outbox if m.to == [CONTACT["contact_email"]])
+        self.assertEqual(client.subject, f"Booking request received — {booking.reference}")
+        self.assertIn(f"/en/reservation/{booking.reference}?token=", client.body)
+        self.assertIn("2 traveller(s)", client.body)
+        self.assertIn("300,000 FCFA", client.body)
+        agency = next(m for m in mail.outbox if m.to == ["contact@agence-voyage.com"])
+        self.assertEqual(agency.reply_to, [CONTACT["contact_email"]])
+        self.assertIn("Langue du client : English", agency.body)
+        self.assertIn("300 000 FCFA", agency.body)  # l'agence lit en français
 
     def test_complete_past_bookings(self):
         booking = services.confirm_booking(self._tour_request(1))

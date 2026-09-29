@@ -656,7 +656,7 @@ QUOTES = [
         "proposal": {
             "amount": "2350000",
             "message": (
-                "Bonjour Awa,\n\nVoici notre proposition pour votre séjour en famille à Dubaï : "
+                "Voici notre proposition pour votre séjour en famille à Dubaï : "
                 "vols aller-retour depuis Abidjan, visas, 5 nuits en hôtel 4 étoiles avec "
                 "petit-déjeuner, safari dans le désert et montée à la Burj Khalifa.\n\n"
                 "Le tarif enfant est appliqué pour votre fils."

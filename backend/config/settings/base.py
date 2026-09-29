@@ -303,6 +303,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.bookings.tasks.complete_past_bookings_task",
         "schedule": crontab(hour=2, minute=0),
     },
+    "purge-read-notifications": {
+        "task": "apps.notifications.tasks.purge_read_notifications_task",
+        "schedule": crontab(hour=3, minute=0),
+    },
     "update-exchange-rates": {
         "task": "apps.core.tasks.update_exchange_rates_task",
         # Après la publication des taux de la BCE (~16 h, heure d'Europe centrale).
@@ -322,6 +326,22 @@ AGENCY_NOTIFICATION_EMAIL = env("AGENCY_NOTIFICATION_EMAIL", default="contact@ag
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 BACKEND_URL = env("BACKEND_URL", default="http://localhost:8000")
+# Images des emails (emblème de l'agence) : servies par le site public.
+EMAIL_ASSETS_URL = env("EMAIL_ASSETS_URL", default=FRONTEND_URL)
+
+# --- Notifications de l'agence (Phase 20, architecture § 7.3) ---
+# Canaux actifs. WhatsApp et SMS sont prêts (apps.notifications.channels.WhatsAppChannel,
+# SmsChannel) : les ajouter ici et choisir un prestataire dans SHORT_MESSAGE_BACKEND.
+STAFF_NOTIFICATION_CHANNELS = env.list("STAFF_NOTIFICATION_CHANNELS", default=[
+    "apps.notifications.channels.DashboardChannel",
+    "apps.notifications.channels.AgencyEmailChannel",
+])
+# Prestataire des messages courts ; ConsoleBackend se contente de les journaliser.
+SHORT_MESSAGE_BACKEND = env(
+    "SHORT_MESSAGE_BACKEND", default="apps.notifications.channels.ConsoleBackend"
+)
+# Les notifications lues sont supprimées après ce délai (tâche quotidienne).
+NOTIFICATION_RETENTION_DAYS = 90
 
 # --- Backoffice (django-unfold, architecture § 13) ---
 # Les couleurs reprennent la palette « ocean » du site (frontend/app/globals.css).

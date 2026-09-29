@@ -70,8 +70,9 @@ class ProposalForm(forms.Form):
     valid_until = forms.DateField(label="Proposition valable jusqu'au", widget=date_input())
     message = forms.CharField(
         label="Message au client",
-        help_text="Programme, prestations incluses, conditions. Envoyé par email avec le "
-                  "lien qui permet au client d'accepter ou de refuser.",
+        help_text="Programme, prestations incluses, conditions. L'email commence déjà par "
+                  "« Bonjour <prénom>, » et contient le montant, la validité et le lien qui "
+                  "permet au client d'accepter ou de refuser.",
         widget=UnfoldAdminTextareaWidget(attrs={"rows": 10}),
     )
 

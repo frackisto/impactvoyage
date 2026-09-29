@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{ email.subject }}</title>
+</head>
+{% comment %}
+Mise en page commune des emails (apps/notifications/emails.py). Tableaux et
+styles en ligne : seule forme comprise par toutes les messageries.
+Couleurs : bleu de la marque assombri (#176d9e, contraste AA sur blanc), orange #f5a524.
+{% endcomment %}
+<body style="margin:0;padding:0;background-color:#f1f5f9;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
+        <tr>
+          <td style="padding:20px 28px;border-bottom:4px solid #f5a524;">
+            <a href="{{ site_url }}" style="text-decoration:none;color:#176d9e;">
+              <img src="{{ logo_url }}" width="40" height="40" alt="" style="vertical-align:middle;border:0;">
+              <span style="vertical-align:middle;font-size:20px;font-weight:bold;color:#176d9e;padding-left:8px;">{{ agency.name }}</span>
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 28px 8px 28px;">
+            <h1 style="margin:0 0 16px 0;font-size:22px;line-height:1.3;color:#0f2a3d;">{{ email.heading }}</h1>
+            {% if email.greeting %}<p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;">{{ email.greeting }}</p>{% endif %}
+            {% for paragraph in email.paragraphs %}
+              <p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;">{{ paragraph|linebreaksbr }}</p>
+            {% endfor %}
+          </td>
+        </tr>
+        {% if email.details %}
+        <tr>
+          <td style="padding:8px 28px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+              {% for label, value in email.details %}
+              <tr>
+                <td style="padding:10px 14px;font-size:14px;color:#475569;width:40%;vertical-align:top;{% if not forloop.last %}border-bottom:1px solid #e2e8f0;{% endif %}">{{ label }}</td>
+                <td style="padding:10px 14px;font-size:14px;font-weight:bold;color:#0f2a3d;vertical-align:top;{% if not forloop.last %}border-bottom:1px solid #e2e8f0;{% endif %}">{{ value|linebreaksbr }}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+        {% if email.action %}
+        <tr>
+          <td style="padding:20px 28px 8px 28px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="border-radius:8px;background-color:#176d9e;">
+                  <a href="{{ email.action.1 }}" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:8px;">{{ email.action.0 }}</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:12px 0 0 0;font-size:12px;line-height:1.5;color:#64748b;">{{ layout.button_fallback }}<br><a href="{{ email.action.1 }}" style="color:#176d9e;word-break:break-all;">{{ email.action.1 }}</a></p>
+          </td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td style="padding:16px 28px 28px 28px;">
+            {% if email.note %}<p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#475569;">{{ email.note|linebreaksbr }}</p>{% endif %}
+            {% if not email.for_agency %}<p style="margin:0;font-size:16px;line-height:1.6;">{{ layout.signature }}</p>{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 28px;background-color:#f8fafc;border-top:1px solid #e2e8f0;font-size:12px;line-height:1.6;color:#64748b;">
+            {% if email.for_agency %}
+              {{ layout.agency_footer }}
+            {% else %}
+              <strong style="color:#0f2a3d;">{{ agency.name }}</strong>{% if agency.address %} — {{ agency.address }}{% endif %}<br>
+              {% if agency.phone %}{{ agency.phone }}{% endif %}{% if agency.whatsapp and agency.whatsapp != agency.phone %} · WhatsApp {{ agency.whatsapp }}{% endif %}{% if agency.email %} · <a href="mailto:{{ agency.email }}" style="color:#176d9e;">{{ agency.email }}</a>{% endif %}<br>
+              {{ layout.footer }}
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

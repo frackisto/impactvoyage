@@ -15,6 +15,8 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from apps.core.exceptions import BusinessError
 from apps.notifications.emails import send_email
 
+from . import emails
+
 User = get_user_model()
 
 VERIFY_EMAIL_SALT = "accounts.verify-email"
@@ -39,14 +41,7 @@ def make_email_verification_token(user):
 def send_verification_email(user):
     if user.is_verified:
         raise BusinessError("Cette adresse email est déjà vérifiée.", code="already_verified")
-    link = f"{settings.FRONTEND_URL}/verifier-email?token={make_email_verification_token(user)}"
-    send_email(
-        user.email,
-        "Confirmez votre adresse email",
-        f"Bonjour {user.first_name},\n\nBienvenue chez Impact Voyage ! Confirmez votre "
-        f"adresse email en ouvrant ce lien (valable 3 jours) :\n{link}\n\n"
-        "L'équipe Impact Voyage",
-    )
+    send_email(user.email, emails.verification(user, make_email_verification_token(user)))
 
 
 def verify_email(token):
@@ -93,15 +88,8 @@ def request_password_reset(email):
         return
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
-    link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
     minutes = settings.PASSWORD_RESET_TIMEOUT // 60
-    send_email(
-        user.email,
-        "Réinitialisation de votre mot de passe",
-        f"Bonjour {user.first_name},\n\nPour choisir un nouveau mot de passe, ouvrez ce lien "
-        f"(valable {minutes} minutes) :\n{link}\n\nSi vous n'êtes pas à l'origine de cette "
-        "demande, ignorez ce message.\n\nL'équipe Impact Voyage",
-    )
+    send_email(user.email, emails.password_reset(user, uid, token, minutes))
 
 
 @transaction.atomic

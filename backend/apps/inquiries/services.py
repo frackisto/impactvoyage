@@ -8,7 +8,6 @@ ou REFUSEE → TERMINEE.
 """
 import uuid
 
-from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -18,6 +17,8 @@ from apps.notifications.emails import send_email
 from apps.notifications.models import Notification
 from apps.notifications.services import admin_path, notify_staff
 
+from . import emails
+from .emails import client_quote_url  # noqa: F401 (lien réexporté pour l'admin et les tests)
 from .models import ContactMessage, QuoteRequest
 
 QStatus = QuoteRequest.Status
@@ -48,8 +49,10 @@ def _lock_quote(quote, new_status):
     return locked
 
 
-def client_quote_url(quote):
-    return f"{settings.FRONTEND_URL}/devis/{quote.reference}?token={quote.access_token}"
+def _notify_staff_about_quote(quote, event, title, message="", related_object=None):
+    related = related_object or quote
+    notify_staff(event, title, message, link=admin_path(related), related_object=related,
+                 details=emails.quote_staff_details(quote), reply_to=[quote.email])
 
 
 # --- Devis ------------------------------------------------------------------
@@ -73,21 +76,13 @@ def create_quote_request(*, activities=(), **data):
     if activities:
         quote.activities.set(activities)
 
-    notify_staff(
+    _notify_staff_about_quote(
+        quote,
         Notification.Event.QUOTE_CREATED,
         f"Nouvelle demande de devis {quote.reference}",
         f"{quote.first_name} {quote.last_name} — {quote.destination_text or quote.destination or 'destination libre'}",
-        link=admin_path(quote),
-        related_object=quote,
     )
-    send_email(
-        quote.email,
-        f"Votre demande de devis {quote.reference}",
-        f"Bonjour {quote.first_name},\n\nNous avons bien reçu votre demande de devis "
-        f"(référence {quote.reference}). Un conseiller vous répondra rapidement.\n\n"
-        f"Suivez votre demande ici : {client_quote_url(quote)}\n\n"
-        "L'équipe Impact Voyage",
-    )
+    send_email(quote.email, emails.quote_received(quote))
     return quote
 
 
@@ -123,15 +118,7 @@ def send_proposal(quote, *, amount, message, valid_until, by=None):
     if by is not None and locked.assigned_to_id is None:
         locked.assigned_to = by
     locked.save()
-    send_email(
-        locked.email,
-        f"Votre proposition de voyage {locked.reference}",
-        f"Bonjour {locked.first_name},\n\n{message}\n\n"
-        f"Montant : {format_amount(amount, locked.currency)}\n"
-        f"Proposition valable jusqu'au {valid_until:%d/%m/%Y}.\n\n"
-        f"Consulter et valider la proposition : {client_quote_url(locked)}\n\n"
-        "L'équipe Impact Voyage",
-    )
+    send_email(locked.email, emails.proposal_sent(locked))
     return locked
 
 
@@ -160,7 +147,7 @@ def _check_client_can_answer(quote):
 @transaction.atomic
 def accept_quote(reference, token):
     """Le client valide la proposition : devis ACCEPTEE et réservation PENDING créée."""
-    from apps.bookings.services import client_booking_url, create_booking_from_quote
+    from apps.bookings.services import create_booking_from_quote
 
     quote = get_quote_for_client(reference, token)
     locked = _lock_quote(quote, QStatus.ACCEPTEE)
@@ -169,22 +156,15 @@ def accept_quote(reference, token):
     locked.save(update_fields=["status", "updated_at"])
     booking = create_booking_from_quote(locked)
 
-    notify_staff(
+    _notify_staff_about_quote(
+        locked,
         Notification.Event.QUOTE_ACCEPTED,
         f"Devis {locked.reference} accepté par le client",
         f"Réservation {booking.reference} créée — "
         f"{format_amount(booking.total_amount, booking.currency)}",
-        link=admin_path(booking),
         related_object=booking,
     )
-    send_email(
-        locked.email,
-        f"Proposition acceptée — {booking.reference}",
-        f"Bonjour {locked.first_name},\n\nMerci ! Votre réservation {booking.reference} "
-        "est enregistrée. Un conseiller vous contacte pour finaliser le règlement.\n\n"
-        f"Suivre votre réservation : {client_booking_url(booking)}\n\n"
-        "L'équipe Impact Voyage",
-    )
+    send_email(locked.email, emails.quote_accepted(locked, booking))
     return booking
 
 
@@ -198,6 +178,12 @@ def decline_quote(reference, token, reason=""):
     if reason:
         locked.comments = "\n".join(filter(None, [locked.comments, f"Motif du refus : {reason}"]))
     locked.save(update_fields=["status", "comments", "updated_at"])
+    _notify_staff_about_quote(
+        locked,
+        Notification.Event.QUOTE_DECLINED,
+        f"Devis {locked.reference} refusé par le client",
+        f"Motif : {reason}" if reason else "Aucun motif indiqué.",
+    )
     return locked
 
 
@@ -214,17 +200,22 @@ def change_quote_status(quote, new_status):
 
 
 @transaction.atomic
-def create_contact_message(*, name, email, subject, message, phone=""):
-    contact = ContactMessage(name=name, email=email, phone=phone, subject=subject, message=message)
+def create_contact_message(*, name, email, subject, message, phone="", language="fr"):
+    """Message de contact : alerte à l'agence (répondre = écrire au client), accusé de réception."""
+    contact = ContactMessage(name=name, email=email, phone=phone, subject=subject,
+                             message=message, language=language)
     contact.full_clean()
     contact.save()
     notify_staff(
         Notification.Event.CONTACT_RECEIVED,
         f"Message de {name} : {subject}",
-        f"{message[:500]}\n\nRépondre à : {email}",
+        message[:500],
         link=admin_path(contact),
         related_object=contact,
+        details=emails.contact_staff_details(contact),
+        reply_to=[email],
     )
+    send_email(email, emails.contact_acknowledgement(contact))
     return contact
 
 

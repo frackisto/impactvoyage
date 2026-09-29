@@ -123,8 +123,10 @@ test.describe("agence et pages légales", () => {
     await expect(page.getByLabel("Nom complet")).toBeFocused();
 
     let payload: Record<string, unknown> = {};
+    let language: string | undefined;
     await page.route("**/api/backend/contact", async (route) => {
       payload = route.request().postDataJSON();
+      language = await route.request().headerValue("accept-language") ?? undefined;
       await route.fulfill({ status: 201, json: { message: "ok" } });
     });
     await page.getByLabel("Nom complet").fill("Awa Koné");
@@ -134,6 +136,26 @@ test.describe("agence et pages légales", () => {
     await page.getByRole("button", { name: "Envoyer le message" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Message envoyé !" })).toBeFocused();
     expect(payload).toMatchObject({ name: "Awa Koné", subject: "Partenariat", phone: "", website: "" });
+    // Langue de la page, pas celle du navigateur : l'accusé de réception part en français.
+    expect(language).toBe("fr");
+  });
+
+  test("contact en anglais : Django reçoit la langue de la page", async ({ browser }) => {
+    const context = await browser.newContext({ locale: "fr-FR" });
+    const page = await context.newPage();
+    let language: string | undefined;
+    await page.route("**/api/backend/contact", async (route) => {
+      language = await route.request().headerValue("accept-language") ?? undefined;
+      await route.fulfill({ status: 201, json: { message: "ok" } });
+    });
+    await page.goto("/en/contact");
+    await page.getByLabel("Full name").fill("Awa Koné");
+    await page.getByLabel("Email address").fill("awa@example.com");
+    await page.getByLabel("Subject").selectOption({ index: 1 });
+    await page.getByLabel("Message").fill("Hello, we would like to discuss a partnership.");
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect.poll(() => language).toBe("en");
+    await context.close();
   });
 
   test("pages légales : sommaire, coordonnées de l'agence, liens croisés", async ({ page }) => {

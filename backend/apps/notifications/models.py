@@ -12,8 +12,10 @@ class Notification(TimeStampedModel):
     class Event(models.TextChoices):
         QUOTE_CREATED = "QUOTE_CREATED", "Nouvelle demande de devis"
         QUOTE_ACCEPTED = "QUOTE_ACCEPTED", "Devis accepté par le client"
+        QUOTE_DECLINED = "QUOTE_DECLINED", "Devis refusé par le client"
         BOOKING_REQUESTED = "BOOKING_REQUESTED", "Nouvelle demande de réservation"
         BOOKING_CANCELLED = "BOOKING_CANCELLED", "Réservation annulée"
+        BOOKING_EXPIRED = "BOOKING_EXPIRED", "Réservation expirée"
         CONTACT_RECEIVED = "CONTACT_RECEIVED", "Nouveau message de contact"
         REVIEW_SUBMITTED = "REVIEW_SUBMITTED", "Nouvel avis à modérer"
 

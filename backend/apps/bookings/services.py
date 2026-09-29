@@ -30,7 +30,8 @@ from apps.offers.selectors import promo_price_for
 from apps.tours.models import TourDeparture
 from apps.vehicles.models import Vehicle
 
-from . import selectors
+from . import emails, selectors
+from .emails import client_booking_url  # noqa: F401 (lien réexporté pour les autres apps)
 from .models import BOOKING_TARGETS, Booking, BookingItem
 
 Status = Booking.Status
@@ -292,27 +293,18 @@ def _lock(booking, new_status):
     return locked
 
 
-def client_booking_url(booking):
-    """Lien de suivi sans compte, envoyé dans chaque email au client."""
-    return f"{settings.FRONTEND_URL}/reservation/{booking.reference}?token={booking.access_token}"
+def _email_customer(booking, email):
+    send_email(booking.contact_email, email)
 
 
-# --- Emails client (texte brut ; gabarits HTML en Phase 20) -------------------
-
-
-def _email_customer(booking, subject, intro):
-    lines = "\n".join(
-        f"- {item.label} : {format_amount(item.line_total, booking.currency)}"
-        for item in booking.items.all()
+def _notify_staff(booking, event, title, message=""):
+    notify_staff(
+        event, title, message,
+        link=admin_path(booking),
+        related_object=booking,
+        details=emails.staff_details(booking),
+        reply_to=[booking.contact_email],
     )
-    body = (
-        f"Bonjour {booking.contact_name},\n\n{intro}\n\n"
-        f"Référence : {booking.reference}\n{lines}\n"
-        f"Total : {format_amount(booking.total_amount, booking.currency)}\n\n"
-        f"Suivre votre réservation : {client_booking_url(booking)}\n\n"
-        "L'équipe Impact Voyage"
-    )
-    send_email(booking.contact_email, f"{subject} — {booking.reference}", body)
 
 
 # --- Cas d'usage ------------------------------------------------------------
@@ -362,18 +354,13 @@ def request_booking(
         if instant:
             _block_stock(booking)
 
-        notify_staff(
+        _notify_staff(
+            booking,
             Notification.Event.BOOKING_REQUESTED,
             f"Demande de réservation {booking.reference}",
             f"{contact_name} — {format_amount(booking.total_amount, booking.currency)}",
-            link=admin_path(booking),
-            related_object=booking,
         )
-        _email_customer(
-            booking,
-            "Demande de réservation reçue",
-            "Nous avons bien reçu votre demande. Un conseiller vous répondra rapidement.",
-        )
+        _email_customer(booking, emails.booking_received(booking))
     return booking
 
 
@@ -407,7 +394,7 @@ def confirm_booking(booking, internal_notes=None):
     if internal_notes is not None:
         locked.internal_notes = internal_notes
     locked.save(update_fields=["status", "expires_at", "internal_notes", "updated_at"])
-    _email_customer(locked, "Réservation confirmée", "Bonne nouvelle : votre réservation est confirmée.")
+    _email_customer(locked, emails.booking_confirmed(locked))
     return locked
 
 
@@ -418,8 +405,7 @@ def reject_booking(booking, reason=""):
     locked.status = Status.REJECTED
     locked.internal_notes = "\n".join(filter(None, [locked.internal_notes, reason]))
     locked.save(update_fields=["status", "internal_notes", "updated_at"])
-    intro = "Nous sommes désolés : nous ne pouvons pas donner suite à votre demande."
-    _email_customer(locked, "Demande de réservation", f"{intro}\n{reason}".strip())
+    _email_customer(locked, emails.booking_rejected(locked, reason))
     return locked
 
 
@@ -442,14 +428,13 @@ def cancel_booking(booking, reason="", by_customer=False):
     locked.internal_notes = "\n".join(filter(None, [locked.internal_notes, reason]))
     locked.save(update_fields=["status", "expires_at", "internal_notes", "updated_at"])
     if by_customer:
-        notify_staff(
+        _notify_staff(
+            locked,
             Notification.Event.BOOKING_CANCELLED,
             f"Réservation {locked.reference} annulée par le client",
-            reason,
-            link=admin_path(locked),
-            related_object=locked,
+            f"Motif : {reason}" if reason else "",
         )
-    _email_customer(locked, "Réservation annulée", "Votre réservation a bien été annulée.")
+    _email_customer(locked, emails.booking_cancelled(locked, by_customer))
     return locked
 
 
@@ -481,6 +466,14 @@ def expire_pending_bookings(now=None):
             _release_stock(locked)
             locked.status = Status.EXPIRED
             locked.save(update_fields=["status", "updated_at"])
+            _notify_staff(
+                locked,
+                Notification.Event.BOOKING_EXPIRED,
+                f"Réservation {locked.reference} expirée",
+                "Le délai de validation est dépassé : le stock a été libéré. "
+                "Relancez le client si besoin.",
+            )
+            _email_customer(locked, emails.booking_expired(locked))
             expired += 1
     return expired
 

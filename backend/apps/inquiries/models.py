@@ -141,6 +141,7 @@ class ContactMessage(TimeStampedModel):
     phone = models.CharField("téléphone", max_length=30, blank=True)
     subject = models.CharField("objet", max_length=200)
     message = models.TextField()
+    language = models.CharField("langue", max_length=5, default="fr")
     status = models.CharField(
         "statut", max_length=10, choices=Status.choices, default=Status.NOUVEAU, db_index=True
     )

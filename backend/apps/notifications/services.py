@@ -3,12 +3,16 @@ from django.utils import timezone
 from .models import Notification
 
 
-def notify_staff(event, title, message="", link="", related_object=None):
-    """Prévient l'agence d'un événement sur tous les canaux actifs."""
-    from .channels import STAFF_CHANNELS
+def notify_staff(event, title, message="", link="", related_object=None, details=(),
+                 reply_to=()):
+    """Prévient l'agence d'un événement sur tous les canaux actifs (STAFF_NOTIFICATION_CHANNELS)."""
+    from .channels import StaffAlert, staff_channels
 
-    for channel in STAFF_CHANNELS:
-        channel.send(event, title, message, link, related_object)
+    alert = StaffAlert(event=event, title=title, message=message, link=link,
+                       related_object=related_object, details=list(details),
+                       reply_to=list(reply_to))
+    for channel in staff_channels():
+        channel.send(alert)
 
 
 def mark_as_read(notification):

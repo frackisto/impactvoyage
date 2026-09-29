@@ -87,6 +87,15 @@ services:
       redis:
         condition: service_healthy
 
+  # Développement : capture tous les emails (SMTP 1025), consultables sur
+  # http://localhost:8025. Utilisé quand EMAIL_HOST est vide (config/settings/dev.py).
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: voyage_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+
   frontend:
     build:
       context: ./frontend

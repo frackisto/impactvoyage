@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 19
+# Plateforme Web Agence de Voyage — Phase 20
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -39,7 +39,9 @@ Services démarrés :
 - `db` → PostgreSQL sur le port 5432
 - `redis` → Redis sur le port 6379
 - `celery` → worker Celery (tâches asynchrones : emails, taux de change)
-- `celery-beat` → planificateur (expiration des réservations, taux de change quotidiens)
+- `celery-beat` → planificateur (expiration des réservations, taux de change quotidiens,
+  purge des notifications lues)
+- `mailpit` → capture des emails en développement : http://localhost:8025
 
 ## Vérifier que tout fonctionne
 
@@ -589,12 +591,63 @@ Le backoffice est servi par Django, pas par le site : `/admin` ouvert sur le sit
 - Limite connue : unfold ne fournit pas de traduction française ; quelques libellés
   de l'interface restent en anglais (« Type to search », « Choose file to upload »).
 
+## Notifications (Phase 20)
+
+- **Emails HTML + texte** : chaque email est décrit par un objet `Email` (titre,
+  paragraphes, récapitulatif, bouton) construit par l'app métier
+  (`bookings/emails.py`, `inquiries/emails.py`, `accounts/emails.py`), puis mis en page
+  par `templates/emails/message.{html,txt}` : emblème et coordonnées de l'agence (tirées
+  des paramètres du site), bouton accessible avec son lien en clair, compatible mobile.
+- **Langue du client** : les emails partent dans la langue du site au moment de la
+  demande (`language` de la réservation, du devis, du message ; langue préférée du
+  compte), avec des liens `/en/…`, des dates et des montants au format de la langue.
+  Le site transmet désormais la langue **de la page** (et non celle du navigateur).
+- **Client** : demande de devis reçue, proposition (montant, validité, lien de
+  validation), proposition acceptée ; réservation reçue, confirmée, refusée (motif,
+  lien vers le devis), annulée (par le client ou par l'agence), **expirée** (nouveau) ;
+  **accusé de réception du formulaire de contact** (nouveau) ; vérification de
+  l'adresse et mot de passe oublié. Répondre écrit à l'adresse publique de l'agence.
+- **Agence** : email HTML à `AGENCY_NOTIFICATION_EMAIL` avec récapitulatif complet et
+  bouton vers la fiche de l'admin ; « Répondre » écrit directement au client. Nouveaux
+  événements : **devis refusé par le client** (avec le motif) et **réservation
+  expirée**. Les notifications du tableau de bord suivent les mêmes événements.
+- **Canaux** : `STAFF_NOTIFICATION_CHANNELS` liste les canaux actifs (tableau de bord et
+  email par défaut). `WhatsAppChannel` et `SmsChannel` sont prêts : ils écrivent aux
+  membres de l'équipe concernés qui ont renseigné leur numéro, via le prestataire de
+  `SHORT_MESSAGE_BACKEND` (par défaut, simple journalisation ; un prestataire réel —
+  WhatsApp Cloud API, Twilio, Orange SMS — n'est qu'une classe `send(channel, to, text)`).
+- **Purge** : les notifications lues depuis plus de 90 jours sont supprimées chaque nuit.
+- **Développement** : **Mailpit** capture tous les emails (http://localhost:8025) tant
+  que `EMAIL_HOST` est vide. Aperçu de tous les emails, en français et en anglais,
+  sans rien envoyer :
+
+  ```bash
+  docker compose exec backend python manage.py preview_emails --out /tmp/emails
+  docker compose cp backend:/tmp/emails ./email-previews
+  ```
+
+## Ce qui a été validé (Phase 20)
+
+- Backend : `manage.py check`, aucune migration manquante, 218 tests pytest (15 nouveaux) :
+  rendu HTML et texte, échappement du contenu saisi par le client, langue (textes,
+  liens, dates, montants), pied de page de l'agence, envoi multipart après validation de
+  la transaction (rien en cas d'échec), Reply-To, destinataires par rôle, canaux
+  WhatsApp / SMS, purge, expiration, refus de devis, accusé de réception, commande
+  d'aperçu.
+- Parcours réel : un message de contact envoyé en anglais produit l'accusé de réception
+  en anglais et l'alerte à l'agence, reçus dans Mailpit.
+- Frontend : TypeScript, ESLint, 42 tests Playwright (contact en français et en anglais :
+  la langue de la page est transmise, redirection /admin, réservations).
+- Rendu des emails vérifié dans Chromium (ordinateur et mobile).
+
 ## Pages encore manquantes
 
 Connexion et inscription (liées depuis l'en-tête), prévues avec les comptes clients.
-L'espace client (« mes réservations ») viendra avec elles ; l'API le permet déjà.
+L'espace client (« mes réservations ») viendra avec elles ; l'API le permet déjà. Les
+liens des emails de compte (`/verifier-email`, `/reset-password`) mèneront à ces pages.
 
 ## Prochaine étape
 
-**Phase 20 : Notifications** — gabarits d'emails HTML (client et agence), notifications
-du tableau de bord, préparation des canaux WhatsApp / SMS.
+**Phase 21 : SEO** — métadonnées, hreflang et données structurées de toutes les pages,
+sitemap et robots, régénération des pages à la demande quand un contenu change dans
+l'admin (webhook Django → `revalidateTag`).
