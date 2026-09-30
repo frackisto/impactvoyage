@@ -15,9 +15,11 @@ PASSWORD_HASHERS = [
 ]
 
 # Fichiers uploadés gardés en mémoire pendant les tests (rien n'est écrit sur disque).
+# Fichiers statiques sans manifeste : les gabarits de l'admin fonctionnent sans avoir
+# lancé collectstatic (intégration continue, machine neuve).
 STORAGES = {
-    **STORAGES,  # noqa: F405
     "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
 # Tests indépendants de Redis (cache et compteurs du rate limiting).
