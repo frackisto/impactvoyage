@@ -4,7 +4,7 @@ Le tableau de bord (Phase 19) est dans l'admin Django.
 """
 from django.urls import include, path
 
-from apps.core.views import CurrencyView, SiteSettingsView, SitemapView, health
+from apps.core.views import CurrencyView, SitemapView, SiteSettingsView, health
 
 APPS_WITH_ROUTES = [
     "accounts", "core", "destinations", "tours", "accommodations", "vehicles", "activities", "events",

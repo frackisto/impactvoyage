@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 21
+# Plateforme Web Agence de Voyage — Phase 22
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -92,10 +92,44 @@ DATABASE_HOST=localhost pytest
 
 > Dans le conteneur `backend`, `DJANGO_SETTINGS_MODULE` vaut `config.settings.dev` et
 > prime sur `pytest.ini` : forcer les réglages de test, sinon les tests d'emails échouent.
+> L'image ne contient pas les outils de test : les installer d'abord.
 >
 > ```bash
-> docker compose exec -e DJANGO_SETTINGS_MODULE=config.settings.test backend pytest
+> docker compose exec -e DJANGO_SETTINGS_MODULE=config.settings.test backend \
+>   sh -c "pip install -q -r requirements-dev.txt && pytest"
 > ```
+
+Qualité du backend (mêmes commandes que l'intégration continue) :
+
+```bash
+ruff check .                      # lint (configuration : backend/pyproject.toml)
+mypy apps config                  # types, vérification légère
+pytest --cov --cov-report=term    # tests + couverture (≥ 90 % au global)
+coverage report --fail-under=80 \
+  --include="apps/*/services.py,apps/core/api.py,apps/accounts/roles.py,apps/accounts/permissions_sync.py"
+```
+
+- **Données de test** : fabriques factory_boy dans `apps/core/tests/factories.py`
+  (`TourFactory`, `BookingItemFactory`, `UserFactory(role="COMMERCIAL")`…) ; un test ne
+  précise que ce qui compte pour lui, les dates sont relatives à aujourd'hui.
+- **Frontend** : `npm run lint`, `npm run typecheck` (après `npx next typegen`),
+  `npm test` (Vitest : utilitaires et composants — formulaires, filtres, pagination),
+  `npm run build` puis `npm run test:e2e` (Playwright, backend démarré avec la
+  démonstration).
+
+### Intégration continue
+
+`.github/workflows/ci.yml` s'exécute à chaque push sur `main` et `developpement` et à
+chaque pull request :
+
+| Job | Contenu |
+|---|---|
+| backend | ruff, mypy, migrations à jour, schéma OpenAPI, pytest, seuils de couverture |
+| frontend | ESLint, TypeScript, Vitest, build de production |
+| e2e | Django (migrations, contenu de l'agence, démonstration) puis Playwright sur le build |
+
+En cas d'échec des tests de bout en bout, les traces Playwright et le journal de Django
+sont joints à l'exécution (artefact `playwright`, 7 jours).
 
 ## Structure du backend
 
@@ -693,8 +727,38 @@ liens des emails de compte (`/verifier-email`, `/reset-password`) mèneront à c
   les nouveaux événements de notification (Phase 20) ; Vitest ne pouvait pas charger un
   module qui importe la navigation de next-intl.
 
+## Tests et qualité (Phase 22)
+
+- **factory_boy** remplace les constructeurs faits main : 17 fabriques communes
+  (`apps/core/tests/factories.py`), 177 appels migrés dans 30 fichiers de tests. Les
+  dates par défaut sont relatives à aujourd'hui (un départ au 10/01/2027 figé aurait fait
+  échouer les tests de réservation dès 2027).
+- **Couverture mesurée** (pytest-cov, configuration dans `backend/pyproject.toml`) :
+  97 % au global, 98 % sur les services et les permissions (objectif : 80 %).
+- **Nouveaux tests** : règles de tarification des réservations (chaque demande
+  impossible refusée avec son code), admin des offres (messages de validation,
+  activation groupée), blog (publication immédiate ou programmée, temps de lecture,
+  actions groupées) ; côté frontend, composants pagination, panneau de filtres et
+  formulaire de contact (contrôles, erreurs de Django, limite de débit).
+- **Lint et types** : ruff (erreurs, imports, bugs probables, modernisation, Django) et
+  mypy « léger » sans erreur ; quelques annotations ajoutées aux classes de base.
+- **Intégration continue** : voir « Lancer les tests ».
+
+## Ce qui a été validé (Phase 22)
+
+- Backend : ruff et mypy sans erreur, 238 tests pytest, couverture 97 % (98 % sur les
+  services et les permissions), migrations à jour, schéma OpenAPI valide.
+- Frontend : ESLint, TypeScript, 48 tests Vitest, build de production.
+- Corrigé au passage : les actions groupées du blog réimplémentaient la publication au
+  lieu d'utiliser `blog.services` (jamais appelé) ; Testing Library ne nettoyait pas le
+  DOM entre deux tests (rendus accumulés).
+- Limites connues : les parcours inscription et connexion (§ 14) seront testés avec les
+  pages de compte, qui n'existent pas encore. Le compteur de vues des fiches
+  (`view_count`) n'est jamais incrémenté : la colonne « Vues » du tableau de bord reste
+  à 0 (prévu par l'architecture § 7.2, à faire avec les performances).
+
 ## Prochaine étape
 
-**Phase 22 : Tests** — factory_boy à la place des constructeurs de test, couverture
-(≥ 80 % sur les services et les permissions), intégration continue (lint, types, tests,
-build).
+**Phase 23 : Sécurité** — revue OWASP (§ 11) : en-têtes de sécurité et CSP,
+`check --deploy`, nettoyage du contenu riche, anti-spam (Turnstile), admin sur une URL
+non standard avec double authentification, contrôles des uploads, données personnelles.

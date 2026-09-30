@@ -1,7 +1,7 @@
 """Champs traduits (FR/EN) — django-modeltranslation, architecture § 12."""
 from modeltranslation.translator import TranslationOptions, register
 
-from .models import Tour, TourImage, TourDay
+from .models import Tour, TourDay, TourImage
 
 
 @register(Tour)

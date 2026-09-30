@@ -6,7 +6,7 @@ from django.utils import timezone
 from apps.accounts.serializers import RegisterSerializer
 from apps.bookings.serializers import BookingRequestSerializer
 from apps.bookings.services import ItemRequest
-from apps.core.tests.helpers import make_destination, make_tour, make_user
+from apps.core.tests.factories import DestinationFactory, TourFactory, UserFactory
 from apps.inquiries.serializers import QuoteRequestCreateSerializer
 from apps.reviews.serializers import ReviewCreateSerializer
 
@@ -48,7 +48,7 @@ class QuoteRequestCreateTests(TestCase):
                 self.assertIn(field, serializer.errors)
 
     def test_destination_must_be_published(self):
-        hidden = make_destination(is_published=False)
+        hidden = DestinationFactory(is_published=False)
         serializer = QuoteRequestCreateSerializer(
             data={**QUOTE, "destination_text": "", "destination": hidden.slug}
         )
@@ -92,7 +92,7 @@ class ReviewCreateTests(TestCase):
               "comment": "Un circuit inoubliable !"}
 
     def test_target_is_resolved_from_type_and_slug(self):
-        tour = make_tour()
+        tour = TourFactory()
         serializer = ReviewCreateSerializer(
             data={**self.REVIEW, "target_type": "tour", "target_slug": tour.slug}
         )
@@ -100,7 +100,7 @@ class ReviewCreateTests(TestCase):
         self.assertEqual(serializer.validated_data["tour"], tour)
 
     def test_unpublished_or_incomplete_target_is_refused(self):
-        hidden = make_tour(is_published=False)
+        hidden = TourFactory(is_published=False)
         for extra in ({"target_type": "tour", "target_slug": hidden.slug},
                       {"target_type": "tour"}):
             with self.subTest(extra=extra):
@@ -118,7 +118,7 @@ class RegisterTests(TestCase):
         self.assertNotIn("consent", serializer.validated_data)
 
     def test_duplicate_email_weak_password_and_consent(self):
-        make_user(email="nouveau@example.com")
+        UserFactory(email="nouveau@example.com")
         errors = RegisterSerializer(data={**self.DATA, "password": "123456",
                                           "consent": False})
         self.assertFalse(errors.is_valid())

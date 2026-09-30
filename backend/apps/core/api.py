@@ -3,6 +3,9 @@ Socle de l'API REST (architecture § 5.1) : format d'erreur unique,
 permissions de base, limitation de débit des formulaires et ViewSets de lecture
 branchés sur les selectors.
 """
+from collections.abc import Callable
+from typing import Any
+
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
@@ -79,8 +82,8 @@ class WriteThrottleMixin:
     d'envoi d'avis.
     """
 
-    write_throttle_scope = None
-    throttled_actions = ("create",)
+    write_throttle_scope: str | None = None
+    throttled_actions: tuple[str, ...] = ("create",)
 
     def get_throttles(self):
         throttles = super().get_throttles()
@@ -100,10 +103,10 @@ class SelectorReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
 
     permission_classes = [permissions.AllowAny]
     lookup_field = "slug"
-    list_selector = None
-    detail_selector = None
-    filter_params_class = None
-    detail_serializer_class = None
+    list_selector: Callable[..., Any] | None = None
+    detail_selector: Callable[..., Any] | None = None
+    filter_params_class: type | None = None
+    detail_serializer_class: type | None = None
 
     def get_filter_params(self):
         if self.filter_params_class is None:

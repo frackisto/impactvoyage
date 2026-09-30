@@ -1,0 +1,168 @@
+# Intégration continue (Phase 22, architecture § 14) : lint, types, tests et build
+# à chaque push et pull request. Trois jobs indépendants :
+#   backend  — ruff, mypy, migrations, schéma OpenAPI, pytest + couverture ;
+#   frontend — ESLint, TypeScript, Vitest, build de production ;
+#   e2e      — Django avec les données de démonstration + Playwright.
+name: CI
+
+on:
+  push:
+    branches: [main, developpement]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  NODE_VERSION: "22"
+
+jobs:
+  backend:
+    name: Backend (lint, types, tests)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: voyage_db
+          POSTGRES_USER: voyage_user
+          POSTGRES_PASSWORD: ci-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U voyage_user" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DATABASE_NAME: voyage_db
+      DATABASE_USER: voyage_user
+      DATABASE_PASSWORD: ci-password
+      DATABASE_HOST: localhost
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Types (mypy)
+        run: mypy apps config
+      - name: Migrations à jour
+        run: python manage.py makemigrations --check --dry-run
+      - name: Schéma OpenAPI valide
+        run: python manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yml
+      - name: Tests et couverture globale (≥ 90 %)
+        run: pytest --cov --cov-report=term --cov-fail-under=90
+      - name: Couverture des services et des permissions (≥ 80 %)
+        run: >-
+          coverage report --fail-under=80
+          --include="apps/*/services.py,apps/core/api.py,apps/accounts/roles.py,apps/accounts/permissions_sync.py"
+
+  frontend:
+    name: Frontend (lint, types, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      API_URL: http://localhost:8000/api/v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lint (ESLint)
+        run: npm run lint
+      - name: Types (TypeScript)
+        run: npx next typegen && npm run typecheck
+      - name: Tests unitaires (Vitest)
+        run: npm test
+      - name: Build de production
+        run: npm run build
+
+  e2e:
+    name: Parcours de bout en bout (Playwright)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: voyage_db
+          POSTGRES_USER: voyage_user
+          POSTGRES_PASSWORD: ci-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U voyage_user" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      # Même secret des deux côtés : Django applique la limite de débit par visiteur.
+      FRONTEND_SHARED_SECRET: ci-shared-secret
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      API_URL: http://localhost:8000/api/v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Backend avec les données de démonstration
+        working-directory: backend
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.dev
+          DATABASE_NAME: voyage_db
+          DATABASE_USER: voyage_user
+          DATABASE_PASSWORD: ci-password
+          DATABASE_HOST: localhost
+          SECRET_KEY: ci-secret-key-not-for-production-0123456789abcdefghijklmnop
+        run: |
+          pip install -r requirements.txt
+          python manage.py migrate --noinput
+          python manage.py load_agency_content
+          python manage.py seed_demo
+          nohup python manage.py runserver 0.0.0.0:8000 --noreload > ../django.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/v1/health/ && break; sleep 2; done
+
+      - name: Frontend (build de production)
+        working-directory: frontend
+        run: |
+          npm ci
+          echo "FRONTEND_SHARED_SECRET=$FRONTEND_SHARED_SECRET" > .env.local
+          npm run build
+          npx playwright install --with-deps chromium
+
+      - name: Playwright
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Rapport en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright
+          path: |
+            frontend/test-results/
+            django.log
+          retention-days: 7

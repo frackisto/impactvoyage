@@ -81,7 +81,8 @@ class SeedDemoTests(TestCase):
 
         # Offres en cours (dont une sur le week-end à Mondoukou), transports, albums, articles.
         self.assertEqual(Offer.objects.currently_active().count(), 3)
-        self.assertEqual(Offer.objects.get(slug="week-end-mondoukou-prix-doux").tour.slug, "week-end-balneaire-mondoukou")
+        self.assertEqual(Offer.objects.get(slug="week-end-mondoukou-prix-doux").tour.slug,
+                         "week-end-balneaire-mondoukou")
         self.assertEqual(TransportService.objects.filter(is_published=True).count(), 4)
         self.assertEqual(MediaAlbum.objects.get(slug="dubai-en-images").items.count(), 4)
         self.assertEqual(BlogPost.objects.published().count(), 3)

@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.accounts.roles import ROLE_RESOURCES, group_name, permissions_for_role
-from apps.core.tests.helpers import make_departure, make_user
+from apps.core.tests.factories import TourDepartureFactory, UserFactory
 from apps.core.tests.test_api import API, ApiTestCase
 
 
@@ -25,7 +25,7 @@ class RoleMatrixTests(TestCase):
 
     def test_groups_are_created_by_migrate_and_follow_the_role(self):
         self.assertEqual(Group.objects.filter(name__startswith="Rôle").count(), len(User.Role))
-        user = make_user("AGENT")
+        user = UserFactory(role="AGENT")
         self.assertEqual([g.name for g in user.groups.all()], [group_name("AGENT")])
         self.assertTrue(user.has_perm("tours.change_tour"))
         self.assertFalse(user.has_perm("bookings.change_booking"))
@@ -38,7 +38,7 @@ class RoleMatrixTests(TestCase):
         self.assertFalse(user.has_perm("tours.change_tour"))
 
     def test_super_admin_is_derived_from_the_role(self):
-        user = make_user("SUPER_ADMIN")
+        user = UserFactory(role="SUPER_ADMIN")
         self.assertTrue(user.is_superuser and user.has_perm("payments.delete_payment"))
         user.role = User.Role.ADMIN
         user.save()
@@ -48,7 +48,7 @@ class RoleMatrixTests(TestCase):
         self.assertTrue(user.has_perm("accounts.change_user"))
 
     def test_client_has_no_permission(self):
-        self.assertEqual(make_user("CLIENT").get_all_permissions(), set())
+        self.assertEqual(UserFactory(role="CLIENT").get_all_permissions(), set())
 
     def test_groups_are_synced_after_the_last_app_with_models_is_migrated(self):
         """Une app sans modèles (dashboard) en fin de liste ne doit pas empêcher la synchronisation."""
@@ -64,7 +64,7 @@ class RoleMatrixTests(TestCase):
         self.assertTrue(group.permissions.filter(codename="change_tour").exists())
 
     def test_sync_roles_command_is_idempotent(self):
-        make_user("GESTIONNAIRE")
+        UserFactory(role="GESTIONNAIRE")
         out = StringIO()
         call_command("sync_roles", stdout=out)
         call_command("sync_roles", stdout=out)
@@ -77,7 +77,7 @@ class RolePermissionApiTests(ApiTestCase):
 
     def setUp(self):
         super().setUp()
-        departure = make_departure(start_date=timezone.localdate() + timedelta(days=30),
+        departure = TourDepartureFactory(start_date=timezone.localdate() + timedelta(days=30),
                                    end_date=timezone.localdate() + timedelta(days=32))
         self.reference = self.client.post(f"{API}/bookings/", {
             "contact_name": "Awa", "contact_email": "awa@example.com",
@@ -86,7 +86,7 @@ class RolePermissionApiTests(ApiTestCase):
         }, format="json").data["reference"]
 
     def as_role(self, role):
-        self.client.force_authenticate(make_user(role))
+        self.client.force_authenticate(UserFactory(role=role))
 
     def test_booking_rights_by_role(self):
         self.as_role("AGENT")  # contenu uniquement : ne voit que ses propres réservations

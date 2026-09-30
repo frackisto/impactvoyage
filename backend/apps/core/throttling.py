@@ -49,7 +49,8 @@ class FrontendAwareThrottleMixin:
 
     def allow_request(self, request, view):
         # Lectures seulement : une écriture (connexion, devis...) reste toujours limitée.
-        if request.method in SAFE_METHODS and is_trusted_frontend(request) and not forwarded_client_ip(request):
+        if (request.method in SAFE_METHODS and is_trusted_frontend(request)
+                and not forwarded_client_ip(request)):
             return True
         return super().allow_request(request, view)
 

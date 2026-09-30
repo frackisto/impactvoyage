@@ -153,7 +153,10 @@ class Command(BaseCommand):
     def offers(self):
         """Offres en cours (dates relatives au jour du chargement)."""
         today = timezone.localdate()
-        targets = {"tour": Tour, "hotel": Hotel, "residence": Residence, "vehicle": Vehicle, "activity": Activity}
+        targets = {
+            "tour": Tour, "hotel": Hotel, "residence": Residence, "vehicle": Vehicle,
+            "activity": Activity,
+        }
         for item in demo.OFFERS:
             target = {}
             if item["target"]:
@@ -272,7 +275,8 @@ class Command(BaseCommand):
         categories = {}
         for order, (slug, fr, en) in enumerate(demo.ACTIVITY_CATEGORIES):
             categories[slug], _ = Category.objects.update_or_create(
-                kind=Category.Kind.ACTIVITY, slug=slug, defaults={"name_fr": fr, "name_en": en, "order": order},
+                kind=Category.Kind.ACTIVITY, slug=slug,
+                defaults={"name_fr": fr, "name_en": en, "order": order},
             )
         for item in demo.ACTIVITIES:
             activity, _ = Activity.objects.update_or_create(

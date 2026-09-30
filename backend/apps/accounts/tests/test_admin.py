@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.core.tests.admin_helpers import AdminTestCase, change_form_data
-from apps.core.tests.helpers import make_user
+from apps.core.tests.factories import UserFactory
 
 
 class UserAdminTests(AdminTestCase):
@@ -34,7 +34,7 @@ class UserAdminTests(AdminTestCase):
         self.assertIn("role", response.context["adminform"].form.errors)
         self.assertFalse(User.objects.filter(email="pirate@example.com").exists())
 
-        colleague = make_user("AGENT")
+        colleague = UserFactory(role="AGENT")
         url = reverse("admin:accounts_user_change", args=[colleague.pk])
         self.client.post(url, change_form_data(self.client.get(url), role="SUPER_ADMIN", _save=""))
         colleague.refresh_from_db()
@@ -42,7 +42,7 @@ class UserAdminTests(AdminTestCase):
 
     def test_admin_cannot_modify_a_super_admin_account(self):
         self.login("ADMIN")
-        boss = make_user("SUPER_ADMIN")
+        boss = UserFactory(role="SUPER_ADMIN")
         response = self.client.get(reverse("admin:accounts_user_change", args=[boss.pk]))
         self.assertFalse(response.context["has_change_permission"])
         password_url = reverse("admin:auth_user_password_change", args=[boss.pk])
@@ -50,7 +50,7 @@ class UserAdminTests(AdminTestCase):
 
     def test_super_admin_can_promote(self):
         self.login("SUPER_ADMIN")
-        colleague = make_user("ADMIN")
+        colleague = UserFactory(role="ADMIN")
         url = reverse("admin:accounts_user_change", args=[colleague.pk])
         self.client.post(url, change_form_data(self.client.get(url), role="SUPER_ADMIN", _save=""))
         colleague.refresh_from_db()

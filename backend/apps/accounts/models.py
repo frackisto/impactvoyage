@@ -64,7 +64,7 @@ class User(AbstractUser):
     is_verified = models.BooleanField("email vérifié", default=False)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS: list[str] = []
 
     objects = UserManager()
 

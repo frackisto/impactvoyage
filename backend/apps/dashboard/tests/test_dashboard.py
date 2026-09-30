@@ -11,7 +11,12 @@ from django.utils import timezone
 
 from apps.bookings.models import Booking, BookingItem
 from apps.core.tests.admin_helpers import AdminTestCase
-from apps.core.tests.helpers import make_booking, make_departure, make_tour, make_user
+from apps.core.tests.factories import (
+    BookingFactory,
+    TourDepartureFactory,
+    TourFactory,
+    UserFactory,
+)
 from apps.dashboard import navigation, selectors, umami
 from apps.inquiries.models import ContactMessage, QuoteRequest
 
@@ -20,7 +25,7 @@ UMAMI = {"UMAMI_API_URL": "https://stats.example.com", "UMAMI_WEBSITE_ID": "site
 
 
 def book_departure(departure, status=Booking.Status.CONFIRMED, **kwargs):
-    booking = make_booking(status=status, **kwargs)
+    booking = BookingFactory(status=status, **kwargs)
     BookingItem.objects.create(
         booking=booking, tour_departure=departure, label="Circuit", unit_price=1, quantity=1,
         line_total=1, start_date=departure.start_date,
@@ -38,10 +43,10 @@ class SelectorTests(TestCase):
                                   date(2026, 2, 1)])
 
     def test_monthly_counts_include_empty_months(self):
-        booking = make_booking()
+        booking = BookingFactory()
         two_months_ago = timezone.now() - timedelta(days=62)
         Booking.objects.filter(pk=booking.pk).update(created_at=two_months_ago)
-        make_booking()
+        BookingFactory()
         starts = selectors.month_starts(timezone.localdate(), months=3)
         counts = selectors.monthly_counts(Booking.objects.all(), starts)
         self.assertEqual(counts[-1], 1)
@@ -49,9 +54,9 @@ class SelectorTests(TestCase):
         self.assertEqual(len(counts), 3)
 
     def test_popularity_counts_live_bookings_then_views(self):
-        viewed = make_tour(view_count=500)
-        booked = make_tour(view_count=3)
-        departure = make_departure(tour=booked)
+        viewed = TourFactory(view_count=500)
+        booked = TourFactory(view_count=3)
+        departure = TourDepartureFactory(tour=booked)
         book_departure(departure)
         book_departure(departure, status=Booking.Status.CANCELLED)  # ne compte pas
         tours = selectors.popular_tours()
@@ -63,7 +68,7 @@ class SelectorTests(TestCase):
 
     def test_stats_are_cached(self):
         first = selectors.dashboard_stats()
-        make_booking(status=Booking.Status.REQUESTED)
+        BookingFactory(status=Booking.Status.REQUESTED)
         self.assertEqual(selectors.dashboard_stats(), first)
         cache.clear()
         self.assertEqual(selectors.dashboard_stats()["indicators"]["bookings_to_process"], 1)
@@ -72,7 +77,7 @@ class SelectorTests(TestCase):
 class DashboardPageTests(AdminTestCase):
     def setUp(self):
         cache.clear()
-        make_booking(status=Booking.Status.REQUESTED, contact_name="Awa Koné")
+        BookingFactory(status=Booking.Status.REQUESTED, contact_name="Awa Koné")
         QuoteRequest.objects.create(first_name="Koffi", last_name="Yao", email="k@example.com",
                                     phone="0102030405", destination_text="Zanzibar")
         ContactMessage.objects.create(name="Ama", email="ama@example.com", subject="Visa",
@@ -112,7 +117,7 @@ class DashboardPageTests(AdminTestCase):
 class NavigationTests(TestCase):
     def sidebar(self, role):
         request = RequestFactory().get("/admin/")
-        request.user = make_user(role)
+        request.user = UserFactory(role=role)
         return {group["title"]: [item["title"] for item in group["items"]]
                 for group in navigation.sidebar_navigation(request)}
 
@@ -132,9 +137,9 @@ class NavigationTests(TestCase):
 
     def test_badges_count_pending_work(self):
         request = RequestFactory().get("/admin/")
-        request.user = make_user("COMMERCIAL")
+        request.user = UserFactory(role="COMMERCIAL")
         self.assertIsNone(navigation.bookings_to_process(request))
-        make_booking(status=Booking.Status.REQUESTED)
+        BookingFactory(status=Booking.Status.REQUESTED)
         self.assertEqual(navigation.bookings_to_process(request), 1)
 
 

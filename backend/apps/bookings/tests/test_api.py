@@ -6,7 +6,12 @@ from django.core import mail
 from django.utils import timezone
 
 from apps.bookings.models import Booking
-from apps.core.tests.helpers import make_departure, make_tour, make_user, make_vehicle
+from apps.core.tests.factories import (
+    TourDepartureFactory,
+    TourFactory,
+    UserFactory,
+    VehicleFactory,
+)
 from apps.core.tests.test_api import API, ApiTestCase
 from apps.inquiries.models import QuoteRequest
 from apps.notifications.models import Notification
@@ -24,9 +29,9 @@ CONTACT = {"contact_name": "Awa Koné", "contact_email": "awa@example.com",
 class BookingApiTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.staff = make_user("COMMERCIAL")
-        self.client_user = make_user("CLIENT")
-        self.departure = make_departure(start_date=in_days(30), end_date=in_days(33), capacity=4)
+        self.staff = UserFactory(role="COMMERCIAL")
+        self.client_user = UserFactory(role="CLIENT")
+        self.departure = TourDepartureFactory(start_date=in_days(30), end_date=in_days(33), capacity=4)
 
     def _request(self, travelers=2, **extra):
         return self.client.post(f"{API}/bookings/", {**CONTACT, "items": [
@@ -82,7 +87,7 @@ class BookingApiTests(ApiTestCase):
         self.assertEqual(cancelled.data["status"], "CANCELLED")
 
     def test_prices_sent_by_the_client_are_ignored(self):
-        vehicle = make_vehicle(base_price=Decimal("60000"))
+        vehicle = VehicleFactory(base_price=Decimal("60000"))
         response = self.client.post(f"{API}/bookings/", {**CONTACT, "items": [
             {"kind": "vehicle", "object_id": vehicle.pk, "start_date": str(in_days(2)),
              "end_date": str(in_days(4)), "unit_price": "1", "line_total": "1"}
@@ -120,11 +125,15 @@ class BookingApiTests(ApiTestCase):
             response = self.client.get(f"{API}/bookings/{reference}/", {"token": bad})
             self.assertEqual((response.status_code, response.data["error"]["code"]), (404, "invalid_token"))
         self.assertEqual(
-            self.client.post(f"{API}/bookings/{reference}/cancel/", {"token": other["access_token"]}).status_code,
+            self.client.post(
+                f"{API}/bookings/{reference}/cancel/", {"token": other["access_token"]}
+            ).status_code,
             404,
         )
 
-        cancelled = self.client.post(f"{API}/bookings/{reference}/cancel/", {"token": token, "reason": "Imprévu"})
+        cancelled = self.client.post(
+            f"{API}/bookings/{reference}/cancel/", {"token": token, "reason": "Imprévu"}
+        )
         self.assertEqual(cancelled.status_code, 200)
         self.assertEqual(cancelled.data["status"], "CANCELLED")
         self.assertFalse(cancelled.data["can_cancel"])
@@ -135,7 +144,9 @@ class BookingApiTests(ApiTestCase):
         self.client.force_authenticate(self.staff)
         self.client.post(f"{API}/bookings/{created['reference']}/confirm/")
         self.client.force_authenticate(None)
-        tracked = self.client.get(f"{API}/bookings/{created['reference']}/", {"token": created["access_token"]})
+        tracked = self.client.get(
+            f"{API}/bookings/{created['reference']}/", {"token": created["access_token"]}
+        )
         self.assertEqual(tracked.data["status"], "CONFIRMED")
         self.assertFalse(tracked.data["can_cancel"])
         response = self.client.post(
@@ -152,7 +163,7 @@ class QuoteApiTests(ApiTestCase):
              "phone": "+2250700000000", "destination_text": "Zanzibar", "consent": True}
 
     def test_full_quote_flow_over_the_api(self):
-        commercial = make_user("COMMERCIAL")
+        commercial = UserFactory(role="COMMERCIAL")
         created = self.client.post(f"{API}/quotes/", self.QUOTE, format="json")
         self.assertEqual(created.status_code, 201)
         reference = created.data["reference"]
@@ -192,7 +203,7 @@ class QuoteApiTests(ApiTestCase):
 
 class ReviewApiTests(ApiTestCase):
     def test_submit_then_only_approved_reviews_are_listed(self):
-        tour = make_tour()
+        tour = TourFactory()
         response = self.client.post(f"{API}/reviews/", {
             "author_name": "Fatou", "author_email": "f@example.com", "rating": 5,
             "comment": "Un circuit inoubliable !", "target_type": "tour",
@@ -209,7 +220,7 @@ class ReviewApiTests(ApiTestCase):
 
 class NotificationApiTests(ApiTestCase):
     def test_staff_reads_own_notifications(self):
-        admin = make_user("ADMIN")
+        admin = UserFactory(role="ADMIN")
         self.client.post(f"{API}/contact/", {"name": "Yao", "email": "y@example.com",
                                             "subject": "Info", "message": "Bonjour à vous !"})
         self.assertEqual(self.client.get(f"{API}/notifications/").status_code, 401)
@@ -219,5 +230,5 @@ class NotificationApiTests(ApiTestCase):
         self.client.post(f"{API}/notifications/{notification['id']}/read/")
         self.assertEqual(self.client.get(f"{API}/notifications/unread-count/").data["count"], 0)
 
-        self.client.force_authenticate(make_user("CLIENT"))
+        self.client.force_authenticate(UserFactory(role="CLIENT"))
         self.assertEqual(self.client.get(f"{API}/notifications/").status_code, 403)

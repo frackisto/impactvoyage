@@ -7,6 +7,7 @@ Chaque mot de la requête doit ressembler à un mot du document de l'objet
 (titre, accroche, destination... dans toutes les langues) ; le score favorise
 les correspondances dans le titre.
 """
+import builtins
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -45,7 +46,7 @@ class SearchTarget:
     """Type de contenu cherchable : champs du document, titre, prix et unité."""
 
     type: str
-    model: type
+    model: builtins.type  # « type » désigne ici le champ ci-dessus
     fields: tuple
     title_field: str
     price_field: str | None = None
@@ -70,7 +71,8 @@ TARGETS = [
                  "base_price", "person"),
     SearchTarget("hotel", Hotel, ("name", "short_description", "destination__name", "address"), "name",
                  "price_from", "night"),
-    SearchTarget("residence", Residence, ("name", "short_description", "destination__name", "address"), "name",
+    SearchTarget("residence", Residence,
+                 ("name", "short_description", "destination__name", "address"), "name",
                  "base_price", "night"),
     SearchTarget("vehicle", Vehicle, ("brand", "model", "category"), "model", "base_price", "day",
                  title_paths=("brand", "model"),

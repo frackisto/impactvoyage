@@ -12,7 +12,12 @@ from apps.core.exceptions import BusinessError
 from apps.core.formatting import format_amount
 from apps.core.models import ExchangeRate
 from apps.core.services import convert_from_xof, get_rates, update_exchange_rates
-from apps.core.tests.helpers import make_departure, make_room, make_tour, make_vehicle
+from apps.core.tests.factories import (
+    RoomFactory,
+    TourDepartureFactory,
+    TourFactory,
+    VehicleFactory,
+)
 from apps.tours.selectors import tour_list
 from apps.vehicles.selectors import vehicle_list
 
@@ -49,16 +54,16 @@ def in_days(n):
 
 class CatalogSelectorTests(TestCase):
     def test_tour_search_by_travelers_and_dates(self):
-        small = make_departure(start_date=in_days(20), end_date=in_days(22), capacity=2)
-        big = make_departure(start_date=in_days(40), end_date=in_days(42), capacity=20)
-        make_tour()  # sans départ : exclu dès qu'on filtre sur les départs
+        small = TourDepartureFactory(start_date=in_days(20), end_date=in_days(22), capacity=2)
+        big = TourDepartureFactory(start_date=in_days(40), end_date=in_days(42), capacity=20)
+        TourFactory()  # sans départ : exclu dès qu'on filtre sur les départs
 
         self.assertEqual(set(tour_list(travelers=5)), {big.tour})
         self.assertEqual(set(tour_list(departure_to=in_days(30))), {small.tour})
         self.assertEqual(tour_list().get(pk=small.tour.pk).next_departure, small.start_date)
 
     def test_vehicle_search_excludes_booked_vehicles(self):
-        booked, free = make_vehicle(), make_vehicle()
+        booked, free = VehicleFactory(), VehicleFactory()
         booking_services.confirm_booking(booking_services.request_booking(
             contact_name="A", contact_email="a@example.com", contact_phone="1",
             items=[ItemRequest("vehicle", booked.pk, in_days(10), in_days(15))],
@@ -72,8 +77,8 @@ class CatalogSelectorTests(TestCase):
         )
 
     def test_hotel_price_from_is_the_cheapest_active_room(self):
-        room = make_room(base_price=Decimal("60000"))
-        make_room(hotel=room.hotel, base_price=Decimal("40000"), capacity=1)
-        make_room(hotel=room.hotel, base_price=Decimal("10000"), is_active=False)
+        room = RoomFactory(base_price=Decimal("60000"))
+        RoomFactory(hotel=room.hotel, base_price=Decimal("40000"), capacity=1)
+        RoomFactory(hotel=room.hotel, base_price=Decimal("10000"), is_active=False)
         self.assertEqual(hotel_list().get().price_from, Decimal("40000"))
         self.assertEqual(hotel_list(travelers=2).get().price_from, Decimal("60000"))

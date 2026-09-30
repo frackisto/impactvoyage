@@ -15,7 +15,7 @@ Les photos sont dans apps/core/fixtures/agency/.
 from datetime import date
 from decimal import Decimal
 
-SITE_SETTINGS = {
+SITE_SETTINGS: dict[str, object] = {
     "agency_name": "Impact Voyage et Logistique SARLP",
     "slogan_fr": "Voyagez, Rêvez, Explorez.",
     "slogan_en": "Travel, Dream, Explore.",

@@ -1,19 +1,24 @@
 from decimal import Decimal
 
-from apps.core.tests.helpers import make_activity, make_destination, make_tour, make_vehicle
+from apps.core.tests.factories import (
+    ActivityFactory,
+    DestinationFactory,
+    TourFactory,
+    VehicleFactory,
+)
 from apps.core.tests.test_api import API, ApiTestCase
 
 
 class GlobalSearchTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.dubai = make_destination(name_fr="Dubaï", name_en="Dubai", slug="dubai", country_code="AE")
-        self.tour = make_tour(title_fr="Dubaï, la ville des records", destination=self.dubai,
+        self.dubai = DestinationFactory(name_fr="Dubaï", name_en="Dubai", slug="dubai", country_code="AE")
+        self.tour = TourFactory(title_fr="Dubaï, la ville des records", destination=self.dubai,
                               base_price=Decimal("850000"))
-        self.safari = make_activity(title_fr="Safari dans le désert", destination=self.dubai)
-        self.bassam = make_destination(name_fr="Grand-Bassam", slug="grand-bassam")
-        make_tour(title_fr="Escapade balnéaire", destination=self.bassam)
-        make_tour(title_fr="Dubaï secret", destination=self.dubai, is_published=False)
+        self.safari = ActivityFactory(title_fr="Safari dans le désert", destination=self.dubai)
+        self.bassam = DestinationFactory(name_fr="Grand-Bassam", slug="grand-bassam")
+        TourFactory(title_fr="Escapade balnéaire", destination=self.bassam)
+        TourFactory(title_fr="Dubaï secret", destination=self.dubai, is_published=False)
 
     def search(self, **params):
         response = self.client.get(f"{API}/search/", params)
@@ -44,7 +49,7 @@ class GlobalSearchTests(ApiTestCase):
     def test_type_and_destination_filters(self):
         data = self.search(q="dubai", type="tour,activity")
         self.assertEqual(set(data["counts"]), {"tour", "activity"})
-        make_vehicle(brand="Toyota", model="Dubai Edition")
+        VehicleFactory(brand="Toyota", model="Dubai Edition")
         # Un véhicule n'a pas de destination : exclu quand une destination est imposée.
         self.assertNotIn("vehicle", self.search(q="dubai", destination="dubai")["counts"])
         self.assertEqual(self.search(q="escapade", destination="dubai")["count"], 0)

@@ -80,7 +80,8 @@ def create_quote_request(*, activities=(), **data):
         quote,
         Notification.Event.QUOTE_CREATED,
         f"Nouvelle demande de devis {quote.reference}",
-        f"{quote.first_name} {quote.last_name} — {quote.destination_text or quote.destination or 'destination libre'}",
+        f"{quote.first_name} {quote.last_name} — "
+        f"{quote.destination_text or quote.destination or 'destination libre'}",
     )
     send_email(quote.email, emails.quote_received(quote))
     return quote

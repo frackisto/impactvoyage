@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from apps.accommodations.models import Amenity
 from apps.bookings.models import BookingItem
-from apps.core.tests.helpers import make_booking, make_residence, make_room
+from apps.core.tests.factories import BookingFactory, ResidenceFactory, RoomFactory
 from apps.core.tests.test_api import API, ApiTestCase
 
 
@@ -15,7 +15,7 @@ def in_days(n):
 
 def book(start, end, quantity=1, **target):
     return BookingItem.objects.create(
-        booking=make_booking(), label="Test", unit_price=Decimal("1"), line_total=Decimal("1"),
+        booking=BookingFactory(), label="Test", unit_price=Decimal("1"), line_total=Decimal("1"),
         quantity=quantity, start_date=start, end_date=end, is_blocking=True, **target,
     )
 
@@ -23,9 +23,9 @@ def book(start, end, quantity=1, **target):
 class HotelSearchTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.double = make_room(capacity=2, quantity=1, base_price=Decimal("45000"))
+        self.double = RoomFactory(capacity=2, quantity=1, base_price=Decimal("45000"))
         self.hotel = self.double.hotel
-        self.suite = make_room(hotel=self.hotel, name="Suite", capacity=4, quantity=2,
+        self.suite = RoomFactory(hotel=self.hotel, name="Suite", capacity=4, quantity=2,
                                base_price=Decimal("90000"))
         book(in_days(10), in_days(12), room=self.double)
 
@@ -62,7 +62,7 @@ class HotelSearchTests(ApiTestCase):
 
 class ResidenceAvailabilityTests(ApiTestCase):
     def test_availability_and_booked_periods(self):
-        residence = make_residence()
+        residence = ResidenceFactory()
         book(in_days(10), in_days(14), residence=residence)
         url = f"{API}/residences/{residence.slug}/availability/"
         busy = self.client.get(url, {"start": in_days(12), "end": in_days(16)}).json()
@@ -78,9 +78,9 @@ class AmenityApiTests(ApiTestCase):
         Amenity.objects.create(name="Sauna")  # utilisé par aucun hébergement
         hidden = Amenity.objects.create(name="Spa")
         for _ in range(2):
-            make_room().hotel.amenities.add(pool)
-        make_room()  # hôtel publié sans piscine
-        unpublished = make_room().hotel
+            RoomFactory().hotel.amenities.add(pool)
+        RoomFactory()  # hôtel publié sans piscine
+        unpublished = RoomFactory().hotel
         unpublished.is_published = False
         unpublished.save()
         unpublished.amenities.add(hidden)

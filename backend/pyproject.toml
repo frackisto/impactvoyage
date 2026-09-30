@@ -1,0 +1,42 @@
+# Outils de qualité du backend (Phase 22) : lint et couverture des tests.
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+# Erreurs, avertissements, imports (isort), bugs probables, modernisation, simplifications.
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "DJ"]
+ignore = [
+    "DJ001",  # CharField null=True : utilisé volontairement (référence attribuée après l'INSERT)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+
+[tool.ruff.lint.per-file-ignores]
+# Textes de démonstration (prose FR/EN) : une phrase par ligne.
+"apps/core/demo_content.py" = ["E501"]
+
+[tool.mypy]
+# Vérification « légère » (architecture § 14) : le code n'est pas annoté partout et
+# Django n'est pas typé sans extension ; mypy repère surtout les incohérences flagrantes.
+python_version = "3.13"
+ignore_missing_imports = true
+explicit_package_bases = true
+exclude = ["/migrations/"]
+
+[[tool.mypy.overrides]]
+# Options de l'admin : Django accepte des tuples, les annotations de modeltranslation
+# n'annoncent que des listes.
+module = ["apps.*.admin"]
+disable_error_code = ["assignment"]

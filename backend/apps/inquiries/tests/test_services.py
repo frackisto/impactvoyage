@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from apps.bookings.models import Booking
 from apps.core.exceptions import BusinessError, InvalidToken, InvalidTransition
-from apps.core.tests.helpers import make_user
+from apps.core.tests.factories import UserFactory
 from apps.inquiries import services
 from apps.inquiries.models import ContactMessage, QuoteRequest
 from apps.notifications.models import Notification
@@ -26,8 +26,8 @@ QUOTE = {
 
 class QuoteFlowTests(TestCase):
     def setUp(self):
-        self.commercial = make_user("COMMERCIAL")
-        make_user("GESTIONNAIRE")
+        self.commercial = UserFactory(role="COMMERCIAL")
+        UserFactory(role="GESTIONNAIRE")
 
     def _create(self, **extra):
         return services.create_quote_request(**{**QUOTE, "consent": True, **extra})
@@ -128,7 +128,7 @@ class QuoteFlowTests(TestCase):
 
 class ContactTests(TestCase):
     def test_contact_message_notifies_staff(self):
-        admin = make_user("ADMIN")
+        admin = UserFactory(role="ADMIN")
         with self.captureOnCommitCallbacks(execute=True):
             contact = services.create_contact_message(
                 name="Yao Koffi", email="yao@example.com", subject="Visa", message="Bonjour…",

@@ -8,11 +8,11 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from apps.core.models import ExchangeRate, SiteSettings
-from apps.core.tests.helpers import (
-    make_departure,
-    make_destination,
-    make_tour,
-    make_vehicle,
+from apps.core.tests.factories import (
+    DestinationFactory,
+    TourDepartureFactory,
+    TourFactory,
+    VehicleFactory,
 )
 from apps.visas.models import VisaService
 
@@ -32,11 +32,11 @@ class ApiTestCase(APITestCase):
 
 class CatalogApiTests(ApiTestCase):
     def test_tour_list_is_paginated_filtered_searched_and_sorted(self):
-        cheap = make_departure(start_date=in_days(20), end_date=in_days(22), capacity=3)
+        cheap = TourDepartureFactory(start_date=in_days(20), end_date=in_days(22), capacity=3)
         cheap.tour.base_price = Decimal("90000")
         cheap.tour.title_fr = "Plages d'Assinie"
         cheap.tour.save()
-        make_departure(start_date=in_days(40), end_date=in_days(42), capacity=20)
+        TourDepartureFactory(start_date=in_days(40), end_date=in_days(42), capacity=20)
 
         response = self.client.get(f"{API}/tours/")
         self.assertEqual(response.status_code, 200)
@@ -57,29 +57,29 @@ class CatalogApiTests(ApiTestCase):
 
     def test_page_size_is_capped(self):
         for _ in range(3):
-            make_tour()
+            TourFactory()
         response = self.client.get(f"{API}/tours/?page_size=1000")
         self.assertEqual(len(response.data["results"]), 3)
         self.assertEqual(self.client.get(f"{API}/tours/?page_size=2").data["next"] is not None,
                          True)
 
     def test_detail_by_slug_and_unpublished_is_404(self):
-        departure = make_departure(start_date=in_days(20), end_date=in_days(22))
+        departure = TourDepartureFactory(start_date=in_days(20), end_date=in_days(22))
         response = self.client.get(f"{API}/tours/{departure.tour.slug}/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["departures"]), 1)
         departures = self.client.get(f"{API}/tours/{departure.tour.slug}/departures/")
         self.assertEqual(departures.data[0]["seats_left"], 10)
 
-        hidden = make_tour(is_published=False)
+        hidden = TourFactory(is_published=False)
         response = self.client.get(f"{API}/tours/{hidden.slug}/")
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.data["error"]["code"], "not_found")
 
     def test_language_and_currency(self):
-        destination = make_destination(name_fr="Côte d'Ivoire", name_en="Ivory Coast")
+        destination = DestinationFactory(name_fr="Côte d'Ivoire", name_en="Ivory Coast")
         ExchangeRate.objects.create(currency="EUR", rate_from_xof=Decimal("0.0015244902"))
-        make_tour(destination=destination)
+        TourFactory(destination=destination)
 
         en = self.client.get(f"{API}/destinations/{destination.slug}/", HTTP_ACCEPT_LANGUAGE="en")
         self.assertEqual(en.data["name"], "Ivory Coast")
@@ -91,7 +91,7 @@ class CatalogApiTests(ApiTestCase):
         self.assertEqual(tours[0]["price"]["display"], {"amount": "228.67", "currency": "EUR"})
 
     def test_vehicle_availability(self):
-        vehicle = make_vehicle()
+        vehicle = VehicleFactory()
         url = f"{API}/vehicles/{vehicle.slug}/availability/"
         response = self.client.get(url, {"start": in_days(3), "end": in_days(5)})
         self.assertEqual(response.data, {"available": True, "booked_periods": []})

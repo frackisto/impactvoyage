@@ -100,7 +100,7 @@ tours/
 ├── signals.py
 ├── tasks.py             # tâches Celery
 ├── tests/
-│   ├── factories.py     # factory_boy
+│   ├── (fabriques factory_boy communes : apps/core/tests/factories.py)
 │   ├── test_models.py
 │   ├── test_serializers.py
 │   ├── test_services.py
@@ -814,9 +814,9 @@ Mise en œuvre (Phase 19) :
 ## 14. Données de démonstration et tests (CdC § 39, § 40)
 
 - **Seeders** : `python manage.py seed_demo [--reset]`, idempotent. Il crée des destinations africaines et internationales, des circuits avec leurs départs, des hôtels, résidences, véhicules, activités, offres, événements, les 10 services du CdC § 11, des avis et des comptes pour chaque rôle. Les données sont fictives mais cohérentes (prix en FCFA, villes réelles). Il est interdit en production.
-- **Tests backend** : `pytest` + `pytest-django` + `factory_boy`, couvrant modèles, serializers, API, authentification, permissions (matrice rôle × action) et services métier. Les tests de concurrence des réservations passent par `TransactionTestCase` sur PostgreSQL. Objectif de couverture : ≥ 80 % sur `services.py` et `permissions.py`.
+- **Tests backend** : `pytest` + `pytest-django` + `factory_boy` (fabriques communes dans `apps/core/tests/factories.py`, dates relatives à aujourd’hui), couvrant modèles, serializers, API, authentification, permissions (matrice rôle × action), services métier et backoffice. Les tests de concurrence des réservations passent par `TransactionTestCase` sur PostgreSQL. Seuils vérifiés par la CI : ≥ 80 % sur les services et les permissions (`services.py`, `core/api.py`, `accounts/roles.py`, `accounts/permissions_sync.py`), ≥ 90 % au global.
 - **Tests frontend** : Vitest + Testing Library pour les composants critiques (formulaires, filtres, pagination), Playwright pour les parcours E2E (inscription, connexion, recherche, devis, demande de réservation) avec contrôle d'accessibilité axe.
-- CI : lint (ruff, eslint), types (mypy léger, `tsc --noEmit`), tests, build.
+- CI (`.github/workflows/ci.yml`, Phase 22) : lint (ruff, eslint), types (mypy léger, `tsc --noEmit`), migrations à jour, schéma OpenAPI, tests et seuils de couverture, build, puis parcours Playwright sur un Django chargé avec la démonstration.
 
 ---
 
@@ -866,8 +866,8 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 19 | Création du backoffice | ✅ |
 | 20 | Notifications | ✅ |
 | 21 | SEO | ✅ |
-| 22 | Tests | ⏭ prochaine étape |
-| 23 | Sécurité | |
+| 22 | Tests | ✅ |
+| 23 | Sécurité | ⏭ prochaine étape |
 | 24 | Dockerisation et déploiement | |
 
 Chaque phase comprend : l'objectif, l'arborescence concernée, les fichiers complets, leur emplacement, les commandes à exécuter, la méthode de test et la correction des erreurs. On ne passe pas à la phase suivante avant que la précédente soit validée.

@@ -53,7 +53,8 @@ class OfferAdmin(CoverPreviewMixin, TranslatedAdmin):
 
     @display(description="prix")
     def prices(self, obj):
-        return f"{amount(obj.promo_price, obj.currency)} (au lieu de {amount(obj.initial_price, obj.currency)})"
+        promo, initial = amount(obj.promo_price, obj.currency), amount(obj.initial_price, obj.currency)
+        return f"{promo} (au lieu de {initial})"
 
     @display(description="réduction")
     def discount(self, obj):

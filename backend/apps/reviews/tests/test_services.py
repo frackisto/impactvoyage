@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from apps.core.exceptions import InvalidTransition
-from apps.core.tests.helpers import make_tour, make_user
+from apps.core.tests.factories import TourFactory, UserFactory
 from apps.notifications.models import Notification
 from apps.reviews import selectors, services
 from apps.reviews.models import Review
@@ -10,8 +10,8 @@ from apps.reviews.models import Review
 
 class ReviewTests(TestCase):
     def test_submit_moderate_and_summarize(self):
-        manager = make_user("GESTIONNAIRE")
-        tour = make_tour()
+        manager = UserFactory(role="GESTIONNAIRE")
+        tour = TourFactory()
         review = services.submit_review(
             author_name="Fatou", author_email="fatou@example.com", rating=5,
             comment="Superbe circuit !", tour=tour,

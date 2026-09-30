@@ -5,15 +5,14 @@ from django.utils import translation
 from apps.blog.models import BlogPost
 from apps.core.files import UploadTo
 from apps.core.models import SiteSettings
+from apps.core.tests.factories import DestinationFactory, TourFactory
 from apps.events.models import Event, EventImage
 from apps.reviews.models import Review
-
-from .helpers import make_destination, make_tour
 
 
 class UploadToTests(TestCase):
     def test_renames_file_to_uuid_in_model_folder(self):
-        path = UploadTo()(make_destination(), "Photo Plage.JPG")
+        path = UploadTo()(DestinationFactory(), "Photo Plage.JPG")
         folder, name = path.split("/")
         self.assertEqual(folder, "destinations")
         self.assertRegex(name, r"^[0-9a-f]{32}\.jpg$")
@@ -29,7 +28,7 @@ class SiteSettingsTests(TestCase):
 
 class TranslationTests(TestCase):
     def test_english_falls_back_to_french_when_empty(self):
-        destination = make_destination(name_fr="Côte d'Ivoire", name_en="")
+        destination = DestinationFactory(name_fr="Côte d'Ivoire", name_en="")
         with translation.override("en"):
             self.assertEqual(destination.name, "Côte d'Ivoire")
         destination.name_en = "Ivory Coast"
@@ -46,7 +45,7 @@ class ContentConstraintTests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             Review.objects.create(
                 author_name="X", author_email="x@x.com", rating=5, comment="…",
-                destination=make_destination(), tour=make_tour(),
+                destination=DestinationFactory(), tour=TourFactory(),
             )
 
     def test_published_blog_post_requires_a_date(self):

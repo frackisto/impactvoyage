@@ -5,6 +5,7 @@ Les champs traduits (title, description...) sont lus dans la langue de la
 requête (Accept-Language, via LocaleMiddleware) avec repli sur le français :
 les serializers n'ont rien de particulier à faire.
 """
+import contextlib
 from decimal import Decimal
 from operator import attrgetter
 
@@ -41,13 +42,11 @@ def money_repr(amount, currency, request=None):
     data = {"amount": f"{Decimal(amount):.2f}", "currency": currency}
     display = get_display_currency(request)
     if display != currency and currency == settings.DEFAULT_CURRENCY:
-        try:
+        with contextlib.suppress(BusinessError):  # taux indisponible : prix d'origine seul
             data["display"] = {
                 "amount": str(convert_from_xof(amount, display)),
                 "currency": display,
             }
-        except BusinessError:  # taux indisponible : on affiche le prix d'origine
-            pass
     return data
 
 

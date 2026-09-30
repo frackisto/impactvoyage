@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from apps.core import revalidation
 from apps.core.tests.admin_helpers import AdminTestCase
-from apps.core.tests.helpers import make_departure, make_destination, make_tour
+from apps.core.tests.factories import DestinationFactory, TourDepartureFactory, TourFactory
 from apps.offers.models import Offer
 from apps.tours.models import Tour
 from apps.visas.models import VisaService
@@ -24,8 +24,8 @@ REVALIDATE = {"FRONTEND_REVALIDATE_URL": "http://frontend:3000/api/revalidate",
 
 class SitemapApiTests(ApiTestCase):
     def test_lists_only_published_content(self):
-        tour = make_tour(slug="dubai")
-        make_tour(slug="brouillon", is_published=False)
+        tour = TourFactory(slug="dubai")
+        TourFactory(slug="brouillon", is_published=False)
         today = timezone.localdate()
         Offer.objects.create(title="Promo", slug="promo", offer_type="CIRCUIT",
                              initial_price=Decimal("100"), promo_price=Decimal("80"),
@@ -63,26 +63,26 @@ class RevalidationTests(TestCase):
         return [set(call.args[0]) for call in delay.call_args_list]
 
     def test_saving_content_revalidates_its_pages_once_per_transaction(self):
-        destination = make_destination()
+        destination = DestinationFactory()
 
         def edit():
-            tour = make_tour(destination=destination)
+            tour = TourFactory(destination=destination)
             tour.title = "Nouveau titre"
             tour.save()
-            make_departure(tour=tour)
+            TourDepartureFactory(tour=tour)
 
         calls = self.committed_tags(edit)
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0], {"tours", "offers", "sitemap"})
 
     def test_many_to_many_and_deletion(self):
-        tour = make_tour()
+        tour = TourFactory()
         self.assertIn({"tours", "offers", "sitemap"},
                       self.committed_tags(lambda: tour.activities.clear()))
         self.assertIn({"tours", "offers", "sitemap"}, self.committed_tags(tour.delete))
 
     def test_rolled_back_transaction_does_not_block_later_revalidations(self):
-        tour = make_tour()
+        tour = TourFactory()
         with mock.patch.object(revalidation.revalidate_frontend_task, "delay") as delay:
             with self.captureOnCommitCallbacks(execute=True):
                 try:
@@ -98,7 +98,7 @@ class RevalidationTests(TestCase):
 
     @override_settings(FRONTEND_REVALIDATE_URL="")
     def test_disabled_without_url(self):
-        self.assertEqual(self.committed_tags(make_tour), [])
+        self.assertEqual(self.committed_tags(TourFactory), [])
 
     def test_task_calls_the_site_with_the_shared_secret(self):
         response = mock.MagicMock(status=200)
@@ -121,7 +121,7 @@ class RevalidationTests(TestCase):
 class AdminBulkActionsTests(AdminTestCase):
     def test_bulk_publication_revalidates_although_update_sends_no_signal(self):
         revalidation._pending.tags = None
-        tour = make_tour(is_published=False)
+        tour = TourFactory(is_published=False)
         self.login("AGENT")
         with mock.patch.object(revalidation.revalidate_frontend_task, "delay") as delay, \
              self.captureOnCommitCallbacks(execute=True):

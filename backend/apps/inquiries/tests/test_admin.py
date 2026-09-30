@@ -5,22 +5,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.core.tests.admin_helpers import AdminTestCase, change_form_data
-from apps.core.tests.helpers import make_user
+from apps.core.tests.factories import QuoteRequestFactory, UserFactory
 from apps.inquiries.models import ContactMessage, QuoteRequest
 
 QStatus = QuoteRequest.Status
 
 
-def make_quote(**kwargs):
-    defaults = {"first_name": "Awa", "last_name": "Koné", "email": "awa@example.com",
-                "phone": "+2250700000000", "destination_text": "Dubaï",
-                "consent_at": timezone.now()}
-    return QuoteRequest.objects.create(**{**defaults, **kwargs})
-
-
 class QuoteAdminTests(AdminTestCase):
     def setUp(self):
-        self.quote = make_quote()
+        self.quote = QuoteRequestFactory()
 
     def url(self, name, quote=None):
         return reverse(f"admin:inquiries_quoterequest_{name}", args=[(quote or self.quote).pk])
@@ -55,7 +48,7 @@ class QuoteAdminTests(AdminTestCase):
 
     def test_assigning_a_commercial_puts_the_quote_in_progress(self):
         self.login("COMMERCIAL")
-        colleague = make_user("COMMERCIAL")
+        colleague = UserFactory(role="COMMERCIAL")
         response = self.client.get(self.url("change"))
         self.assertEqual(list(response.context["adminform"].form.fields), ["assigned_to"])
         self.client.post(self.url("change"), change_form_data(
@@ -77,7 +70,7 @@ class QuoteAdminTests(AdminTestCase):
 
     def test_bulk_assign_to_me(self):
         commercial = self.login("COMMERCIAL")
-        other = make_quote(status=QStatus.TERMINEE)
+        other = QuoteRequestFactory(status=QStatus.TERMINEE)
         self.client.post(reverse("admin:inquiries_quoterequest_changelist"), {
             "action": "assign_to_me", "_selected_action": [self.quote.pk, other.pk],
         })

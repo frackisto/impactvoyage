@@ -24,7 +24,7 @@ class AmenityAdmin(TranslatedAdmin):
 class AmenitiesForScopeMixin:
     """Ne propose que les équipements prévus pour ce type d'hébergement."""
 
-    amenity_scope = None
+    amenity_scope: str | None = None
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "amenities":

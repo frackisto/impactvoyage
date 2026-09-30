@@ -1,21 +1,19 @@
 from django.urls import reverse
 
 from apps.core.tests.admin_helpers import AdminTestCase
-from apps.core.tests.helpers import make_user
+from apps.core.tests.factories import NotificationFactory, UserFactory
 from apps.notifications.models import Notification
 
 
 def notify(user, **kwargs):
-    defaults = {"event": Notification.Event.CONTACT_RECEIVED, "title": "Message de Koffi",
-                "link": "/admin/inquiries/contactmessage/"}
-    return Notification.objects.create(recipient=user, **{**defaults, **kwargs})
+    return NotificationFactory(recipient=user, **kwargs)
 
 
 class NotificationAdminTests(AdminTestCase):
     def test_each_member_only_sees_their_notifications(self):
         agent = self.login("AGENT")  # aucun droit particulier : ses notifications seulement
         mine = notify(agent, title="Pour moi")
-        notify(make_user("COMMERCIAL"), title="Pour un collègue")
+        notify(UserFactory(role="COMMERCIAL"), title="Pour un collègue")
         response = self.client.get(reverse("admin:notifications_notification_changelist"))
         self.assertContains(response, "Pour moi")
         self.assertNotContains(response, "Pour un collègue")

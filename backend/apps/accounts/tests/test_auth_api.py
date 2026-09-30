@@ -6,7 +6,7 @@ from django.test import override_settings
 from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.accounts.services import make_email_verification_token
-from apps.core.tests.helpers import make_user
+from apps.core.tests.factories import UserFactory
 from apps.core.tests.test_api import API, ApiTestCase
 
 PASSWORD = "Voyage-Assinie-2027"
@@ -32,7 +32,7 @@ class RegistrationTests(ApiTestCase):
         self.assertTrue(self.client.get(f"{API}/auth/me/").data["is_verified"])
 
     def test_tampered_or_outdated_verification_token_is_refused(self):
-        user = make_user()
+        user = UserFactory()
         token = make_email_verification_token(user)
         bad = self.client.post(f"{API}/auth/verify-email/", {"token": token + "x"})
         self.assertEqual(bad.data["error"]["code"], "invalid_token")
@@ -49,7 +49,7 @@ class RegistrationTests(ApiTestCase):
 class LoginTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.user = make_user("COMMERCIAL", email="commercial@example.com",
+        self.user = UserFactory(role="COMMERCIAL", email="commercial@example.com",
                               first_name="Yao", last_name="Kouamé")
         self.user.set_password(PASSWORD)
         self.user.save()
@@ -93,7 +93,7 @@ class LoginTests(ApiTestCase):
 class ProfileAndPasswordTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.user = make_user(email="client@example.com")
+        self.user = UserFactory(email="client@example.com")
         self.user.set_password(PASSWORD)
         self.user.save()
         tokens = self.client.post(f"{API}/auth/login/",

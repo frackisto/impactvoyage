@@ -12,14 +12,14 @@ from apps.accommodations.serializers import HotelListSerializer
 from apps.blog.models import BlogPost
 from apps.blog.serializers import BlogPostListSerializer
 from apps.core.models import ExchangeRate
-from apps.core.tests.helpers import (
-    make_activity,
-    make_departure,
-    make_destination,
-    make_room,
-    make_tour,
-    make_user,
-    make_vehicle,
+from apps.core.tests.factories import (
+    ActivityFactory,
+    DestinationFactory,
+    RoomFactory,
+    TourDepartureFactory,
+    TourFactory,
+    UserFactory,
+    VehicleFactory,
 )
 from apps.destinations.selectors import destination_detail
 from apps.destinations.serializers import DestinationDetailSerializer
@@ -44,7 +44,7 @@ class MoneyAndTranslationTests(TestCase):
     def setUp(self):
         cache.clear()
         ExchangeRate.objects.create(currency="EUR", rate_from_xof=Decimal("1") / Decimal("655.957"))
-        self.departure = make_departure(start_date=in_days(20), end_date=in_days(22))
+        self.departure = TourDepartureFactory(start_date=in_days(20), end_date=in_days(22))
         tour = self.departure.tour
         tour.title_fr, tour.title_en = "Découverte d'Abidjan", ""
         tour.inclusions = "Hébergement\n- Guide francophone\n\n"
@@ -70,7 +70,7 @@ class MoneyAndTranslationTests(TestCase):
         self.assertNotIn("display", data[0]["price"])
 
     def test_detail_lists_open_departures_and_inclusions(self):
-        make_departure(tour=self.departure.tour, start_date=in_days(-5), end_date=in_days(-3))
+        TourDepartureFactory(tour=self.departure.tour, start_date=in_days(-5), end_date=in_days(-3))
         data = TourDetailSerializer(
             tour_detail(self.departure.tour.slug), context={"request": api_request()}
         ).data
@@ -85,7 +85,7 @@ class ExposureTests(TestCase):
     """Aucune donnée interne ou personnelle dans les réponses publiques."""
 
     def test_vehicle_plate_is_never_exposed(self):
-        data = VehicleDetailSerializer(make_vehicle(), context={"request": api_request()}).data
+        data = VehicleDetailSerializer(VehicleFactory(), context={"request": api_request()}).data
         self.assertNotIn("plate_number", data)
 
     def test_review_and_blog_hide_emails(self):
@@ -93,7 +93,7 @@ class ExposureTests(TestCase):
             author_name="Fatou", author_email="fatou@example.com", rating=5, comment="Top"
         )
         self.assertNotIn("author_email", ReviewSerializer(review).data)
-        author = make_user("AGENT", first_name="Koffi", last_name="N'Guessan")
+        author = UserFactory(role="AGENT", first_name="Koffi", last_name="N'Guessan")
         post = BlogPost.objects.create(title="T", slug="t", excerpt="E", content="C", author=author)
         data = BlogPostListSerializer(post, context={"request": api_request()}).data
         self.assertEqual(data["author_name"], "Koffi N'Guessan")
@@ -102,12 +102,12 @@ class ExposureTests(TestCase):
 
 class CatalogRepresentationTests(TestCase):
     def test_hotel_price_from(self):
-        make_room(base_price=Decimal("45000"))
+        RoomFactory(base_price=Decimal("45000"))
         data = HotelListSerializer(hotel_list(), many=True, context={"request": api_request()}).data
         self.assertEqual(data[0]["price_from"], {"amount": "45000.00", "currency": "XOF"})
 
     def test_offer_badge_discount_and_target(self):
-        tour = make_tour(title="Assinie", slug="assinie")
+        tour = TourFactory(title="Assinie", slug="assinie")
         offer = Offer.objects.create(
             title="Promo", slug="promo", offer_type=Offer.OfferType.CIRCUIT,
             initial_price=Decimal("200000"), promo_price=Decimal("150000"),
@@ -120,11 +120,11 @@ class CatalogRepresentationTests(TestCase):
         self.assertEqual(data["target"], {"type": "tour", "slug": "assinie", "title": "Assinie"})
 
     def test_destination_detail_only_shows_published_content_in_few_queries(self):
-        destination = make_destination()
-        make_tour(destination=destination)
-        make_tour(destination=destination, is_published=False)
-        make_activity(destination=destination)
-        make_activity(destination=destination, is_published=False)
+        destination = DestinationFactory()
+        TourFactory(destination=destination)
+        TourFactory(destination=destination, is_published=False)
+        ActivityFactory(destination=destination)
+        ActivityFactory(destination=destination, is_published=False)
         # Destination, photos, tags, circuits, hôtels, résidences, activités et note des
         # avis : 8 requêtes, quel que soit le nombre de contenus liés.
         with self.assertNumQueries(8):

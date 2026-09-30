@@ -3,9 +3,9 @@ from django.contrib import admin
 from django.utils import timezone
 from unfold.decorators import display
 
-from apps.core.admin import CoverPreviewMixin, TranslatedAdmin
-from apps.core.revalidation import revalidate_model
+from apps.core.admin import CoverPreviewMixin, TranslatedAdmin, run_for_each
 
+from . import services
 from .models import BlogPost
 
 STATUS_LABELS = {BlogPost.Status.BROUILLON: "default", BlogPost.Status.PUBLIE: "success"}
@@ -57,18 +57,14 @@ class BlogPostAdmin(CoverPreviewMixin, TranslatedAdmin):
     def status_label(self, obj):
         return obj.status, obj.get_status_display()
 
-    @admin.action(description="Publier maintenant", permissions=["change"])
+    # Un article à la fois, par blog.services : l'enregistrement déclenche la
+    # régénération des pages du site (signal), une date de publication future est conservée.
+    @admin.action(description="Publier", permissions=["change"])
     def publish_now(self, request, queryset):
-        now = timezone.now()
-        drafts = queryset.exclude(status=BlogPost.Status.PUBLIE)
-        undated = drafts.filter(published_at__isnull=True).update(
-            status=BlogPost.Status.PUBLIE, published_at=now)
-        dated = drafts.update(status=BlogPost.Status.PUBLIE)
-        revalidate_model(BlogPost)
-        self.message_user(request, f"{undated + dated} article(s) publié(s).")
+        run_for_each(self, request, queryset.exclude(status=BlogPost.Status.PUBLIE),
+                     services.publish_post, "article(s) publié(s)")
 
     @admin.action(description="Repasser en brouillon", permissions=["change"])
     def back_to_draft(self, request, queryset):
-        count = queryset.update(status=BlogPost.Status.BROUILLON)
-        revalidate_model(BlogPost)
-        self.message_user(request, f"{count} article(s) repassé(s) en brouillon.")
+        run_for_each(self, request, queryset.filter(status=BlogPost.Status.PUBLIE),
+                     services.unpublish_post, "article(s) repassé(s) en brouillon")

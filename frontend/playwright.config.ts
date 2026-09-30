@@ -12,8 +12,10 @@ export default defineConfig({
   // Par défaut, la moitié des cœurs (12 sur la machine de développement) : trop pour un
   // seul serveur Next et le Django de développement, qui saturent et font échouer des
   // tests au hasard. 4 workers suffisent.
-  workers: 4,
-  reporter: [["list"]],
+  // En intégration continue (2 à 4 cœurs), 2 workers et une nouvelle tentative par test.
+  workers: process.env.CI ? 2 : 4,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
   // Un seul serveur de production pour tous les workers : sous charge, un changement de
   // langue (rechargement complet, autre root layout) peut dépasser les 5 s par défaut.
   expect: { timeout: 10_000 },

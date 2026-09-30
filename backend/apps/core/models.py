@@ -49,7 +49,7 @@ class SoftDeleteModel(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = SoftDeleteManager()
-    all_objects = models.Manager()
+    all_objects = models.Manager()  # noqa: DJ012 (second gestionnaire, pas un champ)
 
     class Meta:
         abstract = True

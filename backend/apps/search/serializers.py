@@ -7,7 +7,9 @@ from .selectors import TYPES
 
 class SearchParamsSerializer(serializers.Serializer):
     q = serializers.CharField(max_length=100, help_text="Mots recherchés (fautes et accents tolérés)")
-    type = serializers.CharField(required=False, help_text=f"Types séparés par des virgules : {', '.join(TYPES)}")
+    type = serializers.CharField(
+        required=False, help_text=f"Types séparés par des virgules : {', '.join(TYPES)}"
+    )
     destination = serializers.SlugField(required=False)
     limit = serializers.IntegerField(min_value=1, max_value=48, default=24)
 

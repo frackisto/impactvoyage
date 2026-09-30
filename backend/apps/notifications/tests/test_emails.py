@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from apps.core.formatting import format_amount
 from apps.core.models import SiteSettings
-from apps.core.tests.helpers import make_user
+from apps.core.tests.factories import UserFactory
 from apps.notifications import tasks
 from apps.notifications.emails import Email, frontend_url, pick, render, send_email
 from apps.notifications.models import Notification
@@ -92,9 +92,9 @@ class SendingTests(TestCase):
 
 class StaffChannelsTests(TestCase):
     def setUp(self):
-        self.admin = make_user("ADMIN", whatsapp="+2250700000001", phone="+2250700000011")
-        self.commercial = make_user("COMMERCIAL", whatsapp="+2250700000002")
-        self.manager = make_user("GESTIONNAIRE", whatsapp="+2250700000003")
+        self.admin = UserFactory(role="ADMIN", whatsapp="+2250700000001", phone="+2250700000011")
+        self.commercial = UserFactory(role="COMMERCIAL", whatsapp="+2250700000002")
+        self.manager = UserFactory(role="GESTIONNAIRE", whatsapp="+2250700000003")
 
     def test_dashboard_and_agency_email_by_default(self):
         with self.captureOnCommitCallbacks(execute=True):
@@ -131,7 +131,7 @@ class StaffChannelsTests(TestCase):
 
 class PurgeTests(TestCase):
     def test_read_notifications_are_purged_after_the_retention_period(self):
-        user = make_user("ADMIN")
+        user = UserFactory(role="ADMIN")
         old = timezone.now() - timedelta(days=120)
         for is_read, read_at in [(True, old), (True, timezone.now()), (False, None)]:
             Notification.objects.create(recipient=user, event="CONTACT_RECEIVED", title="x",

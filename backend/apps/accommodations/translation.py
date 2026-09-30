@@ -1,7 +1,7 @@
 """Champs traduits (FR/EN) — django-modeltranslation, architecture § 12."""
 from modeltranslation.translator import TranslationOptions, register
 
-from .models import Amenity, Hotel, HotelImage, Room, Residence, ResidenceImage
+from .models import Amenity, Hotel, HotelImage, Residence, ResidenceImage, Room
 
 
 @register(Amenity)

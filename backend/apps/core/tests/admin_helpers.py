@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from .helpers import make_user
+from .factories import UserFactory
 
 
 def _put(data, key, field, value):
@@ -47,7 +47,7 @@ class AdminTestCase(TestCase):
     """Client connecté avec un rôle de l'équipe."""
 
     def login(self, role="SUPER_ADMIN", **kwargs):
-        user = make_user(role, **kwargs)
+        user = UserFactory(role=role, **kwargs)
         user = get_user_model().objects.get(pk=user.pk)
         self.client.force_login(user)
         return user

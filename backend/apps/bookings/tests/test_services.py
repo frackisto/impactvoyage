@@ -13,13 +13,13 @@ from apps.bookings.models import Booking
 from apps.bookings.services import ItemRequest
 from apps.core.exceptions import BusinessError, InvalidToken, InvalidTransition, NotAvailable
 from apps.core.models import BookableMixin
-from apps.core.tests.helpers import (
-    make_activity,
-    make_departure,
-    make_residence,
-    make_room,
-    make_user,
-    make_vehicle,
+from apps.core.tests.factories import (
+    ActivityFactory,
+    ResidenceFactory,
+    RoomFactory,
+    TourDepartureFactory,
+    UserFactory,
+    VehicleFactory,
 )
 from apps.notifications.models import Notification
 from apps.offers.models import Offer
@@ -42,9 +42,9 @@ def request(*items, **kwargs):
 
 class RequestBookingTests(TestCase):
     def setUp(self):
-        self.admin = make_user("ADMIN")
-        self.commercial = make_user("COMMERCIAL")
-        self.departure = make_departure(start_date=in_days(30), end_date=in_days(33), capacity=10)
+        self.admin = UserFactory(role="ADMIN")
+        self.commercial = UserFactory(role="COMMERCIAL")
+        self.departure = TourDepartureFactory(start_date=in_days(30), end_date=in_days(33), capacity=10)
 
     def test_request_is_priced_server_side_and_blocks_nothing(self):
         with self.captureOnCommitCallbacks(execute=True):
@@ -82,7 +82,7 @@ class RequestBookingTests(TestCase):
             request(ItemRequest("tour_departure", self.departure.pk, quantity=11))
 
     def test_past_dates_and_unknown_offers_are_refused(self):
-        vehicle = make_vehicle()
+        vehicle = VehicleFactory()
         with self.assertRaises(BusinessError):
             request(ItemRequest("vehicle", vehicle.pk, in_days(-2), in_days(1)))
         with self.assertRaises(BusinessError):
@@ -91,7 +91,7 @@ class RequestBookingTests(TestCase):
             request()
 
     def test_vehicle_is_priced_per_day(self):
-        vehicle = make_vehicle(base_price=Decimal("60000"))
+        vehicle = VehicleFactory(base_price=Decimal("60000"))
         booking = request(
             ItemRequest("vehicle", vehicle.pk, in_days(5), in_days(8), pickup_location="Aéroport")
         )
@@ -102,7 +102,7 @@ class RequestBookingTests(TestCase):
 
 class LifecycleTests(TestCase):
     def setUp(self):
-        self.departure = make_departure(start_date=in_days(30), end_date=in_days(33), capacity=10)
+        self.departure = TourDepartureFactory(start_date=in_days(30), end_date=in_days(33), capacity=10)
 
     def _tour_request(self, travelers):
         return request(ItemRequest("tour_departure", self.departure.pk, quantity=travelers))
@@ -172,7 +172,7 @@ class LifecycleTests(TestCase):
 
         self.assertEqual(services.expire_pending_bookings(now=timezone.now()), 0)
         later = timezone.now() + timedelta(minutes=31)
-        self.commercial = make_user("COMMERCIAL")
+        self.commercial = UserFactory(role="COMMERCIAL")
         mail.outbox.clear()
         with self.captureOnCommitCallbacks(execute=True):
             self.assertEqual(services.expire_pending_bookings(now=later), 1)
@@ -212,7 +212,7 @@ class LifecycleTests(TestCase):
 
 class OtherStockTests(TestCase):
     def test_vehicle_double_booking(self):
-        vehicle = make_vehicle()
+        vehicle = VehicleFactory()
         first = request(ItemRequest("vehicle", vehicle.pk, in_days(10), in_days(14)))
         second = request(ItemRequest("vehicle", vehicle.pk, in_days(12), in_days(16)))
         services.confirm_booking(first)
@@ -227,7 +227,7 @@ class OtherStockTests(TestCase):
         )
 
     def test_room_quantity(self):
-        room = make_room(quantity=1)
+        room = RoomFactory(quantity=1)
         first = request(ItemRequest("room", room.pk, in_days(10), in_days(12)))
         second = request(ItemRequest("room", room.pk, in_days(11), in_days(13)))
         self.assertEqual(first.total_amount, Decimal("90000"))
@@ -236,7 +236,7 @@ class OtherStockTests(TestCase):
             services.confirm_booking(second)
 
     def test_residence_overlap(self):
-        residence = make_residence()
+        residence = ResidenceFactory()
         services.confirm_booking(
             request(ItemRequest("residence", residence.pk, in_days(10), in_days(15)))
         )
@@ -244,7 +244,7 @@ class OtherStockTests(TestCase):
             request(ItemRequest("residence", residence.pk, in_days(14), in_days(16)))
 
     def test_activity_places_per_day(self):
-        activity = make_activity(max_participants=5)
+        activity = ActivityFactory(max_participants=5)
         services.confirm_booking(
             request(ItemRequest("activity", activity.pk, in_days(7), quantity=4))
         )
@@ -257,7 +257,7 @@ class ConcurrentConfirmationTests(TransactionTestCase):
     """Deux commerciaux confirment en même temps deux demandes pour la dernière place."""
 
     def test_only_one_confirmation_wins(self):
-        departure = make_departure(start_date=in_days(30), end_date=in_days(33), capacity=1)
+        departure = TourDepartureFactory(start_date=in_days(30), end_date=in_days(33), capacity=1)
         bookings = [
             request(ItemRequest("tour_departure", departure.pk, quantity=1)) for _ in range(2)
         ]

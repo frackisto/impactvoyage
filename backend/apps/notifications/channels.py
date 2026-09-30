@@ -102,8 +102,8 @@ class ShortMessageChannel(Channel):
     l'envoi part par Celery après validation de la transaction.
     """
 
-    channel = None  # "whatsapp" | "sms"
-    number_field = None
+    channel: str | None = None  # "whatsapp" | "sms"
+    number_field: str | None = None
 
     def text(self, alert):
         lines = [f"Impact Voyage — {alert.title}"]

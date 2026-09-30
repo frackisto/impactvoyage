@@ -22,7 +22,7 @@ class BackofficeSmokeTests(AdminTestCase):
 
     def test_every_registered_screen_renders_for_the_super_admin(self):
         self.login("SUPER_ADMIN")
-        for model, model_admin in admin.site._registry.items():
+        for model in admin.site._registry:
             opts = model._meta
             with self.subTest(model=opts.label):
                 changelist = reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist")
@@ -73,9 +73,9 @@ class BackofficeSmokeTests(AdminTestCase):
 
 class LoginTests(AdminTestCase):
     def test_login_page_opened_directly_leads_to_the_dashboard(self):
-        from apps.core.tests.helpers import make_user
+        from apps.core.tests.factories import UserFactory
 
-        make_user("COMMERCIAL", email="equipe@example.com")
+        UserFactory(role="COMMERCIAL", email="equipe@example.com")
         response = self.client.post(reverse("admin:login"), {
             "username": "equipe@example.com", "password": "mot-de-passe",
         })

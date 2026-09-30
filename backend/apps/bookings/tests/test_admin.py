@@ -9,21 +9,26 @@ from django.utils import timezone
 
 from apps.bookings.models import Booking
 from apps.core.tests.admin_helpers import AdminTestCase
-from apps.core.tests.helpers import make_booking, make_user, make_vehicle, make_vehicle_item
+from apps.core.tests.factories import (
+    BookingFactory,
+    BookingItemFactory,
+    UserFactory,
+    VehicleFactory,
+)
 
 Status = Booking.Status
 
 
 class BookingAdminTests(AdminTestCase):
     def setUp(self):
-        self.vehicle = make_vehicle()
+        self.vehicle = VehicleFactory()
         self.start = timezone.localdate() + timedelta(days=10)
         self.booking = self.request_vehicle()
 
     def request_vehicle(self):
-        booking = make_booking(status=Status.REQUESTED, total_amount=self.vehicle.base_price * 3)
-        make_vehicle_item(booking, self.vehicle, self.start, self.start + timedelta(days=3),
-                          is_blocking=False)
+        booking = BookingFactory(status=Status.REQUESTED, total_amount=self.vehicle.base_price * 3)
+        BookingItemFactory(booking=booking, vehicle=self.vehicle, start_date=self.start,
+                           end_date=self.start + timedelta(days=3), is_blocking=False)
         return booking
 
     def url(self, name, booking=None):
@@ -106,7 +111,7 @@ class BookingAdminTests(AdminTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_saving_notes_never_overwrites_a_status_changed_meanwhile(self):
-        commercial = make_user("COMMERCIAL")
+        commercial = UserFactory(role="COMMERCIAL")
         stale = Booking.objects.get(pk=self.booking.pk)
         Booking.objects.filter(pk=self.booking.pk).update(status=Status.CANCELLED)  # le client annule
         stale.internal_notes = "Rappeler le client"
