@@ -46,7 +46,7 @@ class ReviewViewSet(WriteThrottleMixin, mixins.ListModelMixin, viewsets.GenericV
         responses={201: {"type": "object", "properties": {"message": {"type": "string"}}}},
     )
     def create(self, request):
-        payload = ReviewCreateSerializer(data=request.data)
+        payload = ReviewCreateSerializer(data=request.data, context={"request": request})
         payload.is_valid(raise_exception=True)
         user = request.user if request.user.is_authenticated else None
         services.submit_review(**payload.validated_data, user=user)

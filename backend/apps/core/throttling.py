@@ -41,6 +41,13 @@ def forwarded_client_ip(request):
         return None
 
 
+def client_ip(request):
+    """Adresse du visiteur : transmise par le serveur Next.js, sinon celle vue par Django."""
+    if is_trusted_frontend(request) and (client := forwarded_client_ip(request)):
+        return client
+    return throttling.BaseThrottle().get_ident(request)
+
+
 class FrontendAwareThrottleMixin:
     def get_ident(self, request):
         if is_trusted_frontend(request) and (client := forwarded_client_ip(request)):

@@ -11,5 +11,7 @@ if not env("EMAIL_HOST", default=""):  # noqa: F405
     EMAIL_PORT = 1025
     EMAIL_USE_TLS = False
 
-# En dev, affichage complet des erreurs, pas de sécurité renforcée.
-INSTALLED_APPS += []  # noqa: F405
+# Double authentification de l'équipe : facultative en développement (comptes de
+# démonstration) ; STAFF_OTP_REQUIRED=True dans .env pour l'essayer. Toujours active en production.
+STAFF_OTP_REQUIRED = env.bool("STAFF_OTP_REQUIRED", default=False)  # noqa: F405
+API_DOCS_PUBLIC = env.bool("API_DOCS_PUBLIC", default=True)  # noqa: F405

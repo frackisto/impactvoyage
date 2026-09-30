@@ -1,7 +1,9 @@
 """Avis clients : dépôt puis modération dans l'administration (CdC § 20)."""
+from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from apps.core.exceptions import InvalidTransition
+from apps.core.validators import strip_image_metadata, validate_image_content
 from apps.notifications.models import Notification
 from apps.notifications.services import admin_path, notify_staff
 
@@ -11,6 +13,13 @@ from .models import Review
 @transaction.atomic
 def submit_review(*, author_name, author_email, rating, comment, user=None, photo=None, **target):
     """Dépose un avis en attente de validation ; target = destination|tour|hotel|activity."""
+    if photo:
+        # Contenu contrôlé avant tout décodage complet, puis métadonnées (GPS…) retirées.
+        try:
+            validate_image_content(photo)
+        except ValidationError as exc:
+            raise ValidationError({"photo": exc.error_list}) from exc
+        photo = strip_image_metadata(photo)
     review = Review(
         author_name=author_name,
         author_email=author_email,

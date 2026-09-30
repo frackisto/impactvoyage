@@ -1,0 +1,25 @@
+{% extends "unfold/layouts/unauthenticated.html" %}
+{% comment %}Codes de secours, affichés une seule fois après l'activation.{% endcomment %}
+
+{% block content %}
+    {% include "unfold/helpers/unauthenticated_title.html" with title=title subtitle=site_title %}
+
+    {% include "unfold/helpers/messages/success.html" with message="La double authentification est activée." %}
+
+    <p class="mb-4">
+        Conservez ces codes en lieu sûr (gestionnaire de mots de passe, papier rangé) :
+        chacun remplace une seule fois le code de l'application si vous n'avez plus votre
+        téléphone. <strong>Ils ne seront plus affichés.</strong>
+    </p>
+
+    <ul class="grid grid-cols-2 gap-2 mb-6 font-mono text-base tracking-wider">
+        {% for code in codes %}
+            <li class="border border-base-200 rounded-default px-3 py-2 text-center dark:border-base-800">{{ code }}</li>
+        {% endfor %}
+    </ul>
+
+    {% load unfold %}
+    {% component "unfold/components/button.html" with href=next variant="primary" class="w-full" %}
+        Accéder au backoffice
+    {% endcomponent %}
+{% endblock %}

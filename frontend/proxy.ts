@@ -5,8 +5,12 @@ import { routing } from "@/i18n/routing";
 import { clientIp, refreshTokens } from "@/lib/api/backend";
 import { ACCESS_COOKIE, clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from "@/lib/auth/cookies";
 import { isTokenExpired } from "@/lib/auth/jwt";
+import { contentSecurityPolicy, createNonce } from "@/lib/security";
 
 const intl = createMiddleware(routing);
+
+const DEV = process.env.NODE_ENV === "development";
+const HTTPS = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://");
 
 /** Pages réservées aux utilisateurs connectés (CdC § 24). */
 const PROTECTED_PATHS = ["/profile"];
@@ -45,7 +49,15 @@ export default async function proxy(request: NextRequest) {
     return response;
   }
 
-  return intl(request);
+  // CSP à nonce (Phase 23) : Next.js lit la politique dans les en-têtes de la requête et
+  // pose le nonce sur ses propres scripts ; toutes les pages sont rendues à la demande.
+  const nonce = createNonce();
+  const csp = contentSecurityPolicy(nonce, { dev: DEV, https: HTTPS });
+  request.headers.set("x-nonce", nonce);
+  request.headers.set("content-security-policy", csp);
+  const response = intl(request);
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 }
 
 export const config = {

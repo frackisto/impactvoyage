@@ -34,6 +34,10 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    # Double authentification de l'équipe (Phase 23) : applications TOTP et codes de secours.
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -78,8 +82,13 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Session du backoffice vérifiée par un code (TOTP) : request.user.is_verified().
+    "django_otp.middleware.OTPMiddleware",
+    "apps.accounts.middleware.AdminLoginThrottleMiddleware",
+    "apps.accounts.middleware.AdminTwoFactorMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.ContentSecurityPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -303,6 +312,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.bookings.tasks.complete_past_bookings_task",
         "schedule": crontab(hour=2, minute=0),
     },
+    "apply-data-retention": {
+        "task": "apps.core.tasks.apply_retention_task",
+        "schedule": crontab(hour=3, minute=30),
+    },
     "purge-read-notifications": {
         "task": "apps.notifications.tasks.purge_read_notifications_task",
         "schedule": crontab(hour=3, minute=0),
@@ -388,3 +401,40 @@ UMAMI_API_URL = env("UMAMI_API_URL", default="")
 UMAMI_WEBSITE_ID = env("UMAMI_WEBSITE_ID", default="")
 UMAMI_API_TOKEN = env("UMAMI_API_TOKEN", default="")
 DASHBOARD_CACHE_SECONDS = 300
+
+# --- Sécurité (Phase 23, architecture § 11) ---
+# Adresse du backoffice. En production, une adresse non standard est obligatoire
+# (ADMIN_URL_PATH, ex. « gestion-7k2p/ ») : les robots qui essaient /admin/ tombent sur une 404.
+ADMIN_URL = env("ADMIN_URL_PATH", default="admin/").strip("/") + "/"
+# Double authentification (application TOTP + codes de secours) des comptes de l'équipe,
+# pour le backoffice comme pour la connexion à l'API. Toujours active en production.
+STAFF_OTP_REQUIRED = env.bool("STAFF_OTP_REQUIRED", default=True)
+OTP_TOTP_ISSUER = "Impact Voyage"
+STAFF_OTP_BACKUP_CODES = 10
+# Connexion au backoffice : après 5 échecs pour une même adresse IP ou un même compte,
+# nouvel essai possible 15 minutes plus tard.
+ADMIN_LOGIN_MAX_FAILURES = 5
+ADMIN_LOGIN_LOCKOUT_SECONDS = 15 * 60
+# Session du backoffice (l'API utilise des jetons JWT) : 8 heures au plus.
+SESSION_COOKIE_AGE = 8 * 60 * 60
+CSRF_COOKIE_HTTPONLY = True
+# Documentation de l'API (Swagger, ReDoc, schéma) : publique en développement,
+# réservée à l'équipe connectée au backoffice en production.
+API_DOCS_PUBLIC = env.bool("API_DOCS_PUBLIC", default=False)
+
+# Anti-spam des formulaires publics (CdC § 29) : Cloudflare Turnstile, en plus du champ
+# piège. Clé secrète vide : vérification désactivée (développement, tests de bout en bout).
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="")
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
+# --- Données personnelles (loi ivoirienne n° 2013-450, RGPD) ---
+# Durées de conservation en jours, appliquées chaque nuit (apps/core/privacy.py) ;
+# elles sont reprises dans la politique de confidentialité du site.
+PERSONAL_DATA_RETENTION_DAYS = {
+    "contact_messages": 2 * 365,     # messages de contact : supprimés
+    "quotes": 3 * 365,               # devis sans réservation, après la dernière mise à jour : anonymisés
+    "closed_bookings": 3 * 365,      # réservations annulées, refusées ou expirées : anonymisées
+    "completed_bookings": 10 * 365,  # réservations réalisées (pièces comptables) : anonymisées
+    "rejected_reviews": 365,         # avis refusés : supprimés
+    "notifications": 365,            # notifications de l'équipe, lues ou non : supprimées
+}

@@ -1,0 +1,72 @@
+{% extends "admin/base_site.html" %}
+{% load unfold %}
+
+{% comment %}
+Données personnelles d'une personne (apps/accounts/admin.py, UserAdmin.personal_data) :
+recherche par email, export JSON (droit d'accès), effacement (droit à l'effacement).
+{% endcomment %}
+
+{% block content %}
+    <div class="flex flex-col gap-4 max-w-4xl">
+        {% if summary %}
+            {% component "unfold/components/card.html" with title="Bilan de l'effacement" %}
+                <ul class="flex flex-col gap-1">
+                    {% for label, counts in summary %}
+                        <li><strong>{{ label }}</strong> :
+                            {% for decision, n in counts %}{{ decision }} {{ n }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endcomponent %}
+        {% endif %}
+
+        <form method="post" novalidate class="flex flex-col gap-4">
+            {% csrf_token %}
+            {% component "unfold/components/card.html" with title="Rechercher une personne" description="Toutes les données liées à cette adresse : compte, demandes de devis, réservations, messages de contact, avis." %}
+                {% include "unfold/helpers/field.html" with field=form.email %}
+            {% endcomponent %}
+            <div>
+                {% component "unfold/components/button.html" with submit=1 name="step" value="search" %}
+                    Rechercher
+                {% endcomponent %}
+            </div>
+
+            {% if email %}
+                {% component "unfold/components/card.html" with title="Données trouvées" %}
+                    {% for label, records in found %}
+                        <h3 class="font-semibold text-important mt-4 first:mt-0 mb-2">{{ label }}</h3>
+                        <ul class="flex flex-col gap-1 mb-2">
+                            {% for record in records %}
+                                <li class="flex flex-col md:flex-row md:justify-between gap-1 border-b border-base-200 py-1 last:border-b-0 dark:border-base-800">
+                                    <span>{{ record.label }}</span>
+                                    <span class="text-sm">
+                                        {% if record.decision == "keep" %}Conservé : {{ record.reason }}{% else %}Sera {{ record.decision_label|lower }}{% endif %}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% empty %}
+                        <p>Aucune donnée personnelle liée à cette adresse.</p>
+                    {% endfor %}
+                {% endcomponent %}
+
+                {% if found %}
+                    <div>
+                        {% component "unfold/components/button.html" with submit=1 name="step" value="export" variant="default" %}
+                            Télécharger l'export (JSON)
+                        {% endcomponent %}
+                    </div>
+
+                    {% component "unfold/components/card.html" with title="Effacer les données" description="Suppression ou anonymisation définitive. Les réservations confirmées ou réalisées sont conservées (obligation comptable), comme les demandes en cours de traitement." %}
+                        {% include "unfold/helpers/field.html" with field=form.confirm %}
+                    {% endcomponent %}
+                    <div>
+                        {% component "unfold/components/button.html" with submit=1 name="step" value="erase" variant="danger" %}
+                            Effacer
+                        {% endcomponent %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

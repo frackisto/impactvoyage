@@ -10,17 +10,22 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const backendOrigin = new URL(process.env.API_URL ?? "http://localhost:8000/api/v1").origin;
 
 /**
- * Adresse publique du backoffice Django (vue par le navigateur, contrairement à
- * API_URL qui vaut http://backend:8000 dans Docker). /admin ouvert sur le site y
- * est redirigé au lieu d'afficher une 404. Figée au build.
+ * En-têtes de sécurité de toutes les réponses (Phase 23). La CSP des pages, qui porte
+ * un nonce propre à chaque réponse, est posée par proxy.ts ; les routes /api (JSON)
+ * n'ont rien à charger ni à afficher. HSTS seulement si le site est servi en HTTPS.
  */
-const adminUrl = (process.env.ADMIN_URL ?? "http://localhost:8000/admin").replace(/\/+$/, "");
-
+const https = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://");
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  ...(https ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }] : []),
+];
+const apiHeaders = [
+  { key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'" },
+  { key: "Cache-Control", value: "no-store" },
 ];
 
 const nextConfig: NextConfig = {
@@ -36,14 +41,13 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/media/:path*", destination: `${backendOrigin}/media/:path*` }];
   },
-  async redirects() {
-    return [
-      { source: "/admin", destination: `${adminUrl}/`, permanent: false },
-      { source: "/admin/:path*", destination: `${adminUrl}/:path*`, permanent: false },
-    ];
-  },
+  // Pas de redirection /admin vers le backoffice : son adresse, non standard en
+  // production (ADMIN_URL_PATH), ne doit apparaître nulle part sur le site.
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/api/:path*", headers: apiHeaders },
+    ];
   },
 };
 

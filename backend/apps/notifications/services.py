@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import Notification
@@ -30,5 +31,8 @@ def mark_all_as_read(user):
 
 
 def admin_path(obj):
-    """Chemin de la fiche d'un objet dans l'admin Django (lien des notifications)."""
-    return f"/admin/{obj._meta.app_label}/{obj._meta.model_name}/{obj.pk}/change/"
+    """
+    Chemin de la fiche d'un objet dans l'admin Django (lien des notifications) ; suit
+    l'adresse non standard du backoffice (ADMIN_URL_PATH).
+    """
+    return reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.pk])

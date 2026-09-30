@@ -11,15 +11,20 @@ import {
   type TokenPair,
 } from "@/lib/auth/cookies";
 import { isTokenExpired } from "@/lib/auth/jwt";
+import { backendPath, forbiddenOriginResponse, isSameOriginRequest } from "@/lib/security";
 
 /**
  * BFF : relaie les appels des Client Components vers l'API Django en ajoutant
  * le jeton de l'utilisateur (lu dans le cookie httpOnly). Le jeton expiré est
  * rafraîchi, et la requête rejouée une fois si Django répond 401.
+ *
+ * Sécurité (Phase 23) : seuls des chemins simples sont relayés, jamais hors de
+ * /api/v1 ; une requête qui modifie des données doit venir d'une page du site.
  */
 async function relay(request: NextRequest, context: RouteContext<"/api/backend/[...path]">) {
-  const { path } = await context.params;
-  if (path.some((segment) => segment === ".." || segment === ".")) {
+  if (!isSameOriginRequest(request)) return forbiddenOriginResponse();
+  const path = backendPath((await context.params).path);
+  if (!path) {
     return NextResponse.json(
       { error: { code: "not_found", message: "Non trouvé.", details: {} } },
       { status: 404 },
@@ -41,7 +46,7 @@ async function relay(request: NextRequest, context: RouteContext<"/api/backend/[
   const contentType = request.headers.get("content-type");
   const send = (token?: string) =>
     backendFetch(
-      `${path.join("/")}/`,
+      path,
       {
         method: request.method,
         body,

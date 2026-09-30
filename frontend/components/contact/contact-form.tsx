@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, type Path } from "react-hook-form";
 import { z } from "zod";
 
+import { useCaptcha } from "@/components/common/turnstile";
 import { selectClass } from "@/components/search/filter-panel";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -23,13 +24,14 @@ export const CONTACT_SUBJECTS = ["info", "booking", "visa", "complaint", "partne
 /**
  * Formulaire de contact (CdC § 19), envoyé via le relais Next.js. L'objet
  * choisi est transmis dans la langue du visiteur. Le champ « website » est un
- * piège à robots invisible.
+ * piège à robots invisible ; le widget Turnstile fournit le jeton anti-robot.
  */
 export function ContactForm() {
   const t = useTranslations("Contact");
   const [sent, setSent] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const captcha = useCaptcha("contact");
   useEffect(() => {
     if (sent) successRef.current?.focus();
   }, [sent]);
@@ -55,10 +57,19 @@ export function ContactForm() {
 
   async function onSubmit(values: FormValues) {
     setFormError(null);
+    if (!captcha.ready) {
+      setFormError(t("errors.captcha"));
+      return;
+    }
     try {
-      await api.post("contact", { ...values, subject: t(`subjects.${values.subject as (typeof CONTACT_SUBJECTS)[number]}`) });
+      await api.post("contact", {
+        ...values,
+        subject: t(`subjects.${values.subject as (typeof CONTACT_SUBJECTS)[number]}`),
+        ...(captcha.token && { captcha_token: captcha.token }),
+      });
       setSent(true);
     } catch (error) {
+      captcha.reset(); // un jeton ne sert qu'une fois
       if (error instanceof ApiError && error.code === "validation_error") {
         const fields = error.fieldErrors();
         for (const [name, message] of Object.entries(fields)) {
@@ -176,6 +187,7 @@ export function ContactForm() {
           {t("privacyLink")}
         </Link>
       </p>
+      {captcha.widget}
       {formError && (
         <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800">
           {formError}

@@ -802,7 +802,8 @@
       "consent": "Your consent is required to send the request.",
       "checkFields": "Some fields need correcting.",
       "tooMany": "Too many requests sent. Try again in an hour or call us.",
-      "server": "Sending failed. Try again in a moment or call us."
+      "server": "Sending failed. Try again in a moment or call us.",
+      "captcha": "Anti-robot check in progress: wait a moment, then send the form again."
     }
   },
   "QuoteTracking": {
@@ -892,7 +893,8 @@
       "notAvailable": "This is no longer available on the chosen dates: it may just have been booked.",
       "offerChanged": "This offer can no longer be booked on these dates.",
       "tooMany": "Too many requests sent. Try again in an hour or call us.",
-      "server": "Sending failed. Try again in a moment or call us."
+      "server": "Sending failed. Try again in a moment or call us.",
+      "captcha": "Anti-robot check in progress: wait a moment, then send the form again."
     },
     "noOfferTitle": "Choose something to book",
     "noOfferText": "Online booking starts from the page of a tour, an accommodation, a vehicle or an activity.",
@@ -1254,7 +1256,8 @@
       "messageLong": "Your message is too long (5,000 characters maximum).",
       "checkFields": "Some fields need correcting.",
       "tooMany": "Too many messages sent. Try again in an hour or call us.",
-      "server": "Sending failed. Try again in a moment or call us."
+      "server": "Sending failed. Try again in a moment or call us.",
+      "captcha": "Anti-robot check in progress: wait a moment, then send the form again."
     }
   },
   "Legal": {
@@ -1308,7 +1311,7 @@
         },
         "s2": {
           "title": "Data collected",
-          "body": "- Quote request: first and last name, email, phone, WhatsApp, country of residence and trip details (destination, dates, travellers, budget, preferences).\n- Contact form: name, email, phone and message.\n- Booking: traveller details and booked services.\n\nWe only collect the information needed to handle your request."
+          "body": "- Quote request: first and last name, email, phone, WhatsApp, country of residence and trip details (destination, dates, travellers, budget, preferences).\n- Contact form: name, email, phone and message.\n- Booking: traveller details and booked services.\n- Review: displayed name, email (never published), rating, comment and optional photo, from which we remove metadata (GPS location, device).\n- Customer account: name, email, phone and preferences.\n\nWe only collect the information needed to handle your request."
         },
         "s3": {
           "title": "Purposes",
@@ -1316,11 +1319,11 @@
         },
         "s4": {
           "title": "Recipients",
-          "body": "Only the agency team members handling your file have access to it. Some data is shared, when necessary, with your trip's service providers (airlines, hotels, rental companies, insurers) and with consular authorities for a visa application."
+          "body": "Only the agency team members handling your file have access to it. Some data is shared, when necessary, with your trip's service providers (airlines, hotels, rental companies, insurers) and with consular authorities for a visa application.\n\nForms are protected against bots by Cloudflare Turnstile: when you submit a form, Cloudflare analyses technical information from your browser and your IP address, without advertising cookies."
         },
         "s5": {
           "title": "Retention period",
-          "body": "Data is kept for as long as needed to handle your request and carry out your trip, then for the periods required by law, notably for accounting records. A request with no follow-up is deleted after [to be completed]."
+          "body": "We keep your data for as long as needed to handle your request and carry out your trip, then:\n\n- contact messages: 2 years, then deleted;\n- quote requests without a booking: 3 years after the last exchange, then anonymised;\n- cancelled, declined or expired bookings: 3 years, then anonymised;\n- completed bookings: 10 years (accounting records), then anonymised;\n- rejected reviews: 1 year, then deleted; published reviews: as long as they are online.\n\nAnonymisation erases your name, contact details and comments; only statistics that cannot be linked to you (destination, dates, number of travellers) are kept."
         },
         "s6": {
           "title": "Cookies",
@@ -1328,11 +1331,11 @@
         },
         "s7": {
           "title": "Security",
-          "body": "Exchanges with the website are encrypted (HTTPS), access to data is restricted to authorised people and forms are protected against automated submissions."
+          "body": "Exchanges with the website are encrypted (HTTPS), access to data is restricted to authorised team members, who sign in with two-factor authentication, and forms are protected against automated submissions."
         },
         "s8": {
           "title": "Your rights",
-          "body": "You may request access to your data, its correction or deletion, and object to its processing, by writing to {email}. You may also contact the Côte d'Ivoire Telecommunications/ICT Regulatory Authority (ARTCI), the personal data protection authority."
+          "body": "You may request access to your data (we send it to you as a file), its correction or deletion, and object to its processing, by writing to {email}. We reply within one month. Data we are legally required to keep (accounting records) is kept until the end of its legal period.\n\nYou may also contact the Côte d'Ivoire Telecommunications/ICT Regulatory Authority (ARTCI), the personal data protection authority, or, if you live in the European Union, your country's data protection authority."
         }
       }
     },

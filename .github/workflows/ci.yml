@@ -58,6 +58,17 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: Schéma OpenAPI valide
         run: python manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yml
+      # Réglages de production (Phase 23) : aucun avertissement de sécurité toléré.
+      - name: Configuration de production (check --deploy)
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          SECRET_KEY: ci-prod-secret-key-0123456789abcdefghijklmnopqrstuvwxyz-ABCDEFGH
+          JWT_SIGNING_KEY: ci-prod-jwt-key-0123456789abcdefghijklmnop
+          FRONTEND_SHARED_SECRET: ci-prod-frontend-secret-0123456789abcdef
+          ALLOWED_HOSTS: api.example.com
+          ADMIN_URL_PATH: gestion-ci
+          TURNSTILE_SECRET_KEY: ci-turnstile-secret
+        run: python manage.py check --deploy --fail-level WARNING
       - name: Tests et couverture globale (≥ 90 %)
         run: pytest --cov --cov-report=term --cov-fail-under=90
       - name: Couverture des services et des permissions (≥ 80 %)

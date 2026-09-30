@@ -12,11 +12,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
 # Adresse interne du backend : sert aussi au relais /media/*, figé au build.
 ARG API_URL=http://backend:8000/api/v1
-# Adresse publique du backoffice Django : /admin ouvert sur le site y est redirigé.
-ARG ADMIN_URL=http://localhost:8000/admin
+# Clé publique du widget anti-robot Cloudflare Turnstile (vide : widget absent).
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     API_URL=$API_URL \
-    ADMIN_URL=$ADMIN_URL
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

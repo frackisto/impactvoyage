@@ -57,7 +57,7 @@ class QuoteViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
 
     @extend_schema(request=QuoteRequestCreateSerializer, responses={201: QuoteClientSerializer})
     def create(self, request):
-        serializer = QuoteRequestCreateSerializer(data=request.data)
+        serializer = QuoteRequestCreateSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         data = dict(serializer.validated_data)
         quote = services.create_quote_request(

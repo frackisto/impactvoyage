@@ -802,7 +802,8 @@
       "consent": "Votre accord est nécessaire pour envoyer la demande.",
       "checkFields": "Certains champs sont à corriger.",
       "tooMany": "Trop de demandes envoyées. Réessayez dans une heure ou contactez-nous par téléphone.",
-      "server": "L'envoi a échoué. Réessayez dans un instant ou contactez-nous par téléphone."
+      "server": "L'envoi a échoué. Réessayez dans un instant ou contactez-nous par téléphone.",
+      "captcha": "Vérification anti-robot en cours : patientez un instant, puis renvoyez le formulaire."
     }
   },
   "QuoteTracking": {
@@ -892,7 +893,8 @@
       "notAvailable": "Cette prestation n'est plus disponible aux dates choisies : elle vient peut-être d'être réservée.",
       "offerChanged": "Cette offre n'est plus réservable à ces dates.",
       "tooMany": "Trop de demandes envoyées. Réessayez dans une heure ou contactez-nous par téléphone.",
-      "server": "L'envoi a échoué. Réessayez dans un instant ou contactez-nous par téléphone."
+      "server": "L'envoi a échoué. Réessayez dans un instant ou contactez-nous par téléphone.",
+      "captcha": "Vérification anti-robot en cours : patientez un instant, puis renvoyez le formulaire."
     },
     "noOfferTitle": "Choisissez une prestation à réserver",
     "noOfferText": "La réservation en ligne se fait depuis la fiche d'un circuit, d'un hébergement, d'un véhicule ou d'une activité.",
@@ -1254,7 +1256,8 @@
       "messageLong": "Votre message est trop long (5 000 caractères maximum).",
       "checkFields": "Certains champs sont à corriger.",
       "tooMany": "Trop de messages envoyés. Réessayez dans une heure ou appelez-nous.",
-      "server": "L'envoi a échoué. Réessayez dans un instant ou appelez-nous."
+      "server": "L'envoi a échoué. Réessayez dans un instant ou appelez-nous.",
+      "captcha": "Vérification anti-robot en cours : patientez un instant, puis renvoyez le formulaire."
     }
   },
   "Legal": {
@@ -1308,7 +1311,7 @@
         },
         "s2": {
           "title": "Données collectées",
-          "body": "- Demande de devis : nom, prénom, email, téléphone, WhatsApp, pays de résidence et détails du projet (destination, dates, voyageurs, budget, préférences).\n- Formulaire de contact : nom, email, téléphone et message.\n- Réservation : coordonnées du voyageur et prestations réservées.\n\nNous ne collectons que les informations nécessaires au traitement de votre demande."
+          "body": "- Demande de devis : nom, prénom, email, téléphone, WhatsApp, pays de résidence et détails du projet (destination, dates, voyageurs, budget, préférences).\n- Formulaire de contact : nom, email, téléphone et message.\n- Réservation : coordonnées du voyageur et prestations réservées.\n- Avis : nom affiché, email (jamais publié), note, commentaire et photo éventuelle, dont nous retirons les métadonnées (position GPS, appareil).\n- Compte client : nom, email, téléphone et préférences.\n\nNous ne collectons que les informations nécessaires au traitement de votre demande."
         },
         "s3": {
           "title": "Finalités",
@@ -1316,11 +1319,11 @@
         },
         "s4": {
           "title": "Destinataires",
-          "body": "Seuls les membres de l'équipe de l'agence qui traitent votre dossier y ont accès. Certaines données sont transmises, lorsque c'est nécessaire, aux prestataires de votre voyage (compagnies aériennes, hôtels, loueurs, assureurs) et aux autorités consulaires pour une demande de visa."
+          "body": "Seuls les membres de l'équipe de l'agence qui traitent votre dossier y ont accès. Certaines données sont transmises, lorsque c'est nécessaire, aux prestataires de votre voyage (compagnies aériennes, hôtels, loueurs, assureurs) et aux autorités consulaires pour une demande de visa.\n\nLes formulaires sont protégés contre les robots par Cloudflare Turnstile : lors de l'envoi, Cloudflare analyse des informations techniques de votre navigateur et votre adresse IP, sans cookie publicitaire."
         },
         "s5": {
           "title": "Durée de conservation",
-          "body": "Les données sont conservées le temps de traiter votre demande et de réaliser votre voyage, puis pendant les durées prévues par la loi, notamment pour les pièces comptables. Une demande restée sans suite est supprimée au terme d'un délai de [à compléter]."
+          "body": "Nous conservons vos données le temps de traiter votre demande et de réaliser votre voyage, puis :\n\n- messages de contact : 2 ans, puis suppression ;\n- demandes de devis sans réservation : 3 ans après le dernier échange, puis anonymisation ;\n- réservations annulées, refusées ou expirées : 3 ans, puis anonymisation ;\n- réservations réalisées : 10 ans (pièces comptables), puis anonymisation ;\n- avis refusés : 1 an, puis suppression ; avis publiés : tant qu'ils sont en ligne.\n\nL'anonymisation efface vos nom, coordonnées et commentaires ; seules des statistiques sans lien avec vous (destination, dates, nombre de voyageurs) sont gardées."
         },
         "s6": {
           "title": "Cookies",
@@ -1328,11 +1331,11 @@
         },
         "s7": {
           "title": "Sécurité",
-          "body": "Les échanges avec le site sont chiffrés (HTTPS), l'accès aux données est réservé aux personnes habilitées et les formulaires sont protégés contre les envois automatisés."
+          "body": "Les échanges avec le site sont chiffrés (HTTPS), l'accès aux données est réservé aux membres habilités de l'équipe, qui se connectent avec une double authentification, et les formulaires sont protégés contre les envois automatisés."
         },
         "s8": {
           "title": "Vos droits",
-          "body": "Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, et vous opposer à leur traitement, en écrivant à {email}. Vous pouvez également saisir l'Autorité de Régulation des Télécommunications/TIC de Côte d'Ivoire (ARTCI), autorité de protection des données personnelles."
+          "body": "Vous pouvez demander l'accès à vos données (nous vous les transmettons dans un fichier), leur rectification ou leur suppression, et vous opposer à leur traitement, en écrivant à {email}. Nous répondons dans un délai d'un mois. Les données que la loi nous oblige à garder (pièces comptables) sont conservées jusqu'à la fin de leur durée légale.\n\nVous pouvez également saisir l'Autorité de Régulation des Télécommunications/TIC de Côte d'Ivoire (ARTCI), autorité de protection des données personnelles, ou, si vous résidez dans l'Union européenne, l'autorité de protection des données de votre pays."
         }
       }
     },

@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 
 import { backendFetch, clientIp } from "@/lib/api/backend";
 import { clearAuthCookies, REFRESH_COOKIE } from "@/lib/auth/cookies";
+import { forbiddenOriginResponse, isSameOriginRequest } from "@/lib/security";
 
 /** Révoque le refresh token côté Django puis efface les cookies. */
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) return forbiddenOriginResponse();
   const refresh = (await cookies()).get(REFRESH_COOKIE)?.value;
   if (refresh) {
     await backendFetch("auth/logout/", {

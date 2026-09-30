@@ -1561,6 +1561,8 @@ export interface components {
          */
         BookingRequestRequest: {
             website?: string;
+            /** @description Jeton du widget Cloudflare Turnstile */
+            captcha_token?: string;
             contact_name: string;
             /** Format: email */
             contact_email: string;
@@ -1608,6 +1610,8 @@ export interface components {
             subject: string;
             message: string;
             website?: string;
+            /** @description Jeton du widget Cloudflare Turnstile */
+            captcha_token?: string;
         };
         /**
          * @description * `AFRIQUE` - Afrique
@@ -1917,8 +1921,15 @@ export interface components {
         /**
          * @description Connexion email + mot de passe. Le jeton d'accès porte le rôle et le nom
          *     (affichage et redirections côté Next.js) ; la réponse inclut le profil.
+         *
+         *     Membres de l'équipe (Phase 23) : le code de double authentification est exigé
+         *     en plus (`otp_code`), comme dans le backoffice. Erreurs : `otp_required` (code
+         *     à demander), `otp_invalid`, `otp_setup_required` (application jamais enregistrée :
+         *     se connecter d'abord au backoffice).
          */
         LoginRequest: {
+            /** @description Code de double authentification (équipe) */
+            otp_code?: string;
             email: string;
             password: string;
         };
@@ -2468,6 +2479,8 @@ export interface components {
             source_offer?: string | null;
             consent: boolean;
             website?: string;
+            /** @description Jeton du widget Cloudflare Turnstile */
+            captcha_token?: string;
         };
         /** @description Fiche complète pour l'équipe (jamais le jeton d'accès client). */
         QuoteStaff: {
@@ -2569,6 +2582,8 @@ export interface components {
         /** @description Inscription d'un client (CdC § 24) ; validated_data prêt pour accounts.services.register_user. */
         RegisterRequest: {
             website?: string;
+            /** @description Jeton du widget Cloudflare Turnstile */
+            captcha_token?: string;
             /** Format: email */
             email: string;
             password: string;
@@ -2692,6 +2707,8 @@ export interface components {
          */
         ReviewCreateRequest: {
             website?: string;
+            /** @description Jeton du widget Cloudflare Turnstile */
+            captcha_token?: string;
             author_name: string;
             /** Format: email */
             author_email: string;

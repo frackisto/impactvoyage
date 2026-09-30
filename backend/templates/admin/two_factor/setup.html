@@ -1,0 +1,27 @@
+{% extends "unfold/layouts/unauthenticated.html" %}
+{% comment %}Enregistrement de l'application d'authentification (premier accès).{% endcomment %}
+
+{% block content %}
+    {% include "unfold/helpers/unauthenticated_title.html" with title=title subtitle=site_title %}
+
+    <p class="mb-3">
+        1. Installez une application d'authentification sur votre téléphone
+        (Google Authenticator, Microsoft Authenticator, FreeOTP…).
+    </p>
+    <p class="mb-6">2. Scannez ce QR code avec l'application :</p>
+
+    <div class="flex justify-center mb-4">
+        <div class="bg-white p-2 rounded-default" role="img" aria-label="QR code de configuration">
+            {{ qr_svg }}
+        </div>
+    </div>
+
+    <p class="mb-6 text-sm">
+        Impossible de scanner ? Saisissez cette clé dans l'application :
+        <code class="block mt-1 font-mono text-base tracking-wider select-all">{{ secret }}</code>
+    </p>
+
+    <p class="mb-4">3. Saisissez le code à 6 chiffres affiché par l'application.</p>
+
+    {% include "admin/two_factor/_code_form.html" with submit_label="Activer" %}
+{% endblock %}

@@ -772,15 +772,17 @@ media/
 ## 11. Stratégie de sécurité (OWASP, CdC § 29)
 
 - HTTPS obligatoire (HSTS), `SECURE_PROXY_SSL_HEADER` derrière Nginx, CORS limité au domaine du frontend, `CSRF_TRUSTED_ORIGINS` en production.
-- Protection CSRF, XSS (échappement React, contenu blog nettoyé avec `nh3`), injection SQL (ORM, aucun SQL brut non paramétré).
-- En-têtes : `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy` (posés par Next.js et Nginx).
+- Protection CSRF, XSS, injection SQL (ORM, aucun SQL brut non paramétré). **Contenu riche** (Phase 23) : aucun champ n'accepte de HTML ; articles et pages légales sont du texte structuré (`##` intertitre, `-` liste) rendu par React sans interpréter de balise (`RichText`), les gabarits Django échappent tout et les liens de l'admin passent par `format_html` avec des valeurs encodées. `nh3` n'a donc pas d'usage : il ne deviendra nécessaire que si un éditeur HTML est ajouté.
+- **CSRF du relais Next.js** (Phase 23) : cookies `SameSite=Lax` et contrôle de l'en-tête `Origin` / `Sec-Fetch-Site` sur toute requête qui modifie des données (`/api/backend/*`, `/api/auth/*`). Le relais n'accepte que des segments de chemin simples, réencodés : il ne peut jamais sortir de `/api/v1` (`lib/security.ts`).
+- En-têtes (Phase 23) : CSP à **nonce** sur les pages (`proxy.ts` : `script-src 'nonce-…' 'strict-dynamic'`, sans `unsafe-inline` pour les scripts ; toutes les pages étant rendues à la demande, le nonce ne coûte rien en cache), CSP `default-src 'none'` sur les routes `/api` et les réponses JSON de Django, CSP du backoffice limitée à son propre domaine, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `X-Frame-Options: DENY`, HSTS dès que le site est en HTTPS. Nginx (Phase 24) reprendra HSTS et la limitation des pages.
 - **Rate limiting** DRF (déjà configuré en Phase 2) : anon 120/min, user 300/min, auth 10/min, devis 5/h, contact 5/h, avis 3/h. Les pages étant rendues par Next.js, le serveur Next.js s'identifie auprès de Django par un secret partagé (`FRONTEND_SHARED_SECRET`) et transmet l'adresse réelle du visiteur (`X-Client-IP`) : les limites s'appliquent à chaque visiteur, les lectures publiques mises en cache par Next.js ne sont pas limitées par Django (limitation des pages par Nginx), les écritures le sont toujours. `X-Forwarded-For` n'est lu que derrière un proxy déclaré (`NUM_PROXIES`). Voir `apps/core/throttling.py` (Phase 15).
-- **Anti-spam** des formulaires publics (devis, contact, avis, inscription) : champ *honeypot* + **Cloudflare Turnstile**, vérifié côté Django.
+- **Anti-spam** des formulaires publics (devis, contact, réservation, avis, inscription) : champ *honeypot* + **Cloudflare Turnstile** (`captcha_token`), vérifié côté Django en dernier, une fois les données valides (un jeton ne sert qu'une fois). Clé vide : vérification désactivée ; Cloudflare injoignable : la demande est acceptée et l'incident journalisé (`apps/core/captcha.py`).
 - Validation systématique côté backend, permissions strictes par action (§ 6.3).
-- Uploads contrôlés : extension, MIME réel, taille, renommage (§ 8).
+- Uploads contrôlés : extension, **format réel lu par Pillow et identique à l'extension**, taille (5 Mo), dimensions (40 mégapixels, contre les bombes de décompression), renommage UUID (§ 8). Les photos envoyées par les visiteurs (avis, avatar) sont réencodées **sans métadonnées EXIF** (position GPS, appareil).
 - Secrets exclusivement dans `.env`, jamais commités (`SECRET_KEY`, `DATABASE_PASSWORD`, `JWT_SIGNING_KEY`, clés API), avec un `.env.example` fourni. `SECRET_KEY` sans valeur par défaut en production.
-- Admin Django sur une URL non standard, avec 2FA pour le staff (`django-otp`).
-- **Données personnelles** : consentement explicite sur les formulaires, page confidentialité, durée de conservation définie, suppression sur demande. Conformité à la loi ivoirienne n° 2013-450 (ARTCI) et au RGPD pour les visiteurs européens.
+- Admin Django sur une URL non standard (`ADMIN_URL_PATH`, obligatoire en production ; le site ne redirige plus `/admin`), avec **2FA pour le staff** (`django-otp` : application TOTP + 10 codes de secours ; enregistrement au premier accès, un appareil ne peut être remplacé sans code ; réinitialisation par un super administrateur). Le même code est exigé à la connexion à l'API des comptes de l'équipe (`otp_code`). Connexions à l'admin bloquées 15 min après 5 échecs par IP ou par compte. Documentation de l'API réservée à l'équipe en production ; API en JSON seulement (pas d'interface navigable).
+- `manage.py check --deploy` sans avertissement en production, vérifié par la CI ; contrôles propres au projet : `core.W002` (Turnstile), `core.W003` (adresse de l'admin), `core.W004` (2FA).
+- **Données personnelles** : consentement explicite sur les formulaires, page confidentialité, durée de conservation définie, suppression sur demande. Conformité à la loi ivoirienne n° 2013-450 (ARTCI) et au RGPD pour les visiteurs européens. Mise en œuvre (Phase 23) : chaque app déclare ses données dans `privacy.py` (registre `apps/core/privacy.py`) ; durées `PERSONAL_DATA_RETENTION_DAYS` appliquées chaque nuit (contact 2 ans, devis sans suite 3 ans, réservations annulées 3 ans et réalisées 10 ans — pièces comptables —, avis refusés 1 an, notifications 1 an) ; outil « Données personnelles » de l'admin (administrateurs) : export JSON et effacement d'après un email, avec conservation motivée (obligation comptable, demande en cours, compte de l'équipe). L'anonymisation garde les statistiques (destination, dates, voyageurs).
 
 ---
 
@@ -867,7 +869,7 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 20 | Notifications | ✅ |
 | 21 | SEO | ✅ |
 | 22 | Tests | ✅ |
-| 23 | Sécurité | ⏭ prochaine étape |
-| 24 | Dockerisation et déploiement | |
+| 23 | Sécurité | ✅ |
+| 24 | Dockerisation et déploiement | ⏭ prochaine étape |
 
 Chaque phase comprend : l'objectif, l'arborescence concernée, les fichiers complets, leur emplacement, les commandes à exécuter, la méthode de test et la correction des erreurs. On ne passe pas à la phase suivante avant que la précédente soit validée.

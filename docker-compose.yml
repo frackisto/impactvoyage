@@ -108,8 +108,8 @@ services:
       args:
         NEXT_PUBLIC_SITE_URL: http://localhost:3000
         API_URL: http://backend:8000/api/v1
-        # Adresse du backoffice vue par le navigateur (redirection de /admin).
-        ADMIN_URL: http://localhost:8000/admin
+        # Widget anti-robot (fichier .env racine) ; vide : formulaires sans Turnstile.
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
     container_name: voyage_frontend
     restart: unless-stopped
     environment:

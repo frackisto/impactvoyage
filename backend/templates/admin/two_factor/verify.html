@@ -1,0 +1,18 @@
+{% extends "unfold/layouts/unauthenticated.html" %}
+{% comment %}Saisie du code de double authentification (apps/accounts/two_factor_views.py).{% endcomment %}
+
+{% block content %}
+    {% include "unfold/helpers/unauthenticated_title.html" with title=title subtitle=site_title %}
+
+    <p class="mb-6">
+        Saisissez le code à 6 chiffres affiché par votre application d'authentification,
+        ou l'un de vos codes de secours.
+    </p>
+
+    {% include "admin/two_factor/_code_form.html" with submit_label="Vérifier" %}
+
+    <p class="mt-6 text-sm text-font-subtle-light dark:text-font-subtle-dark">
+        Téléphone perdu et plus de code de secours ? Un super administrateur peut
+        réinitialiser votre double authentification depuis la fiche de votre compte.
+    </p>
+{% endblock %}

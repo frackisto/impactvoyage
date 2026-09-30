@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch, type Path } from "react-hook-form";
 import { z } from "zod";
 
+import { useCaptcha } from "@/components/common/turnstile";
 import { selectClass } from "@/components/search/filter-panel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,13 +41,15 @@ type QuoteFormProps = {
 /**
  * Formulaire de demande de devis (CdC § 18) : projet de voyage puis coordonnées.
  * Envoyé via le relais Next.js ; les erreurs de Django sont affichées sous les
- * champs concernés. Le champ « website » est un piège à robots invisible.
+ * champs concernés. Le champ « website » est un piège à robots invisible ; le
+ * widget Turnstile fournit le jeton anti-robot.
  */
 export function QuoteForm({ destinations, initial }: QuoteFormProps) {
   const t = useTranslations("Quote");
   const locale = useLocale();
   const [sent, setSent] = useState<QuoteClient | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const captcha = useCaptcha("quote");
   const successRef = useRef<HTMLDivElement>(null);
   // Message de succès annoncé et focalisé (le formulaire disparaît).
   useEffect(() => {
@@ -129,6 +132,10 @@ export function QuoteForm({ destinations, initial }: QuoteFormProps) {
 
   async function onSubmit(values: FormValues) {
     setFormError(null);
+    if (!captcha.ready) {
+      setFormError(t("errors.captcha"));
+      return;
+    }
     const payload: Values = {
       ...values,
       destination: values.destination && values.destination !== OTHER ? values.destination : null,
@@ -144,11 +151,13 @@ export function QuoteForm({ destinations, initial }: QuoteFormProps) {
       source_tour: initial.source_tour ?? null,
       source_offer: initial.source_offer ?? null,
       activities: initial.activities ?? [],
+      ...(captcha.token && { captcha_token: captcha.token }),
     };
     try {
       const { data } = await api.post<QuoteClient>("quotes", payload);
       setSent(data);
     } catch (error) {
+      captcha.reset(); // un jeton ne sert qu'une fois
       if (error instanceof ApiError && error.code === "validation_error") {
         const fields = error.fieldErrors();
         for (const [name, message] of Object.entries(fields)) {
@@ -367,6 +376,7 @@ export function QuoteForm({ destinations, initial }: QuoteFormProps) {
         </FieldGroup>
       </FieldSet>
 
+      {captcha.widget}
       {formError && (
         <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800">
           {formError}

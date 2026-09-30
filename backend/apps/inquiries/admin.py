@@ -7,6 +7,7 @@ passe par inquiries.services. Messages : marqués lus à l'ouverture, puis
 traités ou archivés.
 """
 from datetime import timedelta
+from urllib.parse import quote, urlencode
 
 from django import forms
 from django.contrib import admin
@@ -327,8 +328,11 @@ class ContactMessageAdmin(ServiceManagedAdminMixin, BaseAdmin):
 
     @display(description="répondre")
     def reply_link(self, obj):
-        return format_html('<a href="mailto:{}?subject={}" class="text-primary-600">'
-                           "Répondre par email</a>", obj.email, f"Re: {obj.subject}")
+        # Objet encodé : saisi par le visiteur, il ne doit pas pouvoir ajouter de
+        # destinataire (« &bcc=… ») au message préparé par le logiciel de messagerie.
+        query = urlencode({"subject": f"Re: {obj.subject}"}, quote_via=quote)
+        return format_html('<a href="mailto:{}?{}" class="text-primary-600">'
+                           "Répondre par email</a>", quote(obj.email, safe="@"), query)
 
     def has_add_permission(self, request):
         return False

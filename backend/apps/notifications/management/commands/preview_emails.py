@@ -20,6 +20,7 @@ from apps.inquiries.models import ContactMessage, QuoteRequest
 from apps.notifications.channels import StaffAlert
 from apps.notifications.emails import Email, render
 from apps.notifications.models import Notification
+from apps.notifications.services import admin_path
 
 
 class Command(BaseCommand):
@@ -60,7 +61,7 @@ class Command(BaseCommand):
             event=Notification.Event.BOOKING_REQUESTED,
             title=f"Demande de réservation {booking.reference}",
             message=f"{booking.contact_name} — nouvelle demande à traiter.",
-            link=f"/admin/bookings/booking/{booking.pk}/change/",
+            link=admin_path(booking),
             details=booking_emails.staff_details(booking),
         )
         yield "agency-booking-requested", Email(

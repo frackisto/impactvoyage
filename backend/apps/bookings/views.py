@@ -69,7 +69,7 @@ class BookingViewSet(WriteThrottleMixin, viewsets.GenericViewSet):
 
     @extend_schema(request=BookingRequestSerializer, responses={201: BookingCreatedSerializer})
     def create(self, request):
-        payload = BookingRequestSerializer(data=request.data)
+        payload = BookingRequestSerializer(data=request.data, context={"request": request})
         payload.is_valid(raise_exception=True)
         booking = services.request_booking(
             **payload.validated_data,

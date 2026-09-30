@@ -8,6 +8,7 @@ import { Controller, useForm, useWatch, type Path } from "react-hook-form";
 import { z } from "zod";
 
 import { Price } from "@/components/common/price";
+import { useCaptcha } from "@/components/common/turnstile";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
@@ -44,12 +45,14 @@ export type BookingFormItem = {
  * Demande de réservation (CdC § 12, § 13) : quantité, coordonnées et
  * consentement. Aucun prix n'est envoyé : le total affiché est indicatif et
  * Django le recalcule. Après l'envoi, le client arrive sur sa page de suivi.
- * Le champ « website » est un piège à robots invisible.
+ * Le champ « website » est un piège à robots invisible ; le widget Turnstile
+ * fournit le jeton anti-robot.
  */
 export function BookingForm({ item }: { item: BookingFormItem }) {
   const t = useTranslations("Booking");
   const router = useRouter();
   const [formError, setFormError] = useState<{ message: string; backToOffer?: boolean } | null>(null);
+  const captcha = useCaptcha("booking");
 
   const schema = useMemo(
     () =>
@@ -92,6 +95,10 @@ export function BookingForm({ item }: { item: BookingFormItem }) {
 
   async function onSubmit(values: FormValues) {
     setFormError(null);
+    if (!captcha.ready) {
+      setFormError({ message: t("errors.captcha") });
+      return;
+    }
     const payload: Payload = {
       contact_name: values.contact_name.trim(),
       contact_email: values.contact_email,
@@ -99,6 +106,7 @@ export function BookingForm({ item }: { item: BookingFormItem }) {
       customer_comments: values.customer_comments.trim(),
       consent: values.consent,
       website: values.website,
+      ...(captcha.token && { captcha_token: captcha.token }),
       items: [
         {
           kind: item.kind,
@@ -116,6 +124,7 @@ export function BookingForm({ item }: { item: BookingFormItem }) {
       const query = new URLSearchParams({ token: data.access_token, sent: "1" });
       router.push(`/reservation/${encodeURIComponent(data.reference ?? "")}?${query}`);
     } catch (error) {
+      captcha.reset(); // un jeton ne sert qu'une fois
       if (error instanceof ApiError && error.code === "validation_error") {
         const fields = error.fieldErrors();
         for (const [name, message] of Object.entries(fields)) {
@@ -242,6 +251,7 @@ export function BookingForm({ item }: { item: BookingFormItem }) {
         </FieldGroup>
       </FieldSet>
 
+      {captcha.widget}
       {formError && (
         <div role="alert" className="flex flex-col items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800">
           <p>{formError.message}</p>

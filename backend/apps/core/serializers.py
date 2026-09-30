@@ -12,10 +12,16 @@ from operator import attrgetter
 from django.conf import settings
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.fields import empty
+from rest_framework.settings import api_settings
 
+from .captcha import verify_captcha
 from .exceptions import BusinessError
 from .models import Category, ExchangeRate, SiteSettings, Tag
 from .services import convert_from_xof
+from .throttling import client_ip
+
+CAPTCHA_ERROR = "La vérification anti-robot a échoué ou a expiré. Réessayez."
 
 
 def get_display_currency(request):
@@ -109,11 +115,26 @@ class LinesField(serializers.Field):
 
 class HoneypotSerializerMixin(serializers.Serializer):
     """
-    Anti-spam (CdC § 19) : champ `website` invisible dans le formulaire ; un
-    robot qui le remplit est rejeté. Complété par Cloudflare Turnstile en Phase 23.
+    Anti-spam des formulaires publics (CdC § 19, § 29) :
+    - champ `website` invisible dans le formulaire : un robot qui le remplit est rejeté ;
+    - jeton Cloudflare Turnstile `captcha_token` (Phase 23, apps/core/captcha.py),
+      vérifié en dernier, une fois toutes les autres données valides : un jeton ne
+      sert qu'une fois, il n'est pas gaspillé par une simple erreur de saisie.
     """
 
     website = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    captcha_token = serializers.CharField(required=False, allow_blank=True, write_only=True,
+                                          help_text="Jeton du widget Cloudflare Turnstile")
+
+    def run_validation(self, data=empty):
+        value = super().run_validation(data)
+        request = self.context.get("request")
+        ip = client_ip(request) if request is not None else None
+        if not verify_captcha(value.pop("captcha_token", ""), ip):
+            raise serializers.ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [CAPTCHA_ERROR]}, code="captcha_invalid"
+            )
+        return value
 
     def validate_website(self, value):
         if value:

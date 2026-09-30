@@ -3,6 +3,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { polyfillCountryFlagEmojis } from "country-flag-emoji-polyfill";
 import { useEffect, useState, type ReactNode } from "react";
+import { z } from "zod";
+
+// zod 4 compile ses validations avec new Function() quand eval est permis : la CSP du
+// site l'interdit (Phase 23). Mode sans compilation, pour ne pas déclencher de violation.
+z.config({ jitless: true });
 
 /** Fournisseurs côté client : cache TanStack Query (recherche, pagination, formulaires). */
 export function Providers({ children }: { children: ReactNode }) {

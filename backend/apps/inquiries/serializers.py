@@ -57,7 +57,7 @@ class QuoteRequestCreateSerializer(HoneypotSerializerMixin, serializers.ModelSer
             "destination_text", "destination", "date_departure", "date_return", "adults",
             "children", "travel_type", "budget", "currency", "accommodation_pref",
             "transport_pref", "activities", "services_requested", "comments", "source_tour",
-            "source_offer", "consent", "website",
+            "source_offer", "consent", "website", "captcha_token",
         ]
         extra_kwargs = {"adults": {"min_value": 1, "max_value": 99},
                         "children": {"max_value": 99}}
@@ -179,7 +179,7 @@ class ContactMessageCreateSerializer(HoneypotSerializerMixin, serializers.ModelS
 
     class Meta:
         model = ContactMessage
-        fields = ["name", "email", "phone", "subject", "message", "website"]
+        fields = ["name", "email", "phone", "subject", "message", "website", "captcha_token"]
         extra_kwargs = {"message": {"min_length": 10, "max_length": 5000}}
 
     validate_phone = staticmethod(validate_phone)

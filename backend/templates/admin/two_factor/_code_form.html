@@ -1,0 +1,17 @@
+{% load unfold %}
+<form method="post" id="two-factor-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% include "unfold/helpers/field.html" with field=form.code %}
+    <div class="flex flex-col gap-3 mt-6">
+        {% component "unfold/components/button.html" with submit=1 variant="primary" class="w-full" %}
+            {{ submit_label }}
+        {% endcomponent %}
+    </div>
+</form>
+<form method="post" action="{% url 'admin:logout' %}" class="mt-3">
+    {% csrf_token %}
+    {% component "unfold/components/button.html" with submit=1 variant="secondary" class="w-full" %}
+        Se déconnecter
+    {% endcomponent %}
+</form>

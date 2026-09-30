@@ -1,0 +1,19 @@
+{% extends "unfold/layouts/unauthenticated.html" %}
+{% comment %}Trop d'échecs de connexion (apps/accounts/middleware.py).{% endcomment %}
+
+{% block content %}
+    {% include "unfold/helpers/unauthenticated_title.html" with title=title subtitle=site_title %}
+
+    {% include "unfold/helpers/messages/error.html" with error="Trop de tentatives de connexion." %}
+
+    <p class="mb-6">
+        Par sécurité, les connexions sont suspendues pendant {{ minutes }} minutes pour
+        cette adresse ou ce compte. Réessayez plus tard ou contactez un administrateur.
+    </p>
+
+    {% load unfold %}
+    {% url 'admin:login' as login_url %}
+    {% component "unfold/components/button.html" with href=login_url variant="secondary" class="w-full" %}
+        Retour à la connexion
+    {% endcomponent %}
+{% endblock %}

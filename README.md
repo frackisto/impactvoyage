@@ -1,4 +1,4 @@
-# Plateforme Web Agence de Voyage — Phase 22
+# Plateforme Web Agence de Voyage — Phase 23
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
 Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
@@ -40,7 +40,7 @@ Services démarrés :
 - `redis` → Redis sur le port 6379
 - `celery` → worker Celery (tâches asynchrones : emails, taux de change)
 - `celery-beat` → planificateur (expiration des réservations, taux de change quotidiens,
-  purge des notifications lues)
+  purge des notifications lues, durées de conservation des données personnelles)
 - `mailpit` → capture des emails en développement : http://localhost:8025
 
 ## Vérifier que tout fonctionne
@@ -52,7 +52,7 @@ curl http://localhost:8000/api/v1/health/
 # Documentation Swagger
 open http://localhost:8000/api/v1/docs/
 
-# Admin Django
+# Admin Django (en production : adresse ADMIN_URL_PATH, voir « Sécurité »)
 open http://localhost:8000/admin/
 ```
 
@@ -573,8 +573,8 @@ sur ordinateur et mobile, stables sur deux passages, dont l'audit axe (WCAG 2.2 
 
 Administration Django thémée avec **django-unfold** : http://localhost:8000/admin/
 (connexion par email). Couleurs du site, menu en français, utilisable sur mobile.
-Le backoffice est servi par Django, pas par le site : `/admin` ouvert sur le site
-(http://localhost:3000/admin) y est redirigé (`ADMIN_URL`, lue au build du frontend).
+Le backoffice est servi par Django, pas par le site ; en production, il est à une adresse
+non standard (`ADMIN_URL_PATH`) et exige une double authentification (voir « Sécurité »).
 
 - **Comptes de démonstration** (créés par `seed_demo`, jamais en production), mot de
   passe `Demo-Impact-2026` : `superadmin.demo@`, `admin.demo@`, `agent.demo@`,
@@ -757,8 +757,93 @@ liens des emails de compte (`/verifier-email`, `/reset-password`) mèneront à c
   (`view_count`) n'est jamais incrémenté : la colonne « Vues » du tableau de bord reste
   à 0 (prévu par l'architecture § 7.2, à faire avec les performances).
 
+## Sécurité (Phase 23)
+
+Revue OWASP (architecture § 11). À renseigner avant la mise en production :
+
+| Variable | Où | Rôle |
+|---|---|---|
+| `ADMIN_URL_PATH` | `backend/.env` | Adresse du backoffice, non standard (obligatoire en production) |
+| `TURNSTILE_SECRET_KEY` | `backend/.env` | Clé secrète Cloudflare Turnstile |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | `.env` racine (build du frontend) | Clé du site Turnstile |
+| `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` | `backend/.env` | Domaines du backend (obligatoires en production) |
+
+- **Backoffice** : en production, `/admin/` répond 404 ; seule l'adresse `ADMIN_URL_PATH`
+  mène à l'admin, et le site ne la révèle pas (plus de redirection de `/admin`).
+  **Double authentification** obligatoire pour l'équipe : au premier accès, chacun scanne
+  un QR code avec une application (Google Authenticator, Microsoft Authenticator,
+  FreeOTP…) et reçoit 10 codes de secours, affichés une seule fois ; ensuite, un code est
+  demandé à chaque connexion. Téléphone perdu : un super administrateur clique
+  « Réinitialiser la double authentification » sur la fiche du compte. La colonne
+  « Double authentification » de la liste des utilisateurs montre qui l'a activée.
+  En développement, elle est facultative : `STAFF_OTP_REQUIRED=True` dans `backend/.env`
+  pour l'essayer.
+- **Connexion** : 5 échecs pour une adresse IP ou un compte bloquent l'admin 15 minutes.
+  À l'API, un compte de l'équipe doit aussi fournir son code (`otp_code` ; erreurs
+  `otp_required`, `otp_invalid`, `otp_setup_required`).
+- **Anti-spam** : widget Cloudflare Turnstile sur les formulaires de devis, de contact et
+  de réservation (le jeton est aussi exigé par l'API pour les avis et l'inscription),
+  vérifié par Django une fois les données valides. Sans clés, rien ne change
+  (développement, tests). Clés de test Cloudflare : site `1x00000000000000000000AA`,
+  secret `1x0000000000000000000000000000000AA` (toujours valides).
+- **En-têtes** : CSP stricte à nonce sur toutes les pages du site (aucun script en ligne
+  non signé, seul Turnstile est autorisé en dehors du site), CSP fermée sur les routes
+  `/api` et les réponses de Django, CSP du backoffice limitée à son domaine, HSTS dès que
+  `NEXT_PUBLIC_SITE_URL` est en HTTPS.
+- **Relais `/api/backend/*`** : un chemin encodé (`%2F..%2F`) permettait d'atteindre
+  n'importe quelle adresse de Django, backoffice compris, depuis le site : seuls des
+  chemins simples sous `/api/v1` sont désormais relayés. Les envois venant d'un autre
+  site sont refusés (`forbidden_origin`).
+- **Images** : le format réel (JPEG, PNG, WebP) doit correspondre à l'extension, 40
+  mégapixels au plus ; les photos des visiteurs (avis, avatar) perdent leurs métadonnées
+  (position GPS, appareil).
+- **Contenu riche** : aucun champ n'accepte de HTML ; articles et pages légales sont
+  affichés comme du texte, sans interpréter de balise (pas besoin de nettoyeur HTML).
+- **Données personnelles** : liste des utilisateurs → **Données personnelles**
+  (administrateurs) : rechercher une adresse email, télécharger l'export JSON (droit
+  d'accès), effacer (droit à l'effacement). Les réservations confirmées ou réalisées
+  (pièces comptables), les demandes en cours et les comptes de l'équipe sont conservés,
+  avec le motif affiché. Durées de conservation appliquées chaque nuit (reprises dans la
+  politique de confidentialité) ; `python manage.py apply_retention` les applique tout
+  de suite.
+- **Documentation de l'API** : réservée en production à l'équipe connectée au
+  backoffice ; l'API ne répond qu'en JSON (pas d'interface navigable).
+- `manage.py check --deploy` ne signale plus rien avec les réglages de production ; la CI
+  le vérifie à chaque push.
+
+## Ce qui a été validé (Phase 23)
+
+- Backend : ruff et mypy sans erreur, migrations à jour (validateur d'image ajouté aux
+  champs photo : aucune modification de la base), schéma OpenAPI valide, `check --deploy`
+  sans avertissement avec les réglages de production, 275 tests pytest (37 nouveaux :
+  double authentification, blocage des connexions, CSP, documentation réservée,
+  Turnstile, images, lien de réponse, données personnelles, durées de conservation),
+  couverture 97 %.
+- Frontend : ESLint, TypeScript, 58 tests Vitest (règles du relais, contrôle d'origine,
+  CSP, widget Turnstile dans un formulaire), build de production, 307 tests Playwright
+  sur ordinateur et mobile (dont : CSP à nonce sans aucune violation sur cinq pages et
+  après une navigation, chemins encodés refusés par le relais, envois d'un autre site
+  refusés, `/admin` sans redirection).
+- Parcours réels : backoffice à une adresse non standard avec 2FA dans Chromium
+  (`/admin/` → 404, enregistrement de l'application par QR code, codes de secours, accès,
+  nouvelle connexion avec un code de secours, pages de l'admin sans violation de CSP) ;
+  widget Turnstile avec la clé de test de Cloudflare (script et cadre autorisés par la
+  CSP, jeton transmis, message enregistré) ; vérification côté Django auprès de
+  Cloudflare avec les clés de test « toujours valide » et « toujours refusée ».
+- Corrigé au passage : le relais `/api/backend/*` donnait accès à tout Django depuis le
+  site (chemin encodé) ; le lien « Répondre par email » d'un message de contact
+  permettait d'ajouter un destinataire caché via l'objet saisi par le visiteur ; les
+  liens des notifications visaient `/admin/` en dur ; l'API navigable de DRF restait
+  active en production ; zod 4 testait `eval` (bloqué par la CSP).
+- Limites connues : comme toute page inconnue, `/admin` sur le site répond avec le statut
+  200 (page introuvable servie en streaming, `noindex`) — à corriger avec les
+  performances ; les mentions légales contiennent encore des champs « à compléter »
+  (RCCM, hébergeur…) que seule l'agence peut fournir ; les tests d'activités supposent
+  une démonstration chargée récemment (dates relatives au jour du chargement :
+  `seed_demo --reset` puis `seed_demo`).
+
 ## Prochaine étape
 
-**Phase 23 : Sécurité** — revue OWASP (§ 11) : en-têtes de sécurité et CSP,
-`check --deploy`, nettoyage du contenu riche, anti-spam (Turnstile), admin sur une URL
-non standard avec double authentification, contrôles des uploads, données personnelles.
+**Phase 24 : Dockerisation et déploiement** — `docker-compose.prod.yml`, Nginx (TLS,
+HSTS, limitation des pages, `client_max_body_size`, en-têtes des médias), Umami, images
+sans utilisateur root, sauvegardes.

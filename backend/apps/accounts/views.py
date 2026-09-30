@@ -52,7 +52,7 @@ class RegisterView(AuthThrottleMixin, APIView):
 
     @extend_schema(request=RegisterSerializer, responses={201: AuthResponseSerializer})
     def post(self, request):
-        payload = RegisterSerializer(data=request.data)
+        payload = RegisterSerializer(data=request.data, context={"request": request})
         payload.is_valid(raise_exception=True)
         user = services.register_user(**payload.validated_data)
         body = {**tokens_for(user), "user": UserSerializer(user, context={"request": request}).data}

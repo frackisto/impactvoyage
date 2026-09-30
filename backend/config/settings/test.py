@@ -30,3 +30,8 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 # Pas d'appel au site Next.js pendant les tests (les tests de revalidation l'activent).
 FRONTEND_REVALIDATE_URL = ""
+
+# Sécurité (Phase 23) : désactivée par défaut, activée par les tests qui la vérifient.
+STAFF_OTP_REQUIRED = False
+API_DOCS_PUBLIC = True
+TURNSTILE_SECRET_KEY = ""
