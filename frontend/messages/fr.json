@@ -1327,7 +1327,7 @@
         },
         "s6": {
           "title": "Cookies",
-          "body": "Le site utilise uniquement des cookies nécessaires à son fonctionnement :\n\n- la langue choisie ;\n- la devise d'affichage des prix ;\n- la session de connexion à votre compte, le cas échéant.\n\nAucun cookie publicitaire ni de mesure d'audience n'est déposé."
+          "body": "Le site utilise uniquement des cookies nécessaires à son fonctionnement :\n\n- la langue choisie ;\n- la devise d'affichage des prix ;\n- la session de connexion à votre compte, le cas échéant.\n\nAucun cookie publicitaire ni de mesure d'audience n'est déposé.\n\nPour connaître les pages consultées, nous utilisons Umami, hébergé par l'agence sur son propre serveur : il ne dépose aucun cookie, ne conserve pas votre adresse IP et ne garde que des statistiques anonymes (pages vues, ville et pays approximatifs, type d'appareil et de navigateur). Il est désactivé si votre navigateur envoie le signal « Do Not Track »."
         },
         "s7": {
           "title": "Sécurité",

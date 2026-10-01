@@ -14,7 +14,7 @@
                                │ HTTPS
                                ▼
                     ┌──────────────────────┐
-                    │        Nginx         │  TLS, gzip/brotli, /media, /static
+                    │        Nginx         │  TLS, gzip, /media, /static, débit
                     └─────┬──────────┬─────┘
                           │          │
                           ▼          ▼
@@ -682,7 +682,7 @@ quotes.view / .update
 - Extensions activées par migration : `btree_gist` (contrainte d'exclusion véhicules), `pg_trgm` et `unaccent` (recherche tolérante aux fautes et aux accents : « cote divoire » trouve « Côte d'Ivoire »). `django.contrib.postgres` ajouté à `INSTALLED_APPS`.
 - Recherche globale : `SearchVector` pondéré (titre > description) + similarité trigramme, avec index GIN.
 - Les contraintes métier critiques (stock, chevauchement, cohérence des FK, notes 1–5, prix promo) sont portées **par la base**.
-- Sauvegarde quotidienne (`pg_dump`), conservée 30 jours, avec un test de restauration mensuel.
+- Sauvegarde quotidienne (`pg_dump`), conservée 30 jours, avec un test de restauration mensuel. Mise en œuvre (Phase 24) : service `backup` (`deploy/backup/`) — bases du site et d'Umami + archive des médias (7 jours), empreintes SHA-256, restauration vérifiée dans une base temporaire le 1er du mois ; copie hors du serveur à la charge de l'exploitant (`DEPLOIEMENT.md`).
 
 ### 7.2 Redis
 
@@ -743,7 +743,7 @@ media/
 - Fichiers renommés en UUID à l'upload : pas de nom fourni par l'utilisateur, pas d'énumération.
 - Variantes générées par Celery : 400, 800 et 1600 px, en WebP + original compressé. `next/image` sert la taille adaptée.
 - **Limites** : images JPEG, PNG ou WebP de 5 Mo maximum, avec contrôle de l'extension **et** du contenu réel (Pillow `verify()`). Les vidéos passent par un lien YouTube/Vimeo, pas par un upload.
-- Nginx sert `/media/` sans exécution de script, avec l'en-tête `X-Content-Type-Options: nosniff`.
+- Nginx sert `/media/` sans exécution de script, avec l'en-tête `X-Content-Type-Options: nosniff` (Phase 24 : images JPEG, PNG et WebP seulement, CSP `sandbox`, cache 30 jours). L'optimisation des images de Next.js lit les médias sur le port interne de Nginx (`MEDIA_ORIGIN`).
 - Évolution possible : stockage S3-compatible via `django-storages`, sans changer les modèles.
 
 ---
@@ -763,7 +763,7 @@ media/
 
 - Objectifs Core Web Vitals (75ᵉ percentile mobile) : **LCP < 2,5 s, CLS < 0,1, INP < 200 ms**.
 - Server Components + ISR, `next/image` (tailles et `priority` sur l'image hero), `next/font` (pas de décalage de police), lazy loading des galeries.
-- Cache Redis côté API, en-têtes `Cache-Control` sur les listes publiques, compression gzip/brotli par Nginx.
+- Cache Redis côté API, en-têtes `Cache-Control` sur les listes publiques, compression gzip par Nginx (les pages, déjà compressées par Next.js, et les fichiers statiques précompressés par WhiteNoise ne sont pas recompressés).
 - Requêtes Django optimisées (§ 7.1), pagination partout.
 - Lighthouse CI sur les pages clés à chaque build.
 
@@ -774,7 +774,7 @@ media/
 - HTTPS obligatoire (HSTS), `SECURE_PROXY_SSL_HEADER` derrière Nginx, CORS limité au domaine du frontend, `CSRF_TRUSTED_ORIGINS` en production.
 - Protection CSRF, XSS, injection SQL (ORM, aucun SQL brut non paramétré). **Contenu riche** (Phase 23) : aucun champ n'accepte de HTML ; articles et pages légales sont du texte structuré (`##` intertitre, `-` liste) rendu par React sans interpréter de balise (`RichText`), les gabarits Django échappent tout et les liens de l'admin passent par `format_html` avec des valeurs encodées. `nh3` n'a donc pas d'usage : il ne deviendra nécessaire que si un éditeur HTML est ajouté.
 - **CSRF du relais Next.js** (Phase 23) : cookies `SameSite=Lax` et contrôle de l'en-tête `Origin` / `Sec-Fetch-Site` sur toute requête qui modifie des données (`/api/backend/*`, `/api/auth/*`). Le relais n'accepte que des segments de chemin simples, réencodés : il ne peut jamais sortir de `/api/v1` (`lib/security.ts`).
-- En-têtes (Phase 23) : CSP à **nonce** sur les pages (`proxy.ts` : `script-src 'nonce-…' 'strict-dynamic'`, sans `unsafe-inline` pour les scripts ; toutes les pages étant rendues à la demande, le nonce ne coûte rien en cache), CSP `default-src 'none'` sur les routes `/api` et les réponses JSON de Django, CSP du backoffice limitée à son propre domaine, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `X-Frame-Options: DENY`, HSTS dès que le site est en HTTPS. Nginx (Phase 24) reprendra HSTS et la limitation des pages.
+- En-têtes (Phase 23) : CSP à **nonce** sur les pages (`proxy.ts` : `script-src 'nonce-…' 'strict-dynamic'`, sans `unsafe-inline` pour les scripts ; toutes les pages étant rendues à la demande, le nonce ne coûte rien en cache), CSP `default-src 'none'` sur les routes `/api` et les réponses JSON de Django, CSP du backoffice limitée à son propre domaine, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `X-Frame-Options: DENY`, HSTS dès que le site est en HTTPS. Nginx (Phase 24) pose HSTS une seule fois pour tous les domaines et limite le débit par IP : pages 20/s (rafales de 100), optimisation d'images 30/s, routes `/api` du site 5/s, Django 10/s ; réponse 429 en page dédiée ou en JSON au format de l'API.
 - **Rate limiting** DRF (déjà configuré en Phase 2) : anon 120/min, user 300/min, auth 10/min, devis 5/h, contact 5/h, avis 3/h. Les pages étant rendues par Next.js, le serveur Next.js s'identifie auprès de Django par un secret partagé (`FRONTEND_SHARED_SECRET`) et transmet l'adresse réelle du visiteur (`X-Client-IP`) : les limites s'appliquent à chaque visiteur, les lectures publiques mises en cache par Next.js ne sont pas limitées par Django (limitation des pages par Nginx), les écritures le sont toujours. `X-Forwarded-For` n'est lu que derrière un proxy déclaré (`NUM_PROXIES`). Voir `apps/core/throttling.py` (Phase 15).
 - **Anti-spam** des formulaires publics (devis, contact, réservation, avis, inscription) : champ *honeypot* + **Cloudflare Turnstile** (`captcha_token`), vérifié côté Django en dernier, une fois les données valides (un jeton ne sert qu'une fois). Clé vide : vérification désactivée ; Cloudflare injoignable : la demande est acceptée et l'incident journalisé (`apps/core/captcha.py`).
 - Validation systématique côté backend, permissions strictes par action (§ 6.3).
@@ -802,7 +802,7 @@ media/
 - **Tableau de bord** (page d'accueil de l'admin), alimenté par `dashboard/selectors.py` et mis en cache 5 min :
   - KPIs : demandes de devis, réservations, circuits, destinations, hôtels, véhicules, offres actives, messages non lus, avis en attente ;
   - graphiques (Chart.js) : devis par mois, réservations par mois, destinations et circuits populaires (`view_count` + réservations), chiffre d'affaires quand le paiement existera.
-- **Nombre de visiteurs** : **Umami** auto-hébergé (open source, sans cookie, compatible RGPD, stocke ses données dans PostgreSQL). Le dashboard lit son API. Django ne journalise pas lui-même les visites.
+- **Nombre de visiteurs** : **Umami** auto-hébergé (open source, sans cookie, compatible RGPD, stocke ses données dans PostgreSQL). Le dashboard lit son API. Django ne journalise pas lui-même les visites. Phase 24 : Umami 3.4, base `umami` du même serveur PostgreSQL ; script et collecte servis par le site sous `/stats/` (Nginx, aucun domaine tiers ni changement de CSP, « Do Not Track » respecté), interface sur son propre domaine ; le tableau de bord s'authentifie avec une clé d'API Umami (`UMAMI_API_TOKEN`).
 
 Mise en œuvre (Phase 19) :
 
@@ -833,13 +833,22 @@ Analytics: Umami
 - `docker-compose.yml` (dev) + `docker-compose.prod.yml` : `frontend`, `backend`, `postgres`, `redis`, `celery`, `celery-beat`, `nginx`, `umami`.
 - En production : seuls les ports 80 et 443 de Nginx sont exposés (PostgreSQL et Redis restent sur le réseau interne), Gunicorn sans `--reload`, TLS Let's Encrypt, `restart: unless-stopped`, healthchecks.
 - Variables d'environnement séparées par environnement (`dev`, `prod`, `test`).
-- Au déploiement : `migrate`, `collectstatic`, `sync_roles`. `seed_demo` uniquement en recette.
+- Au déploiement : `migrate`, `collectstatic`, `sync_roles`. `seed_demo` uniquement en recette (`DEMO_DATA_ALLOWED`, signalé par `check --deploy`).
+
+Mise en œuvre (Phase 24, guide : `DEPLOIEMENT.md`) :
+
+- **Domaines** : site (Next.js), backoffice et API (Django), statistiques (Umami), définis une seule fois dans `.env.prod` ; Compose en déduit `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`, `BACKEND_URL` et l'URL publique du site.
+- **Nginx** (`deploy/nginx/`, image dérivée de `nginx:1.30-alpine`) : gabarit des serveurs, résolution DNS à chaque requête (un conteneur recréé change d'adresse), `X-Real-IP` et `X-Forwarded-For` remplacés par l'adresse réelle (`NUM_PROXIES=1`), pages servies en streaming, `client_max_body_size` 10 Mo (site) et 64 Mo (backoffice), pages 429 et de maintenance, port interne 8080 (médias pour Next.js, healthcheck).
+- **TLS** : un certificat Let's Encrypt pour tous les domaines, obtenu et renouvelé par le service `certbot` (webroot) ; Nginx démarre avec un certificat autosigné provisoire et charge le certificat réel dès qu'il change.
+- **Images** : backend (utilisateur `app`, environnement virtuel `/opt/venv`, code en lecture seule), frontend (`nextjs`), `no-new-privileges` ; Gunicorn configuré par `backend/gunicorn.conf.py`. L'API reste joignable en HTTP sur le réseau interne (`SECURE_REDIRECT_EXEMPT`) ; journaux Django sur la sortie standard.
+- **Redis** : persistance AOF (tâches en attente), 256 Mo, éviction des seules clés expirantes (cache).
+- **CI** : job « Déploiement » (configuration Compose, construction des images, utilisateurs non root, `nginx -t`, shellcheck).
 
 ---
 
 ## 16. Documentation (CdC § 41)
 
-README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package.json`, documentation API (Swagger `/api/v1/docs/`, ReDoc), ce document d'architecture, guide d'installation (Django, Next.js, PostgreSQL, Redis, Celery, variables d'environnement, migrations, seeders, lancement local) et guide de déploiement.
+README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package.json`, documentation API (Swagger `/api/v1/docs/`, ReDoc), ce document d'architecture, guide d'installation (Django, Next.js, PostgreSQL, Redis, Celery, variables d'environnement, migrations, seeders, lancement local) et guide de déploiement (`DEPLOIEMENT.md`).
 
 ---
 
@@ -870,6 +879,6 @@ README, `.env.example` (backend, frontend, racine), `requirements.txt`, `package
 | 21 | SEO | ✅ |
 | 22 | Tests | ✅ |
 | 23 | Sécurité | ✅ |
-| 24 | Dockerisation et déploiement | ⏭ prochaine étape |
+| 24 | Dockerisation et déploiement | ✅ |
 
 Chaque phase comprend : l'objectif, l'arborescence concernée, les fichiers complets, leur emplacement, les commandes à exécuter, la méthode de test et la correction des erreurs. On ne passe pas à la phase suivante avant que la précédente soit validée.

@@ -1,9 +1,10 @@
-# Plateforme Web Agence de Voyage — Phase 23
+# Plateforme Web Agence de Voyage — Phase 24
 
 Backend Django + PostgreSQL + Redis + Celery et frontend Next.js, dockerisés.
-Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète.
+Voir [architecture-plateforme-voyage.md](architecture-plateforme-voyage.md) pour l'architecture complète
+et [DEPLOIEMENT.md](DEPLOIEMENT.md) pour la mise en production.
 
-## Démarrage avec Docker (recommandé)
+## Démarrage avec Docker (développement, recommandé)
 
 ```bash
 # 1. Copier les fichiers d'environnement
@@ -282,7 +283,7 @@ page avec les coordonnées de l'agence. Aperçu : http://localhost:3000/charte-g
   Les véhicules, incomplets, restent non publiés ; les textes marqués « À COMPLÉTER » et les
   descriptions de Chine, Abidjan, Grand-Lahou et Mondoukou sont à relire par l'agence.
 - **Photos Django** : servies au navigateur par le relais `/media/*` de Next.js (plus besoin
-  de `NEXT_PUBLIC_MEDIA_URL`) ; en production, Nginx les servira directement.
+  de `NEXT_PUBLIC_MEDIA_URL`) ; en production, Nginx les sert directement (Phase 24).
 
 ## Destinations (Phase 11)
 
@@ -407,9 +408,9 @@ pris tel quel et permettait de contourner les limites.
   production). Il transmet l'adresse réelle du visiteur (`X-Client-IP`) pour les requêtes
   qui lui sont propres : connexion, formulaires, disponibilités.
 - Les lectures publiques mises en cache par Next.js ne sont pas limitées par Django (le
-  trafic des pages sera limité par Nginx, Phase 24) ; les écritures le sont toujours.
+  trafic des pages est limité par Nginx, Phase 24) ; les écritures le sont toujours.
 - `X-Forwarded-For` n'est plus pris en compte par défaut (`NUM_PROXIES=0` ; 1 derrière
-  Nginx, qui devra poser `X-Real-IP`).
+  Nginx, qui pose `X-Real-IP`).
 
 ## Moteur de recherche (Phase 16)
 
@@ -585,7 +586,7 @@ non standard (`ADMIN_URL_PATH`) et exige une double authentification (voir « S�
   non lues, devis et réservations par mois sur 12 mois, destinations et circuits
   populaires (réservations puis vues). Statistiques en cache 5 minutes.
   Visiteurs : lus dans **Umami** (`UMAMI_API_URL`, `UMAMI_WEBSITE_ID`,
-  `UMAMI_API_TOKEN`) ; tant qu'Umami n'est pas déployé (Phase 24), la carte l'indique.
+  `UMAMI_API_TOKEN`) ; sans cette configuration (développement), la carte l'indique.
 - **Réservations** : fiche en lecture seule (sauf notes internes) ; **Confirmer**
   (réserve le stock), **Refuser** et **Annuler** (motif, stock libéré) passent par
   `bookings.services`, avec une page de confirmation et l'email au client. Seules les
@@ -842,8 +843,82 @@ Revue OWASP (architecture § 11). À renseigner avant la mise en production :
   une démonstration chargée récemment (dates relatives au jour du chargement :
   `seed_demo --reset` puis `seed_demo`).
 
-## Prochaine étape
+## Dockerisation et déploiement (Phase 24)
 
-**Phase 24 : Dockerisation et déploiement** — `docker-compose.prod.yml`, Nginx (TLS,
-HSTS, limitation des pages, `client_max_body_size`, en-têtes des médias), Umami, images
-sans utilisateur root, sauvegardes.
+Guide complet : **[DEPLOIEMENT.md](DEPLOIEMENT.md)** (serveur, DNS, installation, Umami,
+mises à jour, sauvegardes et restauration, recette).
+
+```bash
+cp .env.prod.example .env.prod      # domaines, secrets, email Let's Encrypt
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+- **`docker-compose.prod.yml`** : `nginx`, `frontend`, `backend`, `celery`, `celery-beat`,
+  `db`, `redis`, `umami`, `certbot`, `backup`. Seuls les ports 80 et 443 de Nginx sont
+  publiés ; Gunicorn sans `--reload` (`backend/gunicorn.conf.py`), migrations et
+  `collectstatic` au démarrage, healthchecks, `restart: unless-stopped`, journaux limités.
+  Les domaines sont définis une fois dans `.env.prod` : Compose en déduit `ALLOWED_HOSTS`,
+  `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`, `BACKEND_URL` et l'URL du site (build).
+- **Nginx** (`deploy/nginx/`) : site, backoffice/API et Umami sur trois domaines ; TLS 1.2/1.3,
+  HSTS posé une seule fois, HTTP → HTTPS, nom inconnu refusé dès la poignée de main ;
+  **limitation de débit** par IP (pages, optimisation d'images, routes `/api` du site,
+  Django) avec une page 429 ou une erreur JSON au format de l'API ; **médias** servis
+  directement depuis le volume, images seulement, `nosniff` et CSP `sandbox` ;
+  `client_max_body_size` 10 Mo (site) et 64 Mo (backoffice) ; page de maintenance pendant
+  un redémarrage. `X-Real-IP` / `X-Forwarded-For` remplacés par l'adresse réelle
+  (`NUM_PROXIES=1`).
+- **TLS Let's Encrypt** automatique (`deploy/certbot/renew.sh`) : certificat autosigné
+  provisoire au premier démarrage, certificat réel obtenu puis renouvelé par certbot et
+  rechargé par Nginx sans intervention.
+- **Images sans root** : backend (utilisateur `app`, UID 1000, dépendances dans
+  `/opt/venv`, code en lecture seule), frontend (`nextjs`) ; `no-new-privileges`.
+- **Umami 3.4** (mesure d'audience sans cookie) : base `umami` créée au premier démarrage
+  de PostgreSQL ; script et collecte servis par le site sous `/stats/` (CSP inchangée,
+  `components/analytics/umami-script.tsx`, respect de « Do Not Track ») ; le tableau de
+  bord lit l'API avec une clé d'API Umami. Politique de confidentialité complétée.
+- **Sauvegardes** (`deploy/backup/`) : chaque nuit, `pg_dump` des deux bases et archive des
+  médias avec empreintes SHA-256, conservées 30 jours (médias 7 jours) ; test de
+  restauration le 1er du mois ; scripts de sauvegarde, de vérification et de restauration
+  à la demande.
+- **Production** : journaux Django sur la sortie standard (les erreurs 500 étaient
+  invisibles avec `DEBUG=False`) ; l'API reste joignable en HTTP par le serveur Next.js sur
+  le réseau interne (`SECURE_REDIRECT_EXEMPT`) ; `DEMO_DATA_ALLOWED` autorise
+  `seed_demo` en recette (signalé par `check --deploy`, `core.W005`).
+- **Next.js** : `/api/health` (healthcheck) ; `MEDIA_ORIGIN` : en production, l'optimisation
+  des images lit les médias sur le port interne de Nginx (Django ne les sert qu'en
+  développement).
+- **Intégration continue** : nouveau job « Déploiement » — configuration Compose,
+  construction des trois images, utilisateurs non root, `nginx -t`, shellcheck.
+
+> ⚠️ **Environnement de développement existant** : l'image du backend ne tourne plus en
+> root. Les volumes créés avant la Phase 24 (médias, fichiers statiques) et les caches
+> écrits par root dans `backend/` doivent changer de propriétaire, une seule fois :
+>
+> ```bash
+> docker compose build backend
+> docker compose run --rm --no-deps -u root backend sh -c \
+>   "chown -R app:app /app/media /app/staticfiles && rm -rf /app/.ruff_cache /app/.mypy_cache"
+> docker compose up -d
+> ```
+
+## Ce qui a été validé (Phase 24)
+
+- Pile de production complète lancée en local (domaines `*.localhost`, certificat
+  autosigné) : tous les services « healthy » ; HTTP → HTTPS, nom inconnu refusé (ports 80
+  et 443), un seul en-tête HSTS, CSP à nonce intacte ; `/admin/` → 404, backoffice à
+  l'adresse secrète avec connexion (CSRF derrière le proxy) puis 2FA imposée ; API, relais
+  `/api/backend/*` (lecture, formulaire, origine étrangère refusée), sitemap aux URL
+  `https://` ; contenu de l'agence chargé par l'utilisateur non root, `seed_demo` refusé.
+- Médias servis par Nginx (en-têtes, extensions refusées, chemins piégés en 400),
+  `next/image` d'un média via le port interne, fichiers statiques précompressés.
+- Limitation de débit : 429 au-delà des rafales, en JSON sur `/api`, page dédiée avec
+  `Retry-After` sur les pages ; page de maintenance (et JSON 503) site arrêté.
+- Umami : script et collecte par `/stats/`, visite enregistrée et relue par le tableau
+  de bord Django avec une clé d'API ; régénération des pages Celery → Next.js.
+- Sauvegarde, test de restauration (59 tables, 74 migrations), purge par date (bases et
+  médias), restauration réelle de la base Umami (propriétaire conservé) et des photos.
+- `check --deploy` dans l'image : seul `core.W002` (clé Turnstile vide en essai local).
+- Backend : ruff, mypy, 275 tests pytest, couverture 96,8 %. Frontend : ESLint, TypeScript,
+  60 tests Vitest (dont le script Umami), build, parcours Playwright sécurité et SEO.
+- Corrigé au passage : un test du tableau de bord échouait certains jours (« il y a
+  62 jours » sortait de la fenêtre de trois mois le 1er octobre).

@@ -1,0 +1,222 @@
+# Serveurs Nginx de production (Phase 24). Gabarit : ${SITE_DOMAIN}, ${SITE_ALIASES},
+# ${API_DOMAIN} et ${STATS_DOMAIN} sont remplacés au démarrage du conteneur.
+#
+#   https://${SITE_DOMAIN}   site public (Next.js), médias, mesure d'audience (/stats/)
+#   https://${API_DOMAIN}    Django : backoffice, API, documentation, fichiers statiques
+#   https://${STATS_DOMAIN}  interface d'Umami (statistiques de fréquentation)
+
+server_tokens off;
+charset utf-8;
+
+# Applications jointes par le DNS interne de Docker, résolu à chaque requête : un conteneur
+# recréé change d'adresse IP (proxy_pass avec une variable).
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+# --- Limitation de débit par adresse IP (architecture § 11) ---
+# Django ne limite que les requêtes propres à un visiteur (formulaires, connexion) : les
+# pages sont limitées ici. Les rafales (préchargement des liens, galeries) sont absorbées.
+limit_req_zone $binary_remote_addr zone=pages:10m rate=20r/s;
+limit_req_zone $binary_remote_addr zone=images:10m rate=30r/s;
+limit_req_zone $binary_remote_addr zone=bff:10m rate=5r/s;
+limit_req_zone $binary_remote_addr zone=backend:10m rate=10r/s;
+limit_req_status 429;
+limit_req_log_level warn;
+
+# --- Compression (Next.js compresse déjà ses pages : elles ne sont pas recompressées) ---
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 5;
+gzip_min_length 1024;
+gzip_types text/plain text/css text/xml text/javascript application/javascript
+           application/json application/xml application/rss+xml image/svg+xml;
+
+# Formulaires du site : photo d'avis ou avatar de 5 Mo au plus (contrôlé par Django).
+client_max_body_size 10m;
+
+# --- Port 80 : défi Let's Encrypt, puis redirection vers HTTPS ---
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    return 444;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${SITE_DOMAIN} ${SITE_ALIASES} ${API_DOMAIN} ${STATS_DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# --- Port 443 : un nom inconnu ne reçoit même pas de certificat ---
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    ssl_reject_handshake on;
+}
+
+# Autres noms du site (ex. domaine sans « www ») : redirigés vers l'adresse principale.
+# « aliases.invalid » (domaine réservé, jamais attribué) garde la directive valide quand
+# SITE_ALIASES est vide.
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name aliases.invalid ${SITE_ALIASES};
+    include snippets/tls.conf;
+    include snippets/hsts.conf;
+    return 301 https://${SITE_DOMAIN}$request_uri;
+}
+
+# --- Site public (Next.js) ---
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${SITE_DOMAIN};
+    include snippets/tls.conf;
+    include snippets/hsts.conf;
+    include snippets/errors.conf;
+
+    set $frontend frontend:3000;
+    set $umami umami:3000;
+
+    include snippets/media.conf;
+
+    # Fichiers de Next.js aux noms versionnés (cache d'un an posé par Next.js).
+    location /_next/static/ {
+        proxy_pass http://$frontend;
+        include snippets/proxy.conf;
+        access_log off;
+    }
+
+    # Optimisation des images (next/image) : coûteuse, limitée à part.
+    location /_next/image {
+        limit_req zone=images burst=100 nodelay;
+        proxy_pass http://$frontend;
+        include snippets/proxy.conf;
+    }
+
+    # Routes du serveur Next.js (relais vers Django, connexion) : erreurs en JSON, au format
+    # de l'API ({"error": {"code", "message", "details"}}).
+    location /api/ {
+        limit_req zone=bff burst=30 nodelay;
+        error_page 429 @api_throttled;
+        error_page 502 503 504 =503 @api_unavailable;
+        proxy_pass http://$frontend;
+        include snippets/proxy.conf;
+    }
+
+    # Mesure d'audience (Umami) servie par le site lui-même : ni domaine tiers, ni cookie,
+    # ni changement de la CSP. Le script envoie ses mesures à /stats/api/send.
+    location = /stats/script.js {
+        rewrite ^ /script.js break;
+        proxy_pass http://$umami;
+        include snippets/proxy.conf;
+        access_log off;
+    }
+    location = /stats/api/send {
+        limit_req zone=bff burst=30 nodelay;
+        rewrite ^ /api/send break;
+        proxy_pass http://$umami;
+        include snippets/proxy.conf;
+        access_log off;
+    }
+
+    # Pages : rendues en streaming par Next.js, transmises sans attendre la fin.
+    location / {
+        limit_req zone=pages burst=100 nodelay;
+        proxy_pass http://$frontend;
+        include snippets/proxy.conf;
+        proxy_buffering off;
+    }
+
+    location @api_throttled {
+        default_type application/json;
+        return 429 '{"error":{"code":"throttled","message":"Trop de requêtes. Réessayez dans un instant.","details":{}}}';
+    }
+    location @api_unavailable {
+        default_type application/json;
+        return 503 '{"error":{"code":"service_unavailable","message":"Service momentanément indisponible. Réessayez dans un instant.","details":{}}}';
+    }
+}
+
+# --- Django : backoffice (adresse ADMIN_URL_PATH), API, documentation ---
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${API_DOMAIN};
+    include snippets/tls.conf;
+    include snippets/hsts.conf;
+    include snippets/errors.conf;
+
+    set $backend backend:8000;
+
+    # Galeries du backoffice : plusieurs photos de 5 Mo dans un même envoi.
+    client_max_body_size 64m;
+
+    include snippets/media.conf;
+
+    # Fichiers statiques de l'admin (collectstatic), déjà compressés par WhiteNoise.
+    location /static/ {
+        alias /srv/static/;
+        gzip_static on;
+        include snippets/hsts.conf;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Cache-Control "public, max-age=604800" always;
+        access_log off;
+    }
+
+    location / {
+        limit_req zone=backend burst=50 nodelay;
+        proxy_pass http://$backend;
+        include snippets/proxy.conf;
+        # Exports et actions groupées du backoffice.
+        proxy_read_timeout 120s;
+    }
+}
+
+# --- Umami : interface des statistiques ---
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${STATS_DOMAIN};
+    include snippets/tls.conf;
+    include snippets/hsts.conf;
+    include snippets/errors.conf;
+
+    set $umami umami:3000;
+
+    location / {
+        limit_req zone=backend burst=50 nodelay;
+        proxy_pass http://$umami;
+        include snippets/proxy.conf;
+    }
+}
+
+# --- Réseau interne (port 8080, jamais publié) ---
+# Next.js y lit les médias à optimiser (MEDIA_ORIGIN) ; le contrôle de santé de Docker y passe.
+server {
+    listen 8080;
+    server_name _;
+    access_log off;
+
+    include snippets/media.conf;
+
+    location = /healthz {
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+    location / {
+        return 404;
+    }
+}

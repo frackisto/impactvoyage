@@ -27,6 +27,9 @@ if ADMIN_URL == "admin/":  # noqa: F405
     )
 STAFF_OTP_REQUIRED = True
 API_DOCS_PUBLIC = False
+# Recette uniquement (avec SEO_NOINDEX=true) : autorise « seed_demo » sur une installation
+# de production. Jamais sur le site public ; « check --deploy » le signale (core.W005).
+DEMO_DATA_ALLOWED = env.bool("DEMO_DATA_ALLOWED", default=False)  # noqa: F405
 
 # Derrière Nginx, qui termine le TLS : sans cet en-tête, Django verrait
 # toutes les requêtes en HTTP et SECURE_SSL_REDIRECT bouclerait à l'infini.
@@ -37,6 +40,10 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])  # noqa: F40
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])  # noqa: F405
 
 SECURE_SSL_REDIRECT = True
+# Le serveur Next.js appelle l'API en HTTP sur le réseau Docker interne (http://backend:8000) :
+# sans cette exception, chaque appel serait redirigé vers une adresse HTTPS injoignable. Depuis
+# Internet, Django n'est accessible qu'à travers Nginx, qui impose déjà HTTPS (Phase 24).
+SECURE_REDIRECT_EXEMPT = [r"^api/v1/"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 LANGUAGE_COOKIE_SECURE = True
@@ -50,3 +57,21 @@ X_FRAME_OPTIONS = "DENY"
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (  # noqa: F405
     "rest_framework.renderers.JSONRenderer",
 )
+
+# Journaux sur la sortie d'erreur (docker compose logs). Sans ce réglage, Django n'affiche
+# rien quand DEBUG est faux : une erreur 500 resterait invisible.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {"format": "{asctime} {levelname} {name} {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "simple"},
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        # Erreurs des requêtes (4xx en avertissement, 5xx avec la trace).
+        "django": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
+}

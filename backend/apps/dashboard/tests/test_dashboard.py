@@ -1,6 +1,6 @@
 import io
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from unittest import mock
 from urllib.error import URLError
 
@@ -43,15 +43,14 @@ class SelectorTests(TestCase):
                                   date(2026, 2, 1)])
 
     def test_monthly_counts_include_empty_months(self):
-        booking = BookingFactory()
-        two_months_ago = timezone.now() - timedelta(days=62)
-        Booking.objects.filter(pk=booking.pk).update(created_at=two_months_ago)
-        BookingFactory()
         starts = selectors.month_starts(timezone.localdate(), months=3)
+        # Milieu du plus ancien mois : « il y a 62 jours » en sortait certains jours (1er octobre).
+        booking = BookingFactory()
+        Booking.objects.filter(pk=booking.pk).update(created_at=timezone.make_aware(
+            datetime.combine(starts[0].replace(day=15), time(12))))
+        BookingFactory()
         counts = selectors.monthly_counts(Booking.objects.all(), starts)
-        self.assertEqual(counts[-1], 1)
-        self.assertEqual(sum(counts), 2)
-        self.assertEqual(len(counts), 3)
+        self.assertEqual(counts, [1, 0, 1])
 
     def test_popularity_counts_live_bookings_then_views(self):
         viewed = TourFactory(view_count=500)

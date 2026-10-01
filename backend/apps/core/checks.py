@@ -53,4 +53,10 @@ def security_settings(app_configs, **kwargs):
             "La double authentification de l'équipe est désactivée (STAFF_OTP_REQUIRED).",
             id="core.W004",
         ))
+    if settings.DEMO_DATA_ALLOWED:
+        issues.append(Warning(
+            "Les données de démonstration sont autorisées (DEMO_DATA_ALLOWED) : réservé à la recette.",
+            hint="Retirez DEMO_DATA_ALLOWED de .env.prod sur le site public.",
+            id="core.W005",
+        ))
     return issues

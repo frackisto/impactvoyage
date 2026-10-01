@@ -1,0 +1,258 @@
+# Production (Phase 24, architecture § 15). Guide complet : DEPLOIEMENT.md.
+#
+#   cp .env.prod.example .env.prod      # puis renseigner domaines et secrets
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Seul Nginx est exposé (ports 80 et 443) ; PostgreSQL, Redis, Django, Next.js et Umami
+# restent sur le réseau interne. Les applications tournent sans utilisateur root.
+name: impactvoyage-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+# Django, le worker Celery et le planificateur partagent la même image et la même configuration.
+x-backend: &backend
+  image: impactvoyage-backend:latest
+  restart: unless-stopped
+  env_file: .env.prod
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+    # « backend » et « localhost » : appels internes (serveur Next.js, contrôle de santé).
+    ALLOWED_HOSTS: ${API_DOMAIN:?API_DOMAIN manquant dans .env.prod},backend,localhost
+    CSRF_TRUSTED_ORIGINS: https://${API_DOMAIN}
+    FRONTEND_URL: https://${SITE_DOMAIN:?SITE_DOMAIN manquant dans .env.prod}
+    BACKEND_URL: https://${API_DOMAIN}
+    # Un proxy devant Django (Nginx) : X-Forwarded-For porte l'adresse du visiteur.
+    NUM_PROXIES: "1"
+    DATABASE_HOST: db
+    DATABASE_PORT: "5432"
+    REDIS_URL: redis://redis:6379/0
+    REDIS_CACHE_URL: redis://redis:6379/2
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/1
+    FRONTEND_REVALIDATE_URL: http://frontend:3000/api/revalidate
+    UMAMI_API_URL: http://umami:3000
+  security_opt:
+    - no-new-privileges:true
+  logging: *logging
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:?DATABASE_NAME manquant dans .env.prod}
+      POSTGRES_USER: ${DATABASE_USER:?DATABASE_USER manquant dans .env.prod}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD manquant dans .env.prod}
+      # Base d'Umami, créée au premier démarrage (deploy/postgres/initdb/).
+      UMAMI_DB_PASSWORD: ${UMAMI_DB_PASSWORD:?UMAMI_DB_PASSWORD manquant dans .env.prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/postgres/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # File des tâches Celery conservée sur disque (emails en attente) ; à 256 Mo, seules
+    # les entrées du cache (qui expirent) sont évincées, jamais les tâches.
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy volatile-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+  backend:
+    <<: *backend
+    build:
+      context: ./backend
+    # Au déploiement : migrations (puis synchronisation des rôles, automatique), fichiers
+    # statiques de l'admin pour Nginx, puis Gunicorn (backend/gunicorn.conf.py).
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             exec gunicorn config.wsgi:application"
+    volumes:
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  celery:
+    <<: *backend
+    command: celery -A config worker -l info
+    volumes:
+      - media_files:/app/media
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$$HOSTNAME --timeout 10 > /dev/null"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+
+  celery-beat:
+    <<: *backend
+    # Fichier d'état du planificateur dans /tmp : le code de l'image est en lecture seule.
+    command: celery -A config beat -l info --schedule /tmp/celerybeat-schedule
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    image: impactvoyage-frontend:latest
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN}
+        API_URL: http://backend:8000/api/v1
+        # Images à optimiser lues sur le port interne de Nginx (Django ne sert pas les médias).
+        MEDIA_ORIGIN: http://nginx:8080
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+        SEO_NOINDEX: ${SEO_NOINDEX:-false}
+    restart: unless-stopped
+    environment:
+      API_URL: http://backend:8000/api/v1
+      FRONTEND_SHARED_SECRET: ${FRONTEND_SHARED_SECRET:?FRONTEND_SHARED_SECRET manquant dans .env.prod}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+      SEO_NOINDEX: ${SEO_NOINDEX:-false}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging: *logging
+
+  # Mesure d'audience (architecture § 13) : interface sur https://STATS_DOMAIN, script et
+  # collecte servis par le site sous /stats/. Données dans la base « umami » de PostgreSQL.
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.0
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?UMAMI_APP_SECRET manquant dans .env.prod}
+      # Adresse du visiteur posée par Nginx (pays, visiteurs uniques ; elle n'est pas conservée).
+      CLIENT_IP_HEADER: x-real-ip
+      DISABLE_TELEMETRY: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:3000/api/heartbeat"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    logging: *logging
+
+  nginx:
+    image: impactvoyage-nginx:latest
+    build:
+      context: ./deploy/nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      SITE_ALIASES: ${SITE_ALIASES:-}
+      API_DOMAIN: ${API_DOMAIN}
+      STATS_DOMAIN: ${STATS_DOMAIN:?STATS_DOMAIN manquant dans .env.prod}
+    volumes:
+      - static_files:/srv/static:ro
+      - media_files:/srv/media:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - acme_challenge:/var/www/certbot:ro
+    depends_on:
+      - frontend
+      - backend
+      - umami
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+
+  # Certificat Let's Encrypt de tous les domaines, renouvelé automatiquement (deploy/certbot/).
+  certbot:
+    image: certbot/certbot:v5.8.0
+    restart: unless-stopped
+    entrypoint: ["sh", "/opt/certbot/renew.sh"]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      SITE_ALIASES: ${SITE_ALIASES:-}
+      API_DOMAIN: ${API_DOMAIN}
+      STATS_DOMAIN: ${STATS_DOMAIN}
+      CERT_NAME: impactvoyage
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-}
+      LETSENCRYPT_STAGING: ${LETSENCRYPT_STAGING:-0}
+    volumes:
+      - ./deploy/certbot:/opt/certbot:ro
+      - letsencrypt:/etc/letsencrypt
+      - acme_challenge:/var/www/certbot
+    depends_on:
+      - nginx
+    logging: *logging
+
+  # Sauvegardes quotidiennes des bases et des médias, test de restauration mensuel
+  # (architecture § 7.1, deploy/backup/). À recopier hors du serveur (DEPLOIEMENT.md).
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint: ["sh", "/opt/backup/scheduler.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: ${DATABASE_USER}
+      PGPASSWORD: ${DATABASE_PASSWORD}
+      BACKUP_DATABASES: ${DATABASE_NAME} umami
+      BACKUP_TIME: ${BACKUP_TIME:-02:30}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      MEDIA_BACKUP_RETENTION_DAYS: ${MEDIA_BACKUP_RETENTION_DAYS:-7}
+    volumes:
+      - ./deploy/backup:/opt/backup:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+      - media_files:/srv/media:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_files:
+  media_files:
+  letsencrypt:
+  acme_challenge:

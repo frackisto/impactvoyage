@@ -8,6 +8,12 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
  * (rewrites) sont compilées dans l'application.
  */
 const backendOrigin = new URL(process.env.API_URL ?? "http://localhost:8000/api/v1").origin;
+/**
+ * Serveur des médias pour le relais /media/* (optimisation des images par next/image).
+ * Django ne sert les médias qu'en développement : en production, c'est Nginx, sur son
+ * port interne (MEDIA_ORIGIN=http://nginx:8080, docker-compose.prod.yml).
+ */
+const mediaOrigin = process.env.MEDIA_ORIGIN ? new URL(process.env.MEDIA_ORIGIN).origin : backendOrigin;
 
 /**
  * En-têtes de sécurité de toutes les réponses (Phase 23). La CSP des pages, qui porte
@@ -37,9 +43,10 @@ const nextConfig: NextConfig = {
     // Seules les images du site et les médias Django sont optimisées.
     localPatterns: [{ pathname: "/brand/**" }, { pathname: "/images/**" }, { pathname: "/media/**" }],
   },
-  // Photos du catalogue : /media/* relayé vers Django (voir lib/media.ts).
+  // Photos du catalogue : /media/* relayé vers Django, ou Nginx en production (voir
+  // lib/media.ts) ; les navigateurs, eux, les reçoivent directement de Nginx.
   async rewrites() {
-    return [{ source: "/media/:path*", destination: `${backendOrigin}/media/:path*` }];
+    return [{ source: "/media/:path*", destination: `${mediaOrigin}/media/:path*` }];
   },
   // Pas de redirection /admin vers le backoffice : son adresse, non standard en
   // production (ADMIN_URL_PATH), ne doit apparaître nulle part sur le site.

@@ -1327,7 +1327,7 @@
         },
         "s6": {
           "title": "Cookies",
-          "body": "The website only uses cookies required for it to work:\n\n- the chosen language;\n- the currency used to display prices;\n- your account login session, if any.\n\nNo advertising or audience measurement cookies are used."
+          "body": "The website only uses cookies required for it to work:\n\n- the chosen language;\n- the currency used to display prices;\n- your account login session, if any.\n\nNo advertising or audience measurement cookies are used.\n\nTo know which pages are visited, we use Umami, hosted by the agency on its own server: it sets no cookie, does not store your IP address and only keeps anonymous statistics (pages viewed, approximate city and country, type of device and browser). It is disabled if your browser sends the \"Do Not Track\" signal."
         },
         "s7": {
           "title": "Security",

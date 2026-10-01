@@ -190,10 +190,12 @@ class DeployChecksTests(TestCase):
     def ids(self):
         return {issue.id for issue in run_checks(include_deployment_checks=True)}
 
-    @override_settings(TURNSTILE_SECRET_KEY="", ADMIN_URL="admin/", STAFF_OTP_REQUIRED=False)
+    @override_settings(TURNSTILE_SECRET_KEY="", ADMIN_URL="admin/", STAFF_OTP_REQUIRED=False,
+                       DEMO_DATA_ALLOWED=True)
     def test_missing_protections_are_reported(self):
-        self.assertTrue({"core.W002", "core.W003", "core.W004"} <= self.ids())
+        self.assertTrue({"core.W002", "core.W003", "core.W004", "core.W005"} <= self.ids())
 
-    @override_settings(TURNSTILE_SECRET_KEY="clé", ADMIN_URL="gestion-x7/", STAFF_OTP_REQUIRED=True)
+    @override_settings(TURNSTILE_SECRET_KEY="clé", ADMIN_URL="gestion-x7/", STAFF_OTP_REQUIRED=True,
+                       DEMO_DATA_ALLOWED=False)
     def test_complete_configuration_is_silent(self):
-        self.assertFalse({"core.W002", "core.W003", "core.W004"} & self.ids())
+        self.assertFalse({"core.W002", "core.W003", "core.W004", "core.W005"} & self.ids())

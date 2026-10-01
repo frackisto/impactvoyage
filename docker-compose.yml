@@ -122,8 +122,7 @@ services:
     depends_on:
       - backend
 
-  # --- Ajouté dans une phase suivante ---
-  # nginx:      # Phase 24 « Dockerisation et déploiement »
+  # Production (Nginx, TLS, Umami, sauvegardes) : docker-compose.prod.yml, voir DEPLOIEMENT.md.
 
 volumes:
   postgres_data:

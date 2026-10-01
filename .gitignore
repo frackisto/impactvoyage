@@ -22,3 +22,7 @@ node_modules/
 
 # OS
 .DS_Store
+
+# Production (Phase 24) : configuration et sauvegardes locales du serveur
+.env.prod
+/backups/
